@@ -29,8 +29,10 @@
             </div>
 
             <div class="buttons">
-                <button class="blockFunction" onclick="addBlock(this)">Insert</button>
-                <button class="blockFunction" onclick="removeBlock(this)">Remove</button>
+                <button class="blockFunction"
+                    onclick="addBlock(Array.from(this.closest('.block').parentElement.children).indexOf(this.closest('.block')))">Insert</button>
+                <button class="blockFunction"
+                    onclick="removeBlock(Array.from(this.closest('.block').parentElement.children).indexOf(this.closest('.block')))">Remove</button>
             </div>
         </div>
     </div>
@@ -49,49 +51,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/markdown/markdown.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/edit/closebrackets.js"></script>
 
     <!-- drag and drop -->
     <script src="./dragAndDrop.js"></script>
 
     <script>
 
-        function displayText(button) {
-            var block = button.closest('.blockNote');
-            var inputText = block.querySelector(".inputText").value;
-            var displayArea = block.querySelector(".displayText");
+        function addBlock(index) {
+            var blocks = document.querySelectorAll('.block');
+            var block = blocks[index];
 
-            var html = marked(inputText);
-            displayArea.innerHTML = html;
+            if (block) {
+                var newBlock = block.cloneNode(true);
+
+                newBlock.querySelectorAll('.inputText').forEach(function (textArea) {
+                    textArea.value = '';
+                    textArea.style.height = '65px';
+                    textArea.style.display = 'block';
+                });
+
+                newBlock.querySelectorAll('.displayText').forEach(function (displayArea) {
+                    displayArea.innerHTML = '';
+                    displayArea.style.display = 'none';
+                });
+
+                newBlock.id = 'block' + (blocks.length + 1);
+                block.insertAdjacentElement('afterend', newBlock);
+            }
         }
 
-        function addBlock(button) {
-            var block = button.closest('.block');
-            var newBlock = block.cloneNode(true);
-
-            newBlock.querySelectorAll('.inputText').forEach(function (textArea) {
-                textArea.value = '';
-                textArea.style.height = '65px';
-                textArea.style.display = 'block';
-            });
-
-            newBlock.querySelectorAll('.displayText').forEach(function (displayArea) {
-                displayArea.innerHTML = '';
-                displayArea.style.display = 'none';
-            });
-
+        function removeBlock(index) {
             var blocks = document.querySelectorAll('.block');
-            newBlock.id = 'block' + (blocks.length + 1);
+            var block = blocks[index];
 
-            block.insertAdjacentElement('afterend', newBlock);
-        }
-
-        function removeBlock(button) {
-            var block = button.closest('.block');
-            var blocks = document.querySelectorAll('.block');
-            if (blocks.length > 1) {
+            if (blocks.length > 1 && block) {
                 block.parentNode.removeChild(block);
             }
         }
+
 
         function toggleMode(button) {
             var blockNote = button.closest('.blockNote');
@@ -108,9 +106,7 @@
                 var inputValue = inputText.value;
 
                 inputValue = inputValue.replace(/==([^=]+)==/g, '<mark>$1</mark>');
-
                 displayText.innerHTML = marked(inputValue);
-
                 MathJax.typesetPromise();
             }
         }
@@ -119,22 +115,6 @@
             element.style.height = "auto";
             element.style.height = (element.scrollHeight + 5) + "px";
         }
-
-        
-
-        document.querySelectorAll('.block .inputText').forEach(function (textArea) {
-            addAutoPairingListener(textArea);
-        });
-
-        var textAreas = document.getElementsByClassName('inputText');
-        for (var i = 0; i < textAreas.length; i++) {
-            CodeMirror.fromTextArea(textAreas[i], {
-                lineNumbers: true,
-                mode: "markdown",
-                theme: "monokai",
-            });
-        }
-
 
     </script>
 </body>
