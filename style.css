@@ -1,0 +1,131 @@
+.block {
+    display: flex;
+    flex-direction: row;
+    /* align-items: center; */
+    justify-content: space-between;
+    transition: 0.3s;
+}
+
+/* blocknote */
+.blockNote {
+    position: relative;
+}
+
+/* renderEdit button */
+.renderEdit {
+    /* position */
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* style */
+    font-family: Calibri;
+    background-color: rgba(128, 128, 128, 0.114);
+    color: rgb(104, 103, 103);
+    border: transparent;
+}
+
+.renderEdit:hover {
+    background-color: rgba(128, 128, 128, 0.25);
+    transition: 0.3s;
+}
+
+
+/* text area */
+.inputText {
+    /* fonts */
+    font-family: "CMU Serif";
+    font-size: 14px;
+    /* size */
+    box-sizing: border-box;
+    padding: 10px;
+    padding-top: 20px;
+    /* min-height: 100px; */
+    height: 50;
+    width: 100%;
+    resize: none;
+    /* border */
+    border-color: transparent;
+    border-left-color: rgba(231, 230, 220);
+    border-left-width: 1.5px;
+}
+
+.inputText:hover {
+    background-color: rgba(231, 230, 220, 0.326);
+    transition: 0.5s;
+}
+
+.inputText:focus {
+    outline: none;
+    background-color: rgba(231, 230, 220, 0.326);
+}
+
+/* text display */
+.displayText {
+    /* fonts */
+    font-family: "CMU Serif";
+    font-size: 14px;
+    /* size */
+    padding: 10px;
+    /* border */
+    border-left: 1.5px solid rgba(120, 178, 211, 0.596);
+}
+
+.displayText:hover {
+    background-color: rgba(231, 230, 220, 0.326);
+    transition: 0.5s;
+}
+
+.displayText blockquote {
+    font-family: "CMU Serif";
+    background-color: rgba(120, 178, 211, 0.178);
+    padding: 5px;
+}
+
+.displayText pre {
+    /* font */
+    font-family: 'Courier New', Courier, monospace;
+    color: rgb(71, 71, 71);
+    /* background */
+    background-color: rgba(203, 203, 203, 0.2);
+    /* border */
+    border-left-width: 1.5px;
+    border-left-color: rgb(21, 152, 152);
+    /* paddings */
+    padding: 5px;
+
+}
+
+.displayText code {
+    /* font */
+    font-family: 'Courier New', Courier, monospace;
+    color: rgb(71, 71, 71);
+    /* background */
+    background-color: rgba(203, 203, 203, 0.2);
+    /* border */
+    border-left-width: 1.5px;
+    border-left-color: rgb(22, 198, 198);
+    /* paddings */
+    padding: 5px;
+
+}
+
+/* render/edit button */
+
+/* buttons */
+.buttons {
+    display: flex;
+    /* align items vertically */
+    flex-direction: column;
+}
+
+.blockFunction {
+    font-family: Calibri;
+    border-color: transparent;
+    background-color: rgba(128, 128, 128, 0.114);
+    padding: 5px;
+}
+
+.blockFunction:hover {
+    background-color: rgba(128, 128, 128, 0.311);
+    transition: 0.3s;
+}
