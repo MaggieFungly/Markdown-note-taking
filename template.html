@@ -5,19 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Blocks</title>
-    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <script src="./addRemoveBlocks.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="main">
-    <div class="block1">
-        <div class="button">
-            <button class="insertButton" onclick="insertBlock(this)">Insert</button>
+    <div>
+        <div id="init" class="no-drag">
+            <div class="buttons">
+                <button onclick="insertBlock(this)">start</button>
+            </div>
+        </div>
+        <div id="blocks">
         </div>
     </div>
-</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sortable = new Sortable(document.querySelector('#blocks'), {
+                handle: '.block',
+                animation: 120,
+            });
+        });
+    </script>
+
 
 </body>
 

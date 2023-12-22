@@ -22,6 +22,7 @@ function insertBlock(button) {
     noteContainer.appendChild(note)
 
     var buttonContainer = document.createElement('div');
+    buttonContainer.className = 'buttonContainer';
     buttonContainer.style.display = 'block';
 
     var insertButton = document.createElement('button');
