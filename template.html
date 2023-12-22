@@ -4,119 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Display</title>
-    <link rel="stylesheet" type="text/css" href="./style.css">
+    <title>Dynamic Blocks</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="./addRemoveBlocks.js"></script>
 </head>
 
 <body>
-    <div id="toolbar">
-        <button>New File</button>
-        <button>Open File</button><br>
-    </div>
 
-    <div id="container" ondragover="allowDrop(event)" ondrop="drop(event)">
-        <div class="block" draggable="true" ondragstart="dragStart(event)">
-            <div class="blockNote" style="width: 30%;">
-                <button class="renderEdit" onclick="toggleMode(this)">Render/Edit</button>
-                <textarea class="inputText" style="display: block;" oninput="autoResize(this)"></textarea>
-                <div class="displayText" style="display: none;"></div>
-            </div>
-
-            <div class="blockNote" style="width: 70%;">
-                <button class="renderEdit" onclick="toggleMode(this)">Render/Edit</button>
-                <textarea class="inputText" style="display: block;" oninput="autoResize(this)"></textarea>
-                <div class="displayText" style="display: none;"></div>
-            </div>
-
-            <div class="buttons">
-                <button class="blockFunction"
-                    onclick="addBlock(Array.from(this.closest('.block').parentElement.children).indexOf(this.closest('.block')))">Insert</button>
-                <button class="blockFunction"
-                    onclick="removeBlock(Array.from(this.closest('.block').parentElement.children).indexOf(this.closest('.block')))">Remove</button>
-            </div>
+<div class="main">
+    <div class="block1">
+        <div class="button">
+            <button class="insertButton" onclick="insertBlock(this)">Insert</button>
         </div>
     </div>
+</div>
 
-    <!-- marked -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.1.3/marked.min.js"></script>
-
-    <!-- mathjax -->
-    <script id="MathJax-script" async src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
-    <!-- prism -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
-
-    <!-- codemirror -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/markdown/markdown.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/edit/closebrackets.js"></script>
-
-    <!-- drag and drop -->
-    <script src="./dragAndDrop.js"></script>
-
-    <script>
-
-        function addBlock(index) {
-            var blocks = document.querySelectorAll('.block');
-            var block = blocks[index];
-
-            if (block) {
-                var newBlock = block.cloneNode(true);
-
-                newBlock.querySelectorAll('.inputText').forEach(function (textArea) {
-                    textArea.value = '';
-                    textArea.style.height = '65px';
-                    textArea.style.display = 'block';
-                });
-
-                newBlock.querySelectorAll('.displayText').forEach(function (displayArea) {
-                    displayArea.innerHTML = '';
-                    displayArea.style.display = 'none';
-                });
-
-                newBlock.id = 'block' + (blocks.length + 1);
-                block.insertAdjacentElement('afterend', newBlock);
-            }
-        }
-
-        function removeBlock(index) {
-            var blocks = document.querySelectorAll('.block');
-            var block = blocks[index];
-
-            if (blocks.length > 1 && block) {
-                block.parentNode.removeChild(block);
-            }
-        }
-
-
-        function toggleMode(button) {
-            var blockNote = button.closest('.blockNote');
-            var inputText = blockNote.querySelector(".inputText");
-            var displayText = blockNote.querySelector(".displayText");
-
-            if (inputText.style.display === "none" || inputText.style.display === "") {
-                inputText.style.display = "block";
-                displayText.style.display = "none";
-            } else {
-                inputText.style.display = "none";
-                displayText.style.display = "block";
-
-                var inputValue = inputText.value;
-
-                inputValue = inputValue.replace(/==([^=]+)==/g, '<mark>$1</mark>');
-                displayText.innerHTML = marked(inputValue);
-                MathJax.typesetPromise();
-            }
-        }
-
-        function autoResize(element) {
-            element.style.height = "auto";
-            element.style.height = (element.scrollHeight + 5) + "px";
-        }
-
-    </script>
 </body>
 
 </html>
