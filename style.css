@@ -1,131 +1,122 @@
-.block {
-    display: flex;
-    flex-direction: row;
-    /* align-items: center; */
-    justify-content: space-between;
-    transition: 0.3s;
+.buttonContainer {
+    width: 10%;
 }
 
-/* blocknote */
-.blockNote {
+.cueContainer,
+.noteContainer {
     position: relative;
 }
 
-/* renderEdit button */
-.renderEdit {
-    /* position */
-    position: absolute;
-    top: 0;
-    left: 0;
-    /* style */
-    font-family: Calibri;
-    background-color: rgba(128, 128, 128, 0.114);
-    color: rgb(104, 103, 103);
-    border: transparent;
+.cueContainer {
+    width: 30%;
 }
 
-.renderEdit:hover {
-    background-color: rgba(128, 128, 128, 0.25);
+.noteContainer {
+    width: 70%;
+}
+
+.cueButton,
+.noteButton {
+    position: absolute;
+    background-color: transparent;
+    border: transparent;
+    border-radius: 3px;
+    display: block;
+    color: rgba(102, 99, 94, 0.7);
+}
+
+.cueButton:hover,
+.noteButton:hover {
+    background-color: #c4c4c43c;
     transition: 0.3s;
 }
 
-
-/* text area */
-.inputText {
-    /* fonts */
-    font-family: "CMU Serif";
-    font-size: 14px;
-    /* size */
-    box-sizing: border-box;
-    padding: 10px;
-    padding-top: 20px;
-    /* min-height: 100px; */
-    height: 50;
+.cueEdit,
+.noteEdit,
+.cueDisplay,
+.noteDisplay {
     width: 100%;
-    resize: none;
-    /* border */
-    border-color: transparent;
-    border-left-color: rgba(231, 230, 220);
-    border-left-width: 1.5px;
-}
-
-.inputText:hover {
-    background-color: rgba(231, 230, 220, 0.326);
-    transition: 0.5s;
-}
-
-.inputText:focus {
-    outline: none;
-    background-color: rgba(231, 230, 220, 0.326);
-}
-
-/* text display */
-.displayText {
-    /* fonts */
-    font-family: "CMU Serif";
+    min-height: 30px;
+    font-family: 'CMU Serif';
     font-size: 14px;
-    /* size */
-    padding: 10px;
-    /* border */
-    border-left: 1.5px solid rgba(120, 178, 211, 0.596);
+    line-height: 20px;
+    cursor: text;
+    word-wrap: break-word;
+    tab-size: 4;
+    padding-top: 5px;
+    padding-left: 5px;
+    margin-right: 2px;
+    box-sizing: border-box;
 }
 
-.displayText:hover {
-    background-color: rgba(231, 230, 220, 0.326);
-    transition: 0.5s;
+.cueEdit:hover,
+.cueDisplay:hover,
+.noteEdit:hover,
+.noteDisplay:hover,
+.cueEdit:focus,
+.cueDisplay:focus,
+.noteEdit:focus,
+.noteDisplay:focus {
+    background-color: #e1e0e03c;
+    transition: 1s;
 }
 
-.displayText blockquote {
-    font-family: "CMU Serif";
-    background-color: rgba(120, 178, 211, 0.178);
+.cueEdit,
+.noteEdit {
+    border-left: 1.5px solid #2796cb;
+}
+
+.cueEdit:focus,
+.noteEdit:focus {
+    outline: none;
+}
+
+
+.cueDisplay,
+.noteDisplay {
+    border-left: 1.5px solid orange;
+}
+
+.cueDisplay blockquote,
+.noteDisplay blockquote {
+    border-left: 1.5px solid #53a8b6;
+    margin: 1px;
+    padding: 2px;
+    background-color: #f6f6f6;
+}
+
+.cueDisplay code,
+.noteDisplay code {
+    font-family: 'Consolas';
+    padding: 3px;
+}
+
+.cueDisplay pre>code,
+.noteDisplay pre>code {
+    font-family: 'Consolas';
     padding: 5px;
+    background-color: #000000;
+    color: white;
+    display: block;
+    border: none;
+    border-radius: 3px;
+    font-size: 14px;
 }
 
-.displayText pre {
-    /* font */
-    font-family: 'Courier New', Courier, monospace;
-    color: rgb(71, 71, 71);
-    /* background */
-    background-color: rgba(203, 203, 203, 0.2);
-    /* border */
-    border-left-width: 1.5px;
-    border-left-color: rgb(21, 152, 152);
-    /* paddings */
-    padding: 5px;
-
+.noteDisplay a {
+    color: #2796cb;
 }
 
-.displayText code {
-    /* font */
-    font-family: 'Courier New', Courier, monospace;
-    color: rgb(71, 71, 71);
-    /* background */
-    background-color: rgba(203, 203, 203, 0.2);
-    /* border */
-    border-left-width: 1.5px;
-    border-left-color: rgb(22, 198, 198);
-    /* paddings */
-    padding: 5px;
-
+.insertButton,
+.removeButton,
+.dragButton {
+    background-color: transparent;
+    border: transparent;
 }
 
-/* render/edit button */
-
-/* buttons */
-.buttons {
-    display: flex;
-    /* align items vertically */
-    flex-direction: column;
-}
-
-.blockFunction {
-    font-family: Calibri;
-    border-color: transparent;
-    background-color: rgba(128, 128, 128, 0.114);
-    padding: 5px;
-}
-
-.blockFunction:hover {
-    background-color: rgba(128, 128, 128, 0.311);
+.insertButton:hover,
+.removeButton:hover,
+.dragButton:hover {
+    background-color: #c4c4c43c;
     transition: 0.3s;
 }
