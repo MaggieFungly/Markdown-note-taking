@@ -12,25 +12,79 @@ function showDisplay(editDiv, displayDiv) {
     text = text.replace(/==([^=]*)==/g, "<mark>$1</mark>");
     displayDiv.innerHTML = marked.parse(text);
     MathJax.Hub.Queue(["Typeset", MathJax.Hub, displayDiv]);
+    hljs.highlightAll();
     editDiv.style.display = 'none';
     displayDiv.style.display = 'block';
 };
 
 function editFunction(editDiv, displayDiv) {
+    // on blur
     editDiv.addEventListener('blur', function () {
         showDisplay(editDiv, displayDiv);
     });
 
+    // paste
     editDiv.addEventListener('paste', function (e) {
         e.preventDefault();
         var text = (e.originalEvent || e).clipboardData.getData('text/plain');
         document.execCommand('inserttext', false, text);
     });
+
+    // prevent tab
     editDiv.addEventListener('keydown', function (e) {
         if (e.key === 'Tab') {
             e.preventDefault();
             // Insert a tab character
             document.execCommand('inserttext', false, '\t');
+        }
+    });
+
+    // auto closing brackets
+    editDiv.addEventListener('keydown', function (event) {
+        const brackets = {
+            '(': ')',
+            '[': ']',
+            '{': '}',
+            '"': '"',
+            "'": "'",
+            '=': '=' // Handling for double equals
+        };
+
+        let key = event.key;
+
+        if (brackets.hasOwnProperty(key)) {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString();
+
+            if (key === '=' && selectedText === '') {
+                // If '=' is pressed but there's no selection, do nothing special
+                return;
+            }
+
+            event.preventDefault(); // Prevent the default action
+
+            // Create the text to insert
+            const openingChar = key;
+            const closingChar = brackets[key];
+            const newText = document.createTextNode(openingChar + selectedText + closingChar);
+
+            // Replace the selection with the new text
+            range.deleteContents();
+            range.insertNode(newText);
+
+            // Set the selection range
+            if (selectedText) {
+                range.setStart(newText, 1);
+                range.setEnd(newText, 1 + selectedText.length);
+            } else {
+                // If there was no selected text, place the cursor after the characters
+                range.setStartAfter(newText);
+                range.collapse(true);
+            }
+
+            selection.removeAllRanges();
+            selection.addRange(range);
         }
     });
 };
@@ -88,7 +142,7 @@ function insertBlock(button) {
     noteDisplayIcon.className = 'fa fa-pencil-square-o';
     noteButton.appendChild(noteDisplayIcon)
 
-    noteButton.addEventListener('click', function (){ 
+    noteButton.addEventListener('click', function () {
         showEdit(noteEdit, noteDisplay);
     })
 
@@ -103,7 +157,7 @@ function insertBlock(button) {
     buttonContainer.style.display = 'block';
 
     var insertButton = document.createElement('button');
-    insertButton.className = 'insertButton' ;
+    insertButton.className = 'insertButton';
     insertIcon = document.createElement('i');
     insertIcon.className = 'fa fa-plus';
     insertButton.appendChild(insertIcon);
@@ -126,10 +180,10 @@ function insertBlock(button) {
     dragIcon.className = 'fa fa-arrows';
     dragButton.appendChild(dragIcon);
 
+    buttonContainer.appendChild(dragButton);
     buttonContainer.appendChild(insertButton);
     buttonContainer.appendChild(removeButton);
-    buttonContainer.appendChild(dragButton);
-    
+
     blockContainer.appendChild(cueContainer);
     blockContainer.appendChild(noteContainer);
     blockContainer.appendChild(buttonContainer);
