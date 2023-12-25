@@ -4,18 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Blocks</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="./addRemoveBlocks.js"></script>
+    <title>Cornell Notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/electron@16.0.0/dist/electron.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="addRemoveBlocks.js"></script>
 </head>
 
 <body>
 
     <div>
+        <button class="newFile">New File</button>
+        <button class="openFile">Open File</button><br>
+        <input type="text" id="title">
         <div id="init" class="no-drag">
             <div class="buttons">
-                <button onclick="insertBlock(this)">start</button>
+                <button onclick="insertBlock(this)" id="startButton">
+                    <i class="fa fa-plus"></i>
+                </button>
             </div>
         </div>
         <div id="blocks">
@@ -25,10 +37,29 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var sortable = new Sortable(document.querySelector('#blocks'), {
-                handle: '.block',
-                animation: 120,
+                handle: '.dragButton',
+                animation: 300,
             });
         });
+    </script>
+
+    <script>
+        document.querySelector('.newFile').addEventListener('click', async function () {
+                let fileName = document.getElementById('title').value.trim();
+                fileName = fileName ? fileName : 'Untitled';
+
+                try {
+                    const handle = await window.showDirectoryPicker();
+                    const newFileHandle = await handle.getFileHandle(`${fileName}.json`, { create: true });
+                    const writable = await newFileHandle.createWritable();
+
+                    // Write contents to the file
+                    await writable.write(JSON.stringify({}));
+                    await writable.close();
+                } catch (error) {
+                    console.error(error);
+                }
+            });
     </script>
 
 
