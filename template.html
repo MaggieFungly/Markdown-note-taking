@@ -7,7 +7,6 @@
     <title>Cornell Notes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/electron@16.0.0/dist/electron.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
@@ -20,8 +19,8 @@
 <body>
 
     <div>
-        <button class="newFile">New File</button>
-        <button class="openFile">Open File</button><br>
+        <button class="newFileButton">New File</button>
+        <button class="openFileButton">Open File</button><br>
         <input type="text" id="title">
         <div id="init" class="no-drag">
             <div class="buttons">
@@ -42,26 +41,6 @@
             });
         });
     </script>
-
-    <script>
-        document.querySelector('.newFile').addEventListener('click', async function () {
-                let fileName = document.getElementById('title').value.trim();
-                fileName = fileName ? fileName : 'Untitled';
-
-                try {
-                    const handle = await window.showDirectoryPicker();
-                    const newFileHandle = await handle.getFileHandle(`${fileName}.json`, { create: true });
-                    const writable = await newFileHandle.createWritable();
-
-                    // Write contents to the file
-                    await writable.write(JSON.stringify({}));
-                    await writable.close();
-                } catch (error) {
-                    console.error(error);
-                }
-            });
-    </script>
-
 
 </body>
 
