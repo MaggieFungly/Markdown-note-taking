@@ -101,7 +101,7 @@ button:hover {
     min-height: 30px;
     font-family: 'CMU Serif';
     font-size: 15px;
-    line-height: 20px;
+    /* line-height: 20px; */
     cursor: text;
     tab-size: 4;
     padding-top: 8px;
@@ -111,10 +111,6 @@ button:hover {
     height: 100%;
     transition: background-color 0.3s ease-out;
     overflow-x: auto;
-    /* Add horizontal scroll for overflow */
-    white-space: pre-wrap;
-    /* Use this to maintain whitespace and break lines */
-    /* If you don't want line breaks, use white-space: nowrap; instead */
 }
 
 .cueEdit:hover,
