@@ -19,7 +19,18 @@
 <body>
 
     <div>
-        <button id="return"><i class="fa fa-chevron-left"></i></button><br>
+        <div id="toolbar">
+            <button id="return"><i class="fa fa-chevron-left"></i></button>
+            <div id="rightContainer">
+                <button id="fontLarger" class="fontSizeButton">
+                    <i class="fa fa-font" style="font-size: 16px;"></i>
+                </button>
+                <button id="fontSmaller" class="fontSizeButton">
+                    <i class="fa fa-font" style="font-size: 12px;"></i>
+                </button>
+            </div>
+        </div>
+        <br>
         <input type="text" id="title">
         <div id="init" class="no-drag">
             <div class="buttons">
@@ -42,6 +53,44 @@
     </script>
 
     <script src="saveData.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fontLargerButton = document.getElementById('fontLarger');
+
+            fontLargerButton.addEventListener('click', () => {
+                // Select all elements with the specified classes
+                const elements = document.querySelectorAll('.cueEdit, .noteEdit, .cueDisplay, .noteDisplay, .cueDisplay pre>code, .noteDisplay pre > code');
+
+                elements.forEach(element => {
+                    // Get the current font size
+                    const currentFontSize = window.getComputedStyle(element, null).getPropertyValue('font-size');
+                    // Calculate the new font size
+                    const newFontSize = parseFloat(currentFontSize) + 1 + 'px';
+                    // Apply the new font size
+                    element.style.fontSize = newFontSize;
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+                const fontLargerButton = document.getElementById('fontSmaller');
+
+                fontLargerButton.addEventListener('click', () => {
+                    // Select all elements with the specified classes
+                    const elements = document.querySelectorAll('.cueEdit, .noteEdit, .cueDisplay, .noteDisplay, .cueDisplay pre>code, .noteDisplay pre > code');
+
+                    elements.forEach(element => {
+                        // Get the current font size
+                        const currentFontSize = window.getComputedStyle(element, null).getPropertyValue('font-size');
+                        // Calculate the new font size
+                        const newFontSize = parseFloat(currentFontSize) - 1 + 'px';
+                        // Apply the new font size
+                        element.style.fontSize = newFontSize;
+                    });
+                });
+            });
+    </script>
 
     <script>
         const { ipcRenderer } = require('electron');
