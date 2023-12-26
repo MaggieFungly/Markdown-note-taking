@@ -6,23 +6,21 @@
 
 <body>
     <button id="startEdit">Create Note</button>
-    <button id="openFile">Open Note</button>
+    <button id="openFile">Open File</button>
 
     <script>
         const { ipcRenderer } = require('electron');
 
         document.addEventListener('DOMContentLoaded', () => {
             const startEditButton = document.getElementById('startEdit');
-            
+
             startEditButton.addEventListener('click', () => {
                 ipcRenderer.send('open-file-dialog');
             });
-
-            openFileButton.addEventListener('click', () => {
-                ipcRenderer.send('load-data');
-            });
         });
+
     </script>
+
 </body>
 
 </html>

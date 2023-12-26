@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cornell Notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="pagestyle.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="addRemoveBlocks.js"></script>
+</head>
+
+<body>
+
+    <div>
+        <button id="return"><i class="fa fa-chevron-left"></i></button><br>
+        <input type="text" id="title">
+        <div id="init" class="no-drag">
+            <div class="buttons">
+                <button onclick="insertBlock(this)" id="startButton">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div id="blocks">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sortable = new Sortable(document.querySelector('#blocks'), {
+                handle: '.dragButton',
+                animation: 300,
+            });
+        });
+    </script>
+
+    <script src="saveData.js"></script>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        ipcRenderer.on('set-title', (event, fileName) => {
+            document.getElementById('title').value = fileName;
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const titleInput = document.getElementById('title');
+            titleInput.addEventListener('change', function () {
+                ipcRenderer.send('rename-file', this.value);
+            });
+        });
+
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const returnButton = document.getElementById('return');
+            returnButton.addEventListener('click', function () {
+                // Send a message to the main process to return to index.html
+                ipcRenderer.send('load-index');
+            });
+        });
+    </script>
+
+</body>
+
+</html>
