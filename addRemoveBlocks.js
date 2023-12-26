@@ -46,7 +46,9 @@ function editFunction(editDiv, displayDiv) {
             '[': ']',
             '{': '}',
             '"': '"',
-            "'": "'",
+            "<": ">",
+            "*": "*",
+            "$": "$", 
             '=': '=' // Handling for double equals
         };
 
@@ -78,9 +80,10 @@ function editFunction(editDiv, displayDiv) {
                 range.setStart(newText, 1);
                 range.setEnd(newText, 1 + selectedText.length);
             } else {
-                // If there was no selected text, place the cursor after the characters
-                range.setStartAfter(newText);
-                range.collapse(true);
+                // If there is no selected text, place the cursor inside the brackets
+                const cursorPosition = openingChar.length;
+                range.setStart(newText, cursorPosition);
+                range.setEnd(newText, cursorPosition);
             }
 
             selection.removeAllRanges();
@@ -93,12 +96,13 @@ function insertBlock(button) {
     // Create a new container for the block
     var blockContainer = document.createElement('div');
     blockContainer.style.display = 'flex';
+    blockContainer.style.backgroundColor = 'transparent';
     blockContainer.className = 'block';
 
     // cue
     var cueEdit = document.createElement('div');
     cueEdit.className = 'cueEdit';
-    cueEdit.contentEditable = 'true';
+    cueEdit.contentEditable = 'plaintext-only';
     cueEdit.style.display = 'block';
 
     var cueDisplay = document.createElement('div');
@@ -126,7 +130,7 @@ function insertBlock(button) {
     // note
     var noteEdit = document.createElement('div');
     noteEdit.className = 'noteEdit';
-    noteEdit.contentEditable = 'true';
+    noteEdit.contentEditable = 'plaintext-only';
     noteEdit.style.display = 'block';
 
     var noteDisplay = document.createElement('div');
@@ -180,7 +184,21 @@ function insertBlock(button) {
     dragIcon.className = 'fa fa-arrows';
     dragButton.appendChild(dragIcon);
 
+    var highlightButton = document.createElement('button');
+    highlightButton.className = 'highlightButton'
+    highlightIcon = document.createElement('i');
+    highlightIcon.className = 'fa fa-bookmark';
+    highlightButton.appendChild(highlightIcon);
+    highlightButton.addEventListener('click', function () {
+        if (blockContainer.style.backgroundColor === 'transparent') {
+            blockContainer.style.backgroundColor = '#ffe97821';
+        } else {
+            blockContainer.style.backgroundColor = 'transparent';
+        }
+    });
+
     buttonContainer.appendChild(dragButton);
+    buttonContainer.appendChild(highlightButton);
     buttonContainer.appendChild(insertButton);
     buttonContainer.appendChild(removeButton);
 
