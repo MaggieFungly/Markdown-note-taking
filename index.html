@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <button id="startEdit">Create Note</button>
+    <button id="openFile">Open Note</button>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const startEditButton = document.getElementById('startEdit');
+            
+            startEditButton.addEventListener('click', () => {
+                ipcRenderer.send('open-file-dialog');
+            });
+
+            openFileButton.addEventListener('click', () => {
+                ipcRenderer.send('load-data');
+            });
+        });
+    </script>
+</body>
+
+</html>
