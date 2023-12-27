@@ -53,7 +53,24 @@ function createWindow() {
             return;
         }
 
-        const newFilePath = path.join(path.dirname(currentFilePath), `${newTitle}.json`);
+        const directory = path.dirname(currentFilePath);
+        let newFileName = `${newTitle}.json`;
+        let newFilePath = path.join(directory, newFileName);
+        let counter = 1;
+
+        // Function to check if file exists and generate a new file name
+        function generateNewFilePath() {
+            while (fs.existsSync(newFilePath)) {
+                newFileName = `${newTitle} ${counter}.json`;
+                newFilePath = path.join(directory, newFileName);
+                counter++;
+            }
+        }
+
+        // Generate unique file path
+        generateNewFilePath();
+
+        // Rename the file
         fs.rename(currentFilePath, newFilePath, (err) => {
             if (err) {
                 console.error('Error renaming file:', err);
@@ -61,10 +78,41 @@ function createWindow() {
                 event.reply('rename-file-response', 'error');
             } else {
                 currentFilePath = newFilePath; // Update the current file path
-                event.reply('rename-file-response', 'success', newTitle);
+                const newTitleWithoutExtension = path.basename(newFilePath, '.json');
+                event.reply('rename-file-response', 'success', newTitleWithoutExtension);
+                // set the new title to the the page
+                win.webContents.send('set-title', newTitleWithoutExtension);
             }
         });
     });
+
+    // load file
+    ipcMain.on('open-json-file', (event) => {
+        dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'JSON Files', extensions: ['json'] }]
+        }).then(result => {
+            if (!result.canceled && result.filePaths.length > 0) {
+                const filePath = result.filePaths[0];
+                fs.readFile(filePath, 'utf8', (err, data) => {
+                    if (err) {
+                        console.error('Error reading file:', err);
+                    } else {
+                        currentFilePath = filePath; // Update the current file path
+                        win.loadFile('page.html').then(() => {
+                            const fileNameWithoutExtension = path.basename(filePath, '.json');
+                            win.webContents.send('set-title', fileNameWithoutExtension);
+                            win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
+                        });
+                    }
+                });
+            }
+        }).catch(err => {
+            console.error('Error opening file dialog:', err);
+        });
+    });
+
+
 
     ipcMain.on('load-index', (event) => {
         win.loadFile('index.html');

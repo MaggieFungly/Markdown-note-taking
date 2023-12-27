@@ -34,12 +34,13 @@
         <input type="text" id="title">
         <div id="init" class="no-drag">
             <div class="buttons">
-                <button onclick="insertBlock(this)" id="startButton">
+                <button onclick="insertBlock(0)" id="startButton">
                     <i class="fa fa-plus"></i>
                 </button>
             </div>
         </div>
         <div id="blocks">
+            <!-- blocks go here -->
         </div>
     </div>
 
@@ -54,49 +55,14 @@
 
     <script src="saveData.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const fontLargerButton = document.getElementById('fontLarger');
-
-            fontLargerButton.addEventListener('click', () => {
-                // Select all elements with the specified classes
-                const elements = document.querySelectorAll('.cueEdit, .noteEdit, .cueDisplay, .noteDisplay, .cueDisplay pre>code, .noteDisplay pre > code');
-
-                elements.forEach(element => {
-                    // Get the current font size
-                    const currentFontSize = window.getComputedStyle(element, null).getPropertyValue('font-size');
-                    // Calculate the new font size
-                    const newFontSize = parseFloat(currentFontSize) + 1 + 'px';
-                    // Apply the new font size
-                    element.style.fontSize = newFontSize;
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-                const fontLargerButton = document.getElementById('fontSmaller');
-
-                fontLargerButton.addEventListener('click', () => {
-                    // Select all elements with the specified classes
-                    const elements = document.querySelectorAll('.cueEdit, .noteEdit, .cueDisplay, .noteDisplay, .cueDisplay pre>code, .noteDisplay pre > code');
-
-                    elements.forEach(element => {
-                        // Get the current font size
-                        const currentFontSize = window.getComputedStyle(element, null).getPropertyValue('font-size');
-                        // Calculate the new font size
-                        const newFontSize = parseFloat(currentFontSize) - 1 + 'px';
-                        // Apply the new font size
-                        element.style.fontSize = newFontSize;
-                    });
-                });
-            });
-    </script>
+    <script src="pageToolbar.js"></script>
 
     <script>
+        // manage the title
         const { ipcRenderer } = require('electron');
 
         ipcRenderer.on('set-title', (event, fileName) => {
-            document.getElementById('title').value = fileName;
+            document.getElementById('title').value = fileName; // Sets the new file name in the input
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -105,16 +71,38 @@
                 ipcRenderer.send('rename-file', this.value);
             });
         });
-
     </script>
 
+
     <script>
+        // return to the index page
         document.addEventListener('DOMContentLoaded', () => {
             const returnButton = document.getElementById('return');
             returnButton.addEventListener('click', function () {
                 // Send a message to the main process to return to index.html
                 ipcRenderer.send('load-index');
             });
+        });
+    </script>
+
+    <script>
+
+        // load data
+        function importJsonData(jsonData) {
+            const blocksContainer = document.getElementById('blocks');
+            blocksContainer.innerHTML = ''; // Clear existing blocks if necessary
+
+            jsonData.forEach((blockData, index) => {
+                insertBlock(index, blockData.cue, blockData.note, blockData.highlighted);
+            });
+        }
+
+        ipcRenderer.on('json-file-data', (event, response) => {
+            if (response.error) {
+                console.error('Error loading JSON file:', response.message);
+            } else {
+                importJsonData(response.data);
+            }
         });
     </script>
 

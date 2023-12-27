@@ -18,8 +18,20 @@
                 ipcRenderer.send('open-file-dialog');
             });
         });
-
     </script>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const openFileButton = document.getElementById('openFile');
+
+            openFileButton.addEventListener('click', () => {
+                ipcRenderer.send('open-json-file');
+                console.log('button clicked!')
+            });
+        });
+    </script>
+
 
 </body>
 
