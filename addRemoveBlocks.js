@@ -125,6 +125,12 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
         showEdit(cueEdit, cueDisplay);
     });
 
+    // when right-click the cueDisplay, return to the edit mode
+    cueDisplay.addEventListener('contextmenu', function (event){
+        event.preventDefault();
+        cueButton.click();
+    })
+
     var cueContainer = document.createElement('div');
     cueContainer.className = 'cueContainer';
     cueContainer.appendChild(cueButton);
@@ -153,6 +159,11 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     noteButton.addEventListener('click', function () {
         showEdit(noteEdit, noteDisplay);
     });
+
+    noteDisplay.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+        noteButton.click();
+    })
 
     var noteContainer = document.createElement('div');
     noteContainer.className = 'noteContainer';
