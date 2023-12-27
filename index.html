@@ -2,36 +2,72 @@
 <html lang="en">
 
 <head>
+    <style>
+        #buttonContainer {
+            text-align: center;
+            padding-top: 25%;
+        }
+
+        button {
+            background-color: transparent;
+            outline: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #3389C5;
+        }
+
+        button:hover {
+            color: #1a5a89;
+        }
+    </style>
 </head>
 
 <body>
-    <button id="startEdit">Create Note</button>
-    <button id="openFile">Open File</button>
+    <div id="buttonContainer">
+        <button id="startEdit">Create Note (Ctrl + N)</button>
+        <br>
+        <br>
+        <button id="openFile">Open File (Ctrl + O)</button>
+    </div>
 
     <script>
+        // start edit
         const { ipcRenderer } = require('electron');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const startEditButton = document.getElementById('startEdit');
+        const startEditButton = document.getElementById('startEdit');
 
+        document.addEventListener('DOMContentLoaded', () => {
             startEditButton.addEventListener('click', () => {
                 ipcRenderer.send('open-file-dialog');
             });
         });
-    </script>
 
-    <script>
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const openFileButton = document.getElementById('openFile');
-
-            openFileButton.addEventListener('click', () => {
-                ipcRenderer.send('open-json-file');
-                console.log('button clicked!')
-            });
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault(); // Prevent the default action for Ctrl + N
+                startEditButton.click();
+            }
         });
     </script>
 
+    <script>
+        // open file
+        const openFileButton = document.getElementById('openFile');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            openFileButton.addEventListener('click', () => {
+                ipcRenderer.send('open-json-file');
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey && event.key === 'o') {
+                event.preventDefault(); // Prevent the default action for Ctrl + N
+                openFileButton.click();
+            }
+        });
+    </script>
 
 </body>
 
