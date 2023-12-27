@@ -48,7 +48,8 @@ function editFunction(editDiv, displayDiv) {
             '"': '"',
             "<": ">",
             "*": "*",
-            "$": "$", 
+            "$": "$",
+            "`": "`",
             '=': '=' // Handling for double equals
         };
 
@@ -92,17 +93,20 @@ function editFunction(editDiv, displayDiv) {
     });
 };
 
-function insertBlock(button) {
+function insertBlock(index, cue = '', note = '', highlighted = false) {
+    var blocksContainer = document.getElementById('blocks');
+
     // Create a new container for the block
     var blockContainer = document.createElement('div');
     blockContainer.style.display = 'flex';
-    blockContainer.style.backgroundColor = 'transparent';
+    blockContainer.style.backgroundColor = highlighted ? 'rgba(245, 236, 171, 0.3)' : 'transparent';
     blockContainer.className = 'block';
 
-    // cue
+    // Create and setup cue editable area
     var cueEdit = document.createElement('div');
     cueEdit.className = 'cueEdit';
     cueEdit.contentEditable = 'plaintext-only';
+    cueEdit.innerText = cue;
     cueEdit.style.display = 'block';
 
     var cueDisplay = document.createElement('div');
@@ -127,10 +131,11 @@ function insertBlock(button) {
     cueContainer.appendChild(cueEdit);
     cueContainer.appendChild(cueDisplay);
 
-    // note
+    // Create and setup note editable area
     var noteEdit = document.createElement('div');
     noteEdit.className = 'noteEdit';
     noteEdit.contentEditable = 'plaintext-only';
+    noteEdit.innerText = note;
     noteEdit.style.display = 'block';
 
     var noteDisplay = document.createElement('div');
@@ -141,14 +146,13 @@ function insertBlock(button) {
 
     var noteButton = document.createElement('button');
     noteButton.className = 'noteButton';
-
     var noteDisplayIcon = document.createElement('i');
     noteDisplayIcon.className = 'fa fa-pencil-square-o';
-    noteButton.appendChild(noteDisplayIcon)
+    noteButton.appendChild(noteDisplayIcon);
 
     noteButton.addEventListener('click', function () {
         showEdit(noteEdit, noteDisplay);
-    })
+    });
 
     var noteContainer = document.createElement('div');
     noteContainer.className = 'noteContainer';
@@ -156,42 +160,51 @@ function insertBlock(button) {
     noteContainer.appendChild(noteEdit);
     noteContainer.appendChild(noteDisplay);
 
+    // Create and setup buttons container
     var buttonContainer = document.createElement('div');
     buttonContainer.className = 'buttonContainer';
     buttonContainer.style.display = 'block';
 
+    // Insert button
     var insertButton = document.createElement('button');
     insertButton.className = 'insertButton';
-    insertIcon = document.createElement('i');
+    var insertIcon = document.createElement('i');
     insertIcon.className = 'fa fa-plus';
     insertButton.appendChild(insertIcon);
     insertButton.onclick = function () {
-        insertBlock(this);
+        var parentBlock = this.closest('.block');
+        var newIndex = Array.from(blocksContainer.children).indexOf(parentBlock) + 1;
+        insertBlock(newIndex);
     };
 
+    // Remove button
     var removeButton = document.createElement('button');
     removeButton.className = 'removeButton';
-    removeIcon = document.createElement('i');
+    var removeIcon = document.createElement('i');
     removeIcon.className = 'fa fa-trash';
     removeButton.appendChild(removeIcon);
-    removeButton.onclick = function () {
-        removeBlock(this);
-    };
+    removeButton.addEventListener('click', function () {
+        var parentBlock = this.closest('.block');
+        var index = Array.from(blocksContainer.children).indexOf(parentBlock);
+        removeBlock(index);
+    });
 
+    // Drag button
     var dragButton = document.createElement('button');
     dragButton.className = 'dragButton'
-    dragIcon = document.createElement('i');
+    var dragIcon = document.createElement('i');
     dragIcon.className = 'fa fa-arrows';
     dragButton.appendChild(dragIcon);
 
+    // Highlight button
     var highlightButton = document.createElement('button');
     highlightButton.className = 'highlightButton'
-    highlightIcon = document.createElement('i');
+    var highlightIcon = document.createElement('i');
     highlightIcon.className = 'fa fa-bookmark';
     highlightButton.appendChild(highlightIcon);
     highlightButton.addEventListener('click', function () {
         if (blockContainer.style.backgroundColor === 'transparent') {
-            blockContainer.style.backgroundColor = '#ffe97821';
+            blockContainer.style.backgroundColor = 'rgba(245, 236, 171, 0.3)';
         } else {
             blockContainer.style.backgroundColor = 'transparent';
         }
@@ -206,18 +219,19 @@ function insertBlock(button) {
     blockContainer.appendChild(noteContainer);
     blockContainer.appendChild(buttonContainer);
 
-    var isInBlocksContainer = button.closest('#blocks') !== null;
-
-    if (isInBlocksContainer) {
-        button.parentNode.parentNode.parentNode.insertBefore(blockContainer, button.parentNode.parentNode.nextSibling);
+    // Determine where to insert the new block
+    if (typeof index === 'number' && index >= 0 && index < blocksContainer.children.length) {
+        blocksContainer.insertBefore(blockContainer, blocksContainer.children[index]);
     } else {
-        // Insert as the first one in the #blocks container
-        insertIndex = 0;
-        document.getElementById('blocks').insertBefore(blockContainer, document.getElementById('blocks').children[insertIndex]);
+        blocksContainer.appendChild(blockContainer);
     }
+}
 
-};
 
-function removeBlock(button) {
-    button.parentNode.parentNode.remove();
-};
+function removeBlock(index) {
+    const blocksContainer = document.getElementById('blocks');
+
+    if (index >= 0 && index < blocksContainer.children.length) {
+        blocksContainer.removeChild(blocksContainer.children[index]);
+    }
+}
