@@ -105,9 +105,10 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     // Create and setup cue editable area
     var cueEdit = document.createElement('div');
     cueEdit.className = 'cueEdit';
-    cueEdit.contentEditable = 'plaintext-only';
-    cueEdit.innerText = cue;
+    cueEdit.contentEditable ='plaintext-only';
+    cueEdit.innerHTML = cue;
     cueEdit.style.display = 'block';
+    cueEdit.style.whiteSpace = 'pre-wrap';
 
     var cueDisplay = document.createElement('div');
     cueDisplay.className = 'cueDisplay';
@@ -141,8 +142,9 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     var noteEdit = document.createElement('div');
     noteEdit.className = 'noteEdit';
     noteEdit.contentEditable = 'plaintext-only';
-    noteEdit.innerText = note;
+    noteEdit.innerHTML = note;
     noteEdit.style.display = 'block';
+    noteEdit.style.whiteSpace = 'pre-wrap';
 
     var noteDisplay = document.createElement('div');
     noteDisplay.className = 'noteDisplay';
@@ -180,7 +182,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     var insertButton = document.createElement('button');
     insertButton.className = 'insertButton';
     var insertIcon = document.createElement('i');
-    insertIcon.className = 'fa fa-plus';
+    insertIcon.className = 'fas fa-plus';
     insertButton.appendChild(insertIcon);
     insertButton.onclick = function () {
         var parentBlock = this.closest('.block');
@@ -204,14 +206,14 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     var dragButton = document.createElement('button');
     dragButton.className = 'dragButton'
     var dragIcon = document.createElement('i');
-    dragIcon.className = 'fa fa-arrows';
+    dragIcon.className = 'fas fa-arrows-alt'; 
     dragButton.appendChild(dragIcon);
 
     // Highlight button
     var highlightButton = document.createElement('button');
     highlightButton.className = 'highlightButton'
     var highlightIcon = document.createElement('i');
-    highlightIcon.className = 'fa fa-bookmark';
+    highlightIcon.className = 'fas fa-highlighter';
     highlightButton.appendChild(highlightIcon);
     highlightButton.addEventListener('click', function () {
         if (blockContainer.style.backgroundColor === 'transparent') {

@@ -4,8 +4,8 @@ let blocksData = [];
 function updateBlocksData() {
     blocksData = [];
     document.querySelectorAll('#blocks .block').forEach(block => {
-        let noteText = block.querySelector('.noteEdit').innerText;
-        let cueText = block.querySelector('.cueEdit').innerText;
+        let noteText = block.querySelector('.noteEdit').innerHTML;
+        let cueText = block.querySelector('.cueEdit').innerHTML;
         let isHighlighted = block.style.backgroundColor !== 'transparent';
 
         blocksData.push({ note: noteText, cue: cueText, highlighted: isHighlighted });

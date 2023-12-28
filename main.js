@@ -30,6 +30,7 @@ function createWindow() {
         });
     });
 
+    // save-blocks-data
     ipcMain.on('save-blocks-data', (event, blocksData) => {
         if (currentFilePath === '') {
             console.error('No file path specified for saving data');
