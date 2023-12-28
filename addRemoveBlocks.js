@@ -4,18 +4,25 @@ function showEdit(editDiv, displayDiv) {
 };
 
 function showDisplay(editDiv, displayDiv) {
-
-    MathJax.Hub.Config({
-        tex2jax: { inlineMath: [["$", "$"], ["\\(", "\\)"]] }
-    });
-    text = editDiv.innerText;
+    // Extract text and replace custom markup (like ==highlight==)
+    let text = editDiv.innerText;
     text = text.replace(/==([^=]*)==/g, "<mark>$1</mark>");
+
+    // Use a Markdown parser (like marked.js) if necessary
     displayDiv.innerHTML = marked.parse(text);
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub, displayDiv]);
+
+    // Use MathJax.typesetPromise to render math in the updated content
+    MathJax.typesetPromise([displayDiv]).then(() => {
+        console.log("MathJax typesetting complete");
+    }).catch((err) => console.error("MathJax typesetting error:", err));
+
+    // Highlight code if using a syntax highlighter like highlight.js
     hljs.highlightAll();
+
+    // Switch visibility
     editDiv.style.display = 'none';
     displayDiv.style.display = 'block';
-};
+}
 
 function editFunction(editDiv, displayDiv) {
     // on blur
@@ -93,7 +100,7 @@ function editFunction(editDiv, displayDiv) {
     });
 };
 
-function insertBlock(index, cue = '', note = '', highlighted = false) {
+function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var blocksContainer = document.getElementById('blocks');
 
     // Create a new container for the block
@@ -101,6 +108,13 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     blockContainer.style.display = 'flex';
     blockContainer.style.backgroundColor = highlighted ? 'rgba(245, 236, 171, 0.3)' : 'transparent';
     blockContainer.className = 'block';
+
+    // generate a uuid
+    if (!id || id === ''){
+        blockContainer.dataset.id = uuid.v4();
+    } else {
+        blockContainer.dataset.id = id;
+    }
 
     // Create and setup cue editable area
     var cueEdit = document.createElement('div');
@@ -181,6 +195,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     // Insert button
     var insertButton = document.createElement('button');
     insertButton.className = 'insertButton';
+    insertButton.title = 'Insert block below';
     var insertIcon = document.createElement('i');
     insertIcon.className = 'fas fa-plus';
     insertButton.appendChild(insertIcon);
@@ -193,6 +208,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
     // Remove button
     var removeButton = document.createElement('button');
     removeButton.className = 'removeButton';
+    removeButton.title = 'Remove block';
     var removeIcon = document.createElement('i');
     removeIcon.className = 'fa fa-trash';
     removeButton.appendChild(removeIcon);
@@ -204,14 +220,16 @@ function insertBlock(index, cue = '', note = '', highlighted = false) {
 
     // Drag button
     var dragButton = document.createElement('button');
-    dragButton.className = 'dragButton'
+    dragButton.className = 'dragButton';
+    dragButton.title = 'Move block';
     var dragIcon = document.createElement('i');
     dragIcon.className = 'fas fa-arrows-alt'; 
     dragButton.appendChild(dragIcon);
 
     // Highlight button
     var highlightButton = document.createElement('button');
-    highlightButton.className = 'highlightButton'
+    highlightButton.className = 'highlightButton';
+    highlightButton.title = 'Highlight block';
     var highlightIcon = document.createElement('i');
     highlightIcon.className = 'fas fa-highlighter';
     highlightButton.appendChild(highlightIcon);

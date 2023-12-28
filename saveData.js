@@ -7,8 +7,9 @@ function updateBlocksData() {
         let noteText = block.querySelector('.noteEdit').innerHTML;
         let cueText = block.querySelector('.cueEdit').innerHTML;
         let isHighlighted = block.style.backgroundColor !== 'transparent';
+        let id = block.dataset.id;
 
-        blocksData.push({ note: noteText, cue: cueText, highlighted: isHighlighted });
+        blocksData.push({ note: noteText, cue: cueText, highlighted: isHighlighted, id: id });
     });
 }
 
