@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -112,8 +112,6 @@ function createWindow() {
             console.error('Error opening file dialog:', err);
         });
     });
-
-
 
     ipcMain.on('load-index', (event) => {
         win.loadFile('index.html');

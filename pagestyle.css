@@ -8,6 +8,7 @@ button {
     color: rgba(102, 99, 94, 0.7);
     justify-content: center;
     align-items: center;
+    text-align: center;
     display: block;
     width: 20px;
 }
@@ -64,6 +65,7 @@ button:hover {
 
 .buttonContainer {
     width: 3%;
+    text-align: center;
 }
 
 .cueContainer,
@@ -154,9 +156,10 @@ button:hover {
 .cueDisplay code,
 .noteDisplay code {
     font-family: 'Consolas';
-    padding: 3px;
+    padding: 1px;
     background-color: #bacccf85;
     color: #6F8DB3;
+    font-size: 12px;
 }
 
 .cueDisplay pre>code,
@@ -169,12 +172,47 @@ button:hover {
     border: none;
     border-radius: 3px;
     font-size: 14px;
-    width: 70%;
+    width: 85%;
+    /* Adjust the width as needed */
+    margin: 0 auto;
+    /* Centers the block horizontally */
+    overflow: auto;
+    /* In case the content overflows */
 }
 
 .cueDisplay a,
 .noteDisplay a {
     color: #2796cb;
+}
+
+.cueDisplay img,
+.noteDisplay img {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+table {
+    width: 100%;
+    /* Adjust the width as needed */
+    border-collapse: collapse;
+    /* Optional: for collapsing cell borders */
+}
+
+table,
+th,
+td {
+    border: 1px solid black;
+    /* Optional: for adding borders to the table */
+}
+
+th,
+td {
+    text-align: center;
+    /* Centers text horizontally */
+    vertical-align: middle;
+    /* Centers content vertically */
+    padding: 8px;
+    /* Optional: for padding inside cells */
 }
 
 .cueDisplay mark,
@@ -184,5 +222,5 @@ button:hover {
 
 .fa {
     font-size: 12px;
-    vertical-align: middle;
+    margin: 0 auto;
 }

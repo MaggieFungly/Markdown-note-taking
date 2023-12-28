@@ -10,6 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <!-- <script async src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_CHTML"></script> -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -20,10 +21,16 @@
 
     <div>
         <div id="toolbar">
-            <button id="return"><i class="fas fa-chevron-left"></i></button>
+            <button id="return">
+                <i class="fas fa-chevron-left" title="Return to main page"></i>
+            </button>
             <div id="rightContainer">
-                <button id="toggleEdit" onclick="toggleEdit()" title="Edit all blocks"><i class="fas fa-pencil-alt"></i></button>
-                <button id="toggleDisplay" onclick="toggleDisplay()" title="Read all blocks"><i class="far fa-file"></i></button>
+                <button id="printPage" title="Print this page"><i class="fas fa-print"></i></button>
+                <button id="openInBrowser" title="Open in External browser"><i class="fas fa-globe"></i></button>
+                <button id="toggleEdit" onclick="toggleEdit()" title="Edit all blocks"><i
+                        class="fas fa-pencil-alt"></i></button>
+                <button id="toggleDisplay" onclick="toggleDisplay()" title="Read all blocks"><i
+                        class="far fa-file"></i></button>
                 <button id="fontLarger" class="fontSizeButton" title="Larger Font">
                     <i class="fa fa-font" style="font-size: 16px;"></i>
                 </button>
@@ -36,7 +43,7 @@
         <input type="text" id="title">
         <div id="init" class="no-drag">
             <div class="buttons">
-                <button onclick="insertBlock(0)" id="startButton">
+                <button onclick="insertBlock(0)" id="startButton" title="Insert block on top">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
@@ -59,8 +66,8 @@
 
     <script src="pageToolbar.js"></script>
 
+    <!-- title manage -->
     <script>
-        // manage the title
         const { ipcRenderer } = require('electron');
 
         ipcRenderer.on('set-title', (event, fileName) => {
@@ -86,8 +93,8 @@
             });
         });
     </script>
-
-    <!-- toggle display all blocks-->
+    
+    <!-- toggle display -->
     <script>
         function toggleDisplay() {
             // Select all blocks
@@ -167,7 +174,6 @@
             }
         });
 
-        toggleDisplay();
     </script>
 
     <!-- open link in default system browser -->
