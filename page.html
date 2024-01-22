@@ -7,178 +7,79 @@
     <title>Cornell Notes</title>
     <link rel="stylesheet" href="resources/fontawesome/fontawesome-free-6.5.1-web/css/all.css">
     <link rel="stylesheet" href="pagestyle.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css">
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>
         window.MathJax = {
             tex: {
-                inlineMath: [['$', '$']], // Define inline math delimiters
-                displayMath: [['$$', '$$']] // Define display math delimiters
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
             },
             startup: {
                 ready: () => {
                     MathJax.startup.defaultReady();
-                    MathJax.startup.promise.then(() => {
-                        // Additional startup actions if necessary
-                    });
+                    MathJax.startup.promise.then(() => { });
                 }
             }
         };
     </script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="addRemoveBlocks.js"></script>
 </head>
 
 <body>
-
-    <div>
-        <div id="toolbar">
-            <button id="return">
-                <i class="fas fa-chevron-left" title="Return to main page"></i>
-            </button>
-            <div id="rightContainer">
-                <button id="printPage" title="Print this page"><i class="fas fa-print"></i></button>
-                <button id="openInBrowser" title="Open in External browser"><i class="fas fa-globe"></i></button>
-                <button id="toggleEdit" onclick="toggleEdit()" title="Edit all blocks"><i
-                        class="fas fa-pencil-alt"></i></button>
-                <button id="toggleDisplay" onclick="toggleDisplay()" title="Read all blocks"><i
-                        class="far fa-file"></i></button>
-                <button id="fontLarger" class="fontSizeButton" title="Larger Font">
-                    <i class="fa fa-font" style="font-size: 16px;"></i>
-                </button>
-                <button id="fontSmaller" class="fontSizeButton" title="Smaller Font">
-                    <i class="fa fa-font" style="font-size: 12px;"></i>
-                </button>
-            </div>
-        </div>
-        <br>
-        <input type="text" id="title">
-        <div id="init" class="no-drag">
-            <div class="buttons">
-                <button onclick="insertBlock(0)" id="startButton" title="Insert block on top">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        </div>
-        <div id="blocks">
-            <!-- blocks go here -->
+    <div id="toolbar">
+        <button id="return">
+            <i class="fas fa-chevron-left" title="Return to main page"></i>
+        </button>
+        <div id="rightContainer">
+            <button id="printPage" title="Print this page"><i class="fas fa-print"></i></button>
+            <button id="openInBrowser" title="Open in External browser"><i class="fas fa-globe"></i></button>
+            <button id="toggleEdit" onclick="toggleEdit()" title="Edit all blocks"><i
+                    class="fas fa-pencil-alt"></i></button>
+            <button id="toggleDisplay" onclick="toggleDisplay()" title="Read all blocks"><i
+                    class="far fa-file"></i></button>
+            <button id="fontLarger" class="fontSizeButton" title="Larger Font"><i class="fa fa-font"
+                    style="font-size: 16px;"></i></button>
+            <button id="fontSmaller" class="fontSizeButton" title="Smaller Font"><i class="fa fa-font"
+                    style="font-size: 12px;"></i></button>
         </div>
     </div>
+    <br>
+    <input type="text" id="title">
+    <div id="init" class="no-drag">
+        <div class="buttons">
+            <button onclick="insertBlock(0)" id="startButton" title="Insert block on top"><i
+                    class="fas fa-plus"></i></button>
+        </div>
+    </div>
+    <div id="blocks">
+        <!-- blocks go here -->
+    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var sortable = new Sortable(document.querySelector('#blocks'), {
-                handle: '.dragButton',
-                animation: 300,
-            });
-        });
-    </script>
-
+    <!-- data management -->
+    
     <script src="saveData.js"></script>
 
-    <script src="pageToolbar.js"></script>
+    <!-- page management -->
+    <script src="addRemoveBlocks.js"></script>
+    <script src="node_modules\.sortablejs-vAsaEdFD\Sortable.min.js"></script>
+    <script src="pageFunctions.js"></script>
 
-    <!-- title manage -->
+    <!-- electron transportation -->
     <script>
         const { ipcRenderer } = require('electron');
 
         ipcRenderer.on('set-title', (event, fileName) => {
-            document.getElementById('title').value = fileName; // Sets the new file name in the input
+            document.getElementById('title').value = fileName;
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const titleInput = document.getElementById('title');
-            titleInput.addEventListener('change', function () {
-                ipcRenderer.send('rename-file', this.value);
-            });
-        });
-    </script>
-
-
-    <script>
-        // return to the index page
-        document.addEventListener('DOMContentLoaded', () => {
-            const returnButton = document.getElementById('return');
-            returnButton.addEventListener('click', function () {
-                // Send a message to the main process to return to index.html
-                ipcRenderer.send('load-index');
-            });
-        });
-    </script>
-
-    <!-- toggle display -->
-    <script>
-        function toggleDisplay() {
-            // Select all blocks
-            const blocks = document.querySelectorAll('.block');
-
-            // Iterate over each block
-            blocks.forEach(block => {
-                // Find noteEdit and noteDisplay within this block
-                const noteEdit = block.querySelector('.noteEdit');
-                const noteDisplay = block.querySelector('.noteDisplay');
-
-                const cueEdit = block.querySelector('.cueEdit');
-                const cueDisplay = block.querySelector('.cueDisplay');
-
-                // Check if noteEdit is currently visible
-                if (noteEdit && noteDisplay) {
-                    const style = window.getComputedStyle(noteEdit);
-                    if (style.display !== 'none') {
-                        showDisplay(noteEdit, noteDisplay);
-                    }
-                }
-                if (cueEdit && cueDisplay) {
-                    const style = window.getComputedStyle(cueEdit);
-                    if (style.display !== 'none') {
-                        showDisplay(cueEdit, cueDisplay);
-                    }
-                }
-            });
-        }
-
-        function toggleEdit() {
-            // Select all blocks
-            const blocks = document.querySelectorAll('.block');
-
-            // Iterate over each block
-            blocks.forEach(block => {
-                // Find noteEdit and noteDisplay within this block
-                const noteEdit = block.querySelector('.noteEdit');
-                const noteDisplay = block.querySelector('.noteDisplay');
-
-                const cueEdit = block.querySelector('.cueEdit');
-                const cueDisplay = block.querySelector('.cueDisplay');
-
-                // Check if noteEdit is currently visible
-                if (noteEdit && noteDisplay) {
-                    const style = window.getComputedStyle(noteEdit);
-                    if (style.display !== 'block') {
-                        showEdit(noteEdit, noteDisplay);
-                    }
-                }
-                if (cueEdit && cueDisplay) {
-                    const style = window.getComputedStyle(cueEdit);
-                    if (style.display !== 'block') {
-                        showEdit(cueEdit, cueDisplay);
-                    }
-                }
-            });
-        }
-    </script>
-
-    <!-- import file from the folder -->
-    <script>
         function importJsonData(jsonData) {
             const blocksContainer = document.getElementById('blocks');
-            blocksContainer.innerHTML = ''; // Clear existing blocks if necessary
-
+            blocksContainer.innerHTML = '';
             jsonData.forEach((blockData, index) => {
                 insertBlock(index, blockData.cue, blockData.note, blockData.highlighted, blockData.id);
             });
@@ -192,19 +93,17 @@
             }
         });
 
-    </script>
-
-    <!-- open link in default system browser -->
-    <script>
-        const { shell } = require('electron');
         document.addEventListener('click', function (event) {
-            if (event.target.tagName === 'A' && event.target.href.startsWith('http')) {
+            if (event.target.classList.contains('blockLink')) {
                 event.preventDefault();
-                shell.openExternal(event.target.href);
+                ipcRenderer.send('open-new-window');
+            }
+            else if (event.target.tagName === 'A' && event.target.href.startsWith('http') && !event.target.classList.contains('blockLink')) {
+                event.preventDefault();
+                ipcRenderer.send('open-link-externally', event.target.href);
             }
         });
     </script>
-
 </body>
 
 </html>

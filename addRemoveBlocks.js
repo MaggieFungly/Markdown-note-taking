@@ -1,3 +1,11 @@
+function linkedBlock(text){
+    const regex = /@\w+:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g;
+    const matches = text.match(regex);
+    const highlightedText = text.replace(regex, '<a href="#" class="blockLink">$&</a>');
+
+    return highlightedText;
+}
+
 function showEdit(editDiv, displayDiv) {
     editDiv.style.display = 'block';
     displayDiv.style.display = 'none';
@@ -7,7 +15,7 @@ function showDisplay(editDiv, displayDiv) {
     // Extract text and replace custom markup (like ==highlight==)
     let text = editDiv.innerText;
     text = text.replace(/==([^=]*)==/g, "<mark>$1</mark>");
-
+    text = linkedBlock(text);
     // Use a Markdown parser (like marked.js) if necessary
     displayDiv.innerHTML = marked.parse(text);
 
@@ -110,7 +118,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     blockContainer.className = 'block';
 
     // generate a uuid
-    if (!id || id === ''){
+    if (!id || id === '') {
         blockContainer.dataset.id = uuid.v4();
     } else {
         blockContainer.dataset.id = id;
@@ -119,7 +127,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     // Create and setup cue editable area
     var cueEdit = document.createElement('div');
     cueEdit.className = 'cueEdit';
-    cueEdit.contentEditable ='plaintext-only';
+    cueEdit.contentEditable = 'plaintext-only';
     cueEdit.innerHTML = cue;
     cueEdit.style.display = 'block';
     cueEdit.style.whiteSpace = 'pre-wrap';
@@ -133,7 +141,8 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var cueButton = document.createElement('button');
     cueButton.className = 'cueButton';
     var cueDisplayIcon = document.createElement('i');
-    cueDisplayIcon.className = 'fa fa-pencil-square-o';
+    cueDisplayIcon.className = 'fas fa-pencil';
+    cueDisplayIcon.style.fontSize = '12px';
     cueButton.appendChild(cueDisplayIcon);
 
     cueButton.addEventListener('click', function () {
@@ -141,7 +150,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     });
 
     // when right-click the cueDisplay, return to the edit mode
-    cueDisplay.addEventListener('contextmenu', function (event){
+    cueDisplay.addEventListener('contextmenu', function (event) {
         event.preventDefault();
         cueButton.click();
     })
@@ -169,7 +178,8 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var noteButton = document.createElement('button');
     noteButton.className = 'noteButton';
     var noteDisplayIcon = document.createElement('i');
-    noteDisplayIcon.className = 'fa fa-pencil-square-o';
+    noteDisplayIcon.className = 'fas fa-pencil';
+    noteDisplayIcon.style.fontSize = '12px';
     noteButton.appendChild(noteDisplayIcon);
 
     noteButton.addEventListener('click', function () {
@@ -223,7 +233,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     dragButton.className = 'dragButton';
     dragButton.title = 'Move block';
     var dragIcon = document.createElement('i');
-    dragIcon.className = 'fas fa-arrows-alt'; 
+    dragIcon.className = 'fas fa-arrows-alt';
     dragButton.appendChild(dragIcon);
 
     // Highlight button

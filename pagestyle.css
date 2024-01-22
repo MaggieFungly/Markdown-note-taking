@@ -88,13 +88,14 @@ button:hover {
     border: transparent;
     border-radius: 3px;
     display: block;
-    color: rgba(102, 99, 94, 0.7);
+    color: transparent;
 }
 
 .cueButton:hover,
 .noteButton:hover {
-    background-color: #c4c4c43c;
-    transition: 0.3s;
+    background-color: transparent;
+    transition: 0.1s;
+    color: rgba(102, 99, 94, 0.7);
 }
 
 .cueEdit,
@@ -150,7 +151,7 @@ button:hover {
     border-left: 1.5px solid #53a8b6;
     margin: 1px;
     padding: 2px;
-    background-color: #f6f6f6;
+    background-color: #f6f6f642;
 }
 
 .cueDisplay code,
