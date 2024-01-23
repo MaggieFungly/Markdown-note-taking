@@ -1,112 +1,53 @@
-function linkedBlock(text){
-    const regex = /@\w+:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g;
-    const matches = text.match(regex);
-    const highlightedText = text.replace(regex, '<a href="#" class="blockLink">$&</a>');
-
-    return highlightedText;
-}
-
-function showEdit(editDiv, displayDiv) {
-    editDiv.style.display = 'block';
-    displayDiv.style.display = 'none';
-};
-
-function showDisplay(editDiv, displayDiv) {
-    // Extract text and replace custom markup (like ==highlight==)
-    let text = editDiv.innerText;
-    text = text.replace(/==([^=]*)==/g, "<mark>$1</mark>");
-    text = linkedBlock(text);
-    // Use a Markdown parser (like marked.js) if necessary
-    displayDiv.innerHTML = marked.parse(text);
-
-    // Use MathJax.typesetPromise to render math in the updated content
+function showDisplay(textValue, displayDiv, codeMirrorEditor){
+    // render Markdown
+    displayDiv.innerHTML = marked.parse(textValue);
+    // handle math equations
     MathJax.typesetPromise([displayDiv]).then(() => {
-        console.log("MathJax typesetting complete");
-    }).catch((err) => console.error("MathJax typesetting error:", err));
-
-    // Highlight code if using a syntax highlighter like highlight.js
-    hljs.highlightAll();
-
-    // Switch visibility
-    editDiv.style.display = 'none';
-    displayDiv.style.display = 'block';
+    });
+    displayDiv.style.display = "block"; // Show the display div
+    codeMirrorEditor.getWrapperElement().style.display = "none"; // Hide the editor
 }
 
-function editFunction(editDiv, displayDiv) {
-    // on blur
-    editDiv.addEventListener('blur', function () {
-        showDisplay(editDiv, displayDiv);
+function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirrorClassName, displayDivClassName, text) {
+    var editorDiv = document.createElement('div');
+    editorDiv.className = editorClassName;
+    blockContainer.appendChild(editorDiv);
+
+    var editTextArea = document.createElement('textarea');
+    editTextArea.className = textAreaClassName;
+    editTextArea.style.display = 'block';
+    editTextArea.style.whiteSpace = 'pre-wrap';
+    editTextArea.textContent = text;
+    editorDiv.appendChild(editTextArea);
+
+    var codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
+        lineNumbers: false,
+        mode: "markdown",
+        theme: "monokai",
+        autoCloseBrackets: true,
+        lineWrapping: true,
+        indentWithTabs: true,
+        showCursorWhenSelecting: true,
     });
 
-    // paste
-    editDiv.addEventListener('paste', function (e) {
-        e.preventDefault();
-        var text = (e.originalEvent || e).clipboardData.getData('text/plain');
-        document.execCommand('inserttext', false, text);
+    var displayDiv = document.createElement('div');
+    editorDiv.appendChild(displayDiv);
+    displayDiv.className = displayDivClassName;
+    displayDiv.style.display = 'none';
+
+    codeMirrorEditor.on("blur", function () {
+        textValue = codeMirrorEditor.getValue()
+        showDisplay(textValue, displayDiv, codeMirrorEditor)
     });
 
-    // prevent tab
-    editDiv.addEventListener('keydown', function (e) {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            // Insert a tab character
-            document.execCommand('inserttext', false, '\t');
-        }
+    displayDiv.addEventListener("contextmenu", function (event) {
+        // Prevent the default context menu
+        event.preventDefault(); 
+        // Show the editor
+        codeMirrorEditor.getWrapperElement().style.display = "block"; 
+        displayDiv.style.display = "none"; // Hide the display div
     });
-
-    // auto closing brackets
-    editDiv.addEventListener('keydown', function (event) {
-        const brackets = {
-            '(': ')',
-            '[': ']',
-            '{': '}',
-            '"': '"',
-            "<": ">",
-            "*": "*",
-            "$": "$",
-            "`": "`",
-            '=': '=' // Handling for double equals
-        };
-
-        let key = event.key;
-
-        if (brackets.hasOwnProperty(key)) {
-            const selection = window.getSelection();
-            const range = selection.getRangeAt(0);
-            const selectedText = range.toString();
-
-            if (key === '=' && selectedText === '') {
-                // If '=' is pressed but there's no selection, do nothing special
-                return;
-            }
-
-            event.preventDefault(); // Prevent the default action
-
-            // Create the text to insert
-            const openingChar = key;
-            const closingChar = brackets[key];
-            const newText = document.createTextNode(openingChar + selectedText + closingChar);
-
-            // Replace the selection with the new text
-            range.deleteContents();
-            range.insertNode(newText);
-
-            // Set the selection range
-            if (selectedText) {
-                range.setStart(newText, 1);
-                range.setEnd(newText, 1 + selectedText.length);
-            } else {
-                // If there is no selected text, place the cursor inside the brackets
-                const cursorPosition = openingChar.length;
-                range.setStart(newText, cursorPosition);
-                range.setEnd(newText, cursorPosition);
-            }
-
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
-    });
-};
+}
 
 function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var blocksContainer = document.getElementById('blocks');
@@ -124,78 +65,9 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
         blockContainer.dataset.id = id;
     }
 
-    // Create and setup cue editable area
-    var cueEdit = document.createElement('div');
-    cueEdit.className = 'cueEdit';
-    cueEdit.contentEditable = 'plaintext-only';
-    cueEdit.innerHTML = cue;
-    cueEdit.style.display = 'block';
-    cueEdit.style.whiteSpace = 'pre-wrap';
+    addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", cue)
+    addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", note)
 
-    var cueDisplay = document.createElement('div');
-    cueDisplay.className = 'cueDisplay';
-    cueDisplay.style.display = 'none';
-
-    editFunction(cueEdit, cueDisplay);
-
-    var cueButton = document.createElement('button');
-    cueButton.className = 'cueButton';
-    var cueDisplayIcon = document.createElement('i');
-    cueDisplayIcon.className = 'fas fa-pencil';
-    cueDisplayIcon.style.fontSize = '12px';
-    cueButton.appendChild(cueDisplayIcon);
-
-    cueButton.addEventListener('click', function () {
-        showEdit(cueEdit, cueDisplay);
-    });
-
-    // when right-click the cueDisplay, return to the edit mode
-    cueDisplay.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-        cueButton.click();
-    })
-
-    var cueContainer = document.createElement('div');
-    cueContainer.className = 'cueContainer';
-    cueContainer.appendChild(cueButton);
-    cueContainer.appendChild(cueEdit);
-    cueContainer.appendChild(cueDisplay);
-
-    // Create and setup note editable area
-    var noteEdit = document.createElement('div');
-    noteEdit.className = 'noteEdit';
-    noteEdit.contentEditable = 'plaintext-only';
-    noteEdit.innerHTML = note;
-    noteEdit.style.display = 'block';
-    noteEdit.style.whiteSpace = 'pre-wrap';
-
-    var noteDisplay = document.createElement('div');
-    noteDisplay.className = 'noteDisplay';
-    noteDisplay.style.display = 'none';
-
-    editFunction(noteEdit, noteDisplay);
-
-    var noteButton = document.createElement('button');
-    noteButton.className = 'noteButton';
-    var noteDisplayIcon = document.createElement('i');
-    noteDisplayIcon.className = 'fas fa-pencil';
-    noteDisplayIcon.style.fontSize = '12px';
-    noteButton.appendChild(noteDisplayIcon);
-
-    noteButton.addEventListener('click', function () {
-        showEdit(noteEdit, noteDisplay);
-    });
-
-    noteDisplay.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-        noteButton.click();
-    })
-
-    var noteContainer = document.createElement('div');
-    noteContainer.className = 'noteContainer';
-    noteContainer.appendChild(noteButton);
-    noteContainer.appendChild(noteEdit);
-    noteContainer.appendChild(noteDisplay);
 
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
@@ -256,8 +128,6 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     buttonContainer.appendChild(insertButton);
     buttonContainer.appendChild(removeButton);
 
-    blockContainer.appendChild(cueContainer);
-    blockContainer.appendChild(noteContainer);
     blockContainer.appendChild(buttonContainer);
 
     // Determine where to insert the new block
