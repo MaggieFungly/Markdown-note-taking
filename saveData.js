@@ -4,8 +4,15 @@ let blocksData = [];
 function updateBlocksData() {
     blocksData = [];
     document.querySelectorAll('#blocks .block').forEach(block => {
-        let noteText = block.querySelector('.noteEdit').innerHTML;
-        let cueText = block.querySelector('.cueEdit').innerHTML;
+        // Attempt to find the CodeMirror instances. 
+        // Assuming CodeMirror is directly attached to a specific child element of the block.
+        let noteCodeMirrorInstance = block.querySelector('.noteContainer .CodeMirror').CodeMirror;
+        let cueCodeMirrorInstance = block.querySelector('.cueContainer .CodeMirror').CodeMirror;
+
+        // Get the text from the CodeMirror instances
+        let noteText = noteCodeMirrorInstance ? noteCodeMirrorInstance.getValue() : '';
+        let cueText = cueCodeMirrorInstance ? cueCodeMirrorInstance.getValue() : '';
+
         let isHighlighted = block.style.backgroundColor !== 'transparent';
         let id = block.dataset.id;
 
@@ -21,18 +28,22 @@ function saveBlocksData() {
 
 // MutationObserver callback to be executed when mutations are observed
 const observerCallback = (mutationsList, observer) => {
-    // On any mutation, update and save blocksData
-    updateBlocksData();
-    saveBlocksData();
+    for (let mutation of mutationsList) {
+        if (mutation.type === 'childList' || mutation.type === 'attributes' || mutation.type === 'characterData') {
+            // On any mutation, update and save blocksData
+            updateBlocksData();
+            saveBlocksData();
+        }
+    }
 };
 
 // Create an instance of MutationObserver with the callback
 const observer = new MutationObserver(observerCallback);
 
-// Start observing the #blocks div for child list changes
+// Start observing the #blocks div for child list changes, attribute changes, and character data changes
 document.addEventListener('DOMContentLoaded', () => {
     const targetNode = document.getElementById('blocks');
-    observer.observe(targetNode, { childList: true, subtree: true });
+    observer.observe(targetNode, { childList: true, attributes: true, characterData: true, subtree: true });
 
     // Initialize the blocksData for the first time
     updateBlocksData();

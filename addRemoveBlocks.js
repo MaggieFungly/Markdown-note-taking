@@ -30,6 +30,11 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         showCursorWhenSelecting: true,
     });
 
+    codeMirrorEditor.on("change", function () {
+        updateBlocksData();
+        saveBlocksData(); // Call saveBlocksData whenever there is a change in the editor
+    });
+
     var displayDiv = document.createElement('div');
     editorDiv.appendChild(displayDiv);
     displayDiv.className = displayDivClassName;
