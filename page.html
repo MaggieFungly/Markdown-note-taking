@@ -10,9 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/monokai.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/yeti.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.js"></script>
+    <script src=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/markdown/markdown.min.js"></script>
-    <script src="autoCloseBrackets.js"></script>
     <script src="https://codemirror.net/5/addon/edit/continuelist.js"></script>
+    <script src="https://codemirror.net/5/addon/edit/closebrackets.js"></script>
+    <!-- <script src="node_modules/@codemirror/closebrackets/dist/index.js"></script> -->
     <script src="https://codemirror.net/5/addon/search/searchcursor.js"></script>
 
     <link rel="stylesheet" href="resources/fontawesome/fontawesome-free-6.5.1-web/css/all.css">
@@ -23,6 +25,7 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
     <script>
         window.MathJax = {
             tex: {
@@ -58,6 +61,12 @@
                     style="font-size: 12px;"></i></button>
         </div>
     </div>
+    <div id="search-box">
+        <input type="text" id="search-input" placeholder="Search...">
+        <button id="search-next">Next</button>
+        <button id="search-prev">Prev</button>
+        <button id="search-close">Close</button>
+    </div>
     <br>
     <input type="text" id="title">
     <div id="init" class="no-drag">
@@ -77,10 +86,29 @@
     <script src="addRemoveBlocks.js"></script>
     <script src="node_modules\.sortablejs-vAsaEdFD\Sortable.min.js"></script>
     <script src="pageFunctions.js"></script>
+    <script src="node_modules\mark.js\dist/mark.js"></script>
+    <script src="searchInPage.js"></script>
 
     <!-- electron transportation -->
     <script>
         const { ipcRenderer } = require('electron');
+
+        var title = document.getElementById('title');
+        title.addEventListener("keypress", function (event) {
+            // Check if the key pressed is 'Enter'
+            if (event.key === 'Enter') {
+                let newTitle = title.value;
+                // Send the new title to the main process to rename the file
+                ipcRenderer.send('rename-file', newTitle);
+            }
+        });
+        ipcRenderer.on('rename-file', (event, status, newTitleWithoutExtension) => {
+            if (status === 'success') {
+                console.log('File renamed to', newTitleWithoutExtension);
+            } else {
+                console.error('Failed to rename file');
+            }
+        });
 
         ipcRenderer.on('set-title', (event, fileName) => {
             document.getElementById('title').value = fileName;
