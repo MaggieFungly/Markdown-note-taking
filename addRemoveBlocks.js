@@ -30,7 +30,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         lineNumbers: false,
         theme: "default",
         autoCloseBrackets: {
-            pairs: "()[]{}''\"\"<>**",
+            pairs: "()[]{}''\"\"<>**==",
             closeBefore: ")]}'\":;>",
             triples: "",
             explode: "[]{}"
