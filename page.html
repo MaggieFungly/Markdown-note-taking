@@ -6,16 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cornell Notes</title>
     <!-- codemirror -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/monokai.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/yeti.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.js"></script>
-    <script src=""></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/markdown/markdown.min.js"></script>
-    <script src="https://codemirror.net/5/addon/edit/continuelist.js"></script>
-    <script src="https://codemirror.net/5/addon/edit/closebrackets.js"></script>
-    <!-- <script src="node_modules/@codemirror/closebrackets/dist/index.js"></script> -->
-    <script src="https://codemirror.net/5/addon/search/searchcursor.js"></script>
+    <script src="node_modules/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
+    <script src="node_modules/codemirror/mode/markdown/markdown.js"></script>
+    <script src="node_modules/codemirror/addon/edit/continuelist.js"></script>
+    <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
 
     <link rel="stylesheet" href="resources/fontawesome/fontawesome-free-6.5.1-web/css/all.css">
     <link rel="stylesheet" href="pagestyle.css">
@@ -44,6 +39,12 @@
 </head>
 
 <body>
+    <div id="searchDiv" style="display: none;">
+        <input type="text" id="searchBox" placeholder="Enter search term">
+        <button id="searchButton" style="width: 20px;"><i class="fas fa-search"></i></button>
+        <button id="stopSearchButton" style="width: 20px;"><i class="fas fa-times"></i></button>
+    </div>
+
     <div id="toolbar">
         <button id="return">
             <i class="fas fa-chevron-left" title="Return to main page"></i>
@@ -60,12 +61,6 @@
             <button id="fontSmaller" class="fontSizeButton" title="Smaller Font"><i class="fa fa-font"
                     style="font-size: 12px;"></i></button>
         </div>
-    </div>
-    <div id="search-box">
-        <input type="text" id="search-input" placeholder="Search...">
-        <button id="search-next">Next</button>
-        <button id="search-prev">Prev</button>
-        <button id="search-close">Close</button>
     </div>
     <br>
     <input type="text" id="title">
@@ -84,10 +79,8 @@
 
     <!-- page management -->
     <script src="addRemoveBlocks.js"></script>
-    <script src="node_modules\.sortablejs-vAsaEdFD\Sortable.min.js"></script>
+    <script src="node_modules/sortablejs/Sortable.js"></script>
     <script src="pageFunctions.js"></script>
-    <script src="node_modules\mark.js\dist/mark.js"></script>
-    <script src="searchInPage.js"></script>
 
     <!-- electron transportation -->
     <script>
@@ -139,6 +132,32 @@
                 event.preventDefault();
                 ipcRenderer.send('open-link-externally', event.target.href);
             }
+        });
+    </script>
+
+    <!-- search function -->
+    <script>
+        const searchDiv = document.getElementById("searchDiv");
+        const searchBox = document.getElementById("searchBox");
+        const searchButton = document.getElementById('searchButton');
+        const stopSearchButton = document.getElementById('stopSearchButton');
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') { // metaKey is for Cmd on macOS
+                e.preventDefault();
+                // trigger in-page search
+                searchDiv.style.display = "flex";
+                searchBox.focus()
+            }
+        });
+
+        searchButton.addEventListener('click', () => {
+            ipcRenderer.send('perform-search', searchBox.value);
+        });
+
+        stopSearchButton.addEventListener('click', () => {
+            ipcRenderer.send('stop-search');
+            searchDiv.style.display = "none";
         });
     </script>
 </body>

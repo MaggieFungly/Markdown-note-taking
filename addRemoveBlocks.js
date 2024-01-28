@@ -1,15 +1,22 @@
-function showDisplay(textValue, displayDiv, codeMirrorEditor){
-    // render Markdown
-    displayDiv.innerHTML = marked.parse(textValue);
-    // handle math equations
+function showDisplay(textValue, displayDiv, codeMirrorEditor) {
+    // Process for custom highlighting syntax
+    const processedText = textValue.replace(/==([^=]+)==/g, '<span style="background-color: yellow">$1</span>');
+
+    // Render Markdown
+    displayDiv.innerHTML = marked.parse(processedText);
+
+    // Handle math equations
     MathJax.typesetPromise([displayDiv]).then(() => {
+        // Additional actions after typesetting, if necessary
     });
+
     displayDiv.style.display = "block"; // Show the display div
     codeMirrorEditor.getWrapperElement().style.display = "none"; // Hide the editor
 }
 
 function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirrorClassName, displayDivClassName, text) {
     var editorDiv = document.createElement('div');
+    // classnames: cueContainer, noteContainer
     editorDiv.className = editorClassName;
     blockContainer.appendChild(editorDiv);
 
@@ -17,23 +24,44 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     editTextArea.className = textAreaClassName;
     editTextArea.style.display = 'block';
     editTextArea.style.whiteSpace = 'pre-wrap';
-    editTextArea.textContent = text;
     editorDiv.appendChild(editTextArea);
 
     var codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
         lineNumbers: false,
-        mode: "markdown",
-        theme: "monokai",
-        autoCloseBrackets: true,
+        theme: "default",
+        autoCloseBrackets: {
+            pairs: "()[]{}''\"\"<>**",
+            closeBefore: ")]}'\":;>",
+            triples: "",
+            explode: "[]{}"
+        },
+        autoCloseTags: true,
+        smartIndent: true,
+        indentUnit: 4,
         lineWrapping: true,
         indentWithTabs: true,
         showCursorWhenSelecting: true,
+        continuedList: true,
+        highlightFormatting: true,
+        extraKeys: {
+            "Enter": "newlineAndIndentContinueMarkdownList",
+        },
+        override: true,
     });
+    codeMirrorEditor.className = codeMirrorClassName;
+    codeMirrorEditor.setValue(text);
+
+    setTimeout(() => {
+        codeMirrorEditor.refresh();
+    }, 0); // Sometimes a delay of 0 is enough, but you might need to adjust this
+
 
     codeMirrorEditor.on("change", function () {
         updateBlocksData();
         saveBlocksData(); // Call saveBlocksData whenever there is a change in the editor
     });
+    // default display
+    codeMirrorEditor.getWrapperElement().style.display = "block";
 
     var displayDiv = document.createElement('div');
     editorDiv.appendChild(displayDiv);
@@ -45,11 +73,12 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         showDisplay(textValue, displayDiv, codeMirrorEditor)
     });
 
+    // double click to edit
     displayDiv.addEventListener("contextmenu", function (event) {
         // Prevent the default context menu
-        event.preventDefault(); 
+        event.preventDefault();
         // Show the editor
-        codeMirrorEditor.getWrapperElement().style.display = "block"; 
+        codeMirrorEditor.getWrapperElement().style.display = "block";
         displayDiv.style.display = "none"; // Hide the display div
     });
 }
@@ -72,7 +101,6 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
 
     addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", cue)
     addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", note)
-
 
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');

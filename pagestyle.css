@@ -5,13 +5,57 @@ button {
     justify-content: center;
     align-items: center;
     text-align: center;
-    display: block;
+    display: flex;
     width: 20px;
 }
 
 button:hover {
     background-color: #c4c4c43c;
     transition: 0.3s;
+}
+
+#searchDiv {
+    position: fixed;
+    /* Fixed position */
+    top: 10px;
+    /* Positioned 10px from the top */
+    left: 50%;
+    /* Positioned in the middle of the page */
+    transform: translateX(-50%);
+    /* Shifts the div back by half its own width */
+    z-index: 1000;
+    /* Ensures it stays on top of other elements */
+    background-color: white;
+    /* Background color */
+    border: 1px solid #ddd;
+    /* Border for visibility */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* Shadow for a "floating" effect */
+    padding: 8px;
+    /* Some padding around the content */
+    border-radius: 4px;
+    /* Rounded corners */
+    display: flex;
+    /* Flex layout for the internal elements */
+    gap: 8px;
+    /* Spacing between elements */
+}
+
+#searchBox {
+    flex-grow: 1;
+    /* Allows the search box to take up available space */
+}
+
+#searchBox:focus{
+    outline: none;
+}
+
+#searchButton,
+#stopSearchButton {
+    width: auto;
+    /* Adjust width */
+    padding: 0 10px;
+    /* Padding for buttons */
 }
 
 #toolbar {
@@ -36,8 +80,8 @@ button:hover {
     border-bottom: 1px solid #000000;
     border-spacing: 10px;
     font-size: 30px;
-    font-family: 'CMU Serif';
-    font-weight: bold;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    /* font-weight: bold; */
     width: 100%;
 }
 
@@ -71,10 +115,12 @@ button:hover {
 
 .cueContainer {
     width: 25%;
+    resize: horizontal;
 }
 
 .noteContainer {
     width: 72%;
+    resize: horizontal;
 }
 
 .CodeMirror,
@@ -83,12 +129,19 @@ button:hover {
     font-family: Georgia, 'Times New Roman', Times, serif;
     font-size: 14px;
     height: auto;
-    padding-left: 8px;
+    padding: 8px;
     border-left: 1.5px solid;
+    background-color: transparent;
 }
 
 .CodeMirror {
     border-left-color: #2796cb;
+}
+
+.cueDisplay::selection,
+.noteDisplay::selection,
+.CodeMirror .CodeMirror-selected {
+    background-color: rgba(186, 186, 186, 0.3);
 }
 
 .cueDisplay,
@@ -117,7 +170,6 @@ button:hover {
     background-color: #e1e0e03c;
 }
 
-
 .cueEdit:focus,
 .noteEdit:focus {
     outline: none;
@@ -125,18 +177,19 @@ button:hover {
 
 .cueDisplay blockquote,
 .noteDisplay blockquote {
-    border-left: 1.5px solid #53a8b6;
-    margin: 1px;
-    padding: 2px;
+    border-left: 1.5px solid #7D93B0;
     background-color: #f6f6f642;
+    padding-left: 2px;
+    margin-left: 2px;
 }
 
+.CodeMirror .cm-comment,
 .cueDisplay code,
 .noteDisplay code {
     font-family: 'Consolas';
     padding: 1px;
     background-color: #bacccf85;
-    color: #6F8DB3;
+    color: #5778A2;
     font-size: 12px;
 }
 
@@ -158,6 +211,7 @@ button:hover {
     /* In case the content overflows */
 }
 
+.CodeMirror .cm-link,
 .cueDisplay a,
 .noteDisplay a {
     color: #2796cb;

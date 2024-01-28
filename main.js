@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, webContents } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -32,6 +32,13 @@ function setupIpcEventListeners() {
     ipcMain.on('load-index', loadIndex);
     ipcMain.on('open-link-externally', openLinkExternally);
     ipcMain.on('open-new-window', openNewWindow);
+    ipcMain.on('find-json-files', findJsonFiles);
+    ipcMain.on('perform-search', (event, searchText) => {
+        findInPage(searchText);
+    });
+    ipcMain.on('stop-search', (event) => {
+        stopFindInPage();
+    });
 }
 
 // Event handler to open file dialog
@@ -177,5 +184,33 @@ function createNewFile(folderPath, event) {
     });
 }
 
+function findJsonFiles(event, dir) {
+    fs.readdir(dir, (err, files) => {
+        if (err) {
+            event.reply('find-json-files-response', 'error', err.message);
+            return;
+        }
+
+        let jsonFiles = files.filter(file => path.extname(file).toLowerCase() === '.json');
+        event.reply('find-json-files-response', 'success', jsonFiles);
+    });
+}
+
+// search in page
+function findInPage(searchText) {
+    if (win && searchText) {
+        win.webContents.findInPage(searchText);
+    }
+}
+// stop searching in page
+function stopFindInPage(action = 'clearSelection') {
+    if (win) {
+        win.webContents.stopFindInPage(action);
+    }
+}
+
+
+
 // Start the application when ready
 app.whenReady().then(createWindow);
+
