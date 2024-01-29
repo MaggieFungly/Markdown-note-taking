@@ -1,12 +1,13 @@
-# Taking Cornell Notes in Markdown
+# Cornell Notes in Markdown
 
-This is a block-based application for taking Cornell Notes in Markdown.
+This application facilitates block-based note-taking in Markdown, specifically tailored for the Cornell Notes system. It includes a dual-column design for effective note-taking and commenting.
 
-There are two columns for cues and notes, as in Cornell Notes system.
+### Usage Instructions
+- Input your notes in Markdown format within the designated blocks.
+- Employ functionalities to **insert**, **remove**, or **reorder** blocks as per your requirements.
+- **Right-click** on a block to edit, and click elsewhere to see the formatted preview.
 
-- You can **insert**, **remove**, **highlight** and **sort** blocks using the widgets on the right. ![Alt text](attachments/image.png)
-- The notes are stored in local `json` files.
-
-## To-do list
-- Linked blocks feature
-- Enhance editing features
+### Highlights
+- Integrated CodeMirror editors with syntax highlighting and automatic bracket closure for enhanced editing.
+- Real-time Markdown preview for immediate feedback on your notes.
+- MathJax support for both inline and block equations.
