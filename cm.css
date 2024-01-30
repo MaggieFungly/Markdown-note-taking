@@ -1,0 +1,18 @@
+.cm-s-default .cm-header {
+    color: black;
+}
+
+.cm-s-default .cm-quote {
+    color: rgb(46, 46, 46);
+    background-color: rgba(207, 207, 207, 0.2);
+}
+
+.cm-s-default .cm-variable,
+.cm-s-default .cm-variable-2,
+.cm-s-default .cm-variable-3 {
+    color: black;
+}
+
+.cm-s-default .cm-link {
+    color: #01B3D9;
+}
