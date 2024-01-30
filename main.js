@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, webContents } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, webContents, globalShortcut } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,6 +21,12 @@ function createWindow() {
 
     // Setup IPC event listeners
     setupIpcEventListeners();
+
+    const undoShortcut = process.platform === 'darwin' ? 'Cmd+Z' : 'Ctrl+Z';
+    globalShortcut.register(undoShortcut, () => {
+        win.webContents.undo();
+    });
+
 }
 
 // Set up IPC event listeners
@@ -39,6 +45,7 @@ function setupIpcEventListeners() {
     ipcMain.on('stop-search', (event) => {
         stopFindInPage();
     });
+    ipcMain.on('get-directory-contents', getDirectoryContents);
 }
 
 // Event handler to open file dialog
@@ -207,6 +214,30 @@ function stopFindInPage(action = 'clearSelection') {
     if (win) {
         win.webContents.stopFindInPage(action);
     }
+}
+
+function getDirectoryContents(event) {
+    // Check if there is a current file path set
+    if (!currentFilePath) {
+        event.reply('get-directory-contents-response', { error: true, message: 'No directory path set' });
+        return;
+    }
+
+    // Use the directory of the current file
+    const dirPath = path.dirname(currentFilePath);
+
+    fs.readdir(dirPath, { withFileTypes: true }, (err, dirents) => {
+        if (err) {
+            event.reply('get-directory-contents-response', { error: true, message: err.message });
+            return;
+        }
+
+        const items = dirents
+            .filter(dirent => dirent.isDirectory() || path.extname(dirent.name).toLowerCase() === '.json')
+            .map(dirent => dirent.name);
+
+        event.reply('get-directory-contents-response', { error: false, items });
+    });
 }
 
 

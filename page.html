@@ -8,6 +8,7 @@
     <!-- codemirror -->
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="cm.css">
     <script src="node_modules/codemirror/mode/markdown/markdown.js"></script>
     <script src="node_modules/codemirror/addon/edit/continuelist.js"></script>
     <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
@@ -46,32 +47,35 @@
     </div>
 
     <div id="toolbar">
-        <button id="return">
-            <i class="fas fa-chevron-left" title="Return to main page"></i>
-        </button>
-        <div id="rightContainer">
-            <button id="printPage" title="Print this page"><i class="fas fa-print"></i></button>
-            <button id="openInBrowser" title="Open in External browser"><i class="fas fa-globe"></i></button>
-            <button id="toggleEdit" onclick="toggleEdit()" title="Edit all blocks"><i
-                    class="fas fa-pencil-alt"></i></button>
-            <button id="toggleDisplay" onclick="toggleDisplay()" title="Read all blocks"><i
-                    class="far fa-file"></i></button>
-            <button id="fontLarger" class="fontSizeButton" title="Larger Font"><i class="fa fa-font"
-                    style="font-size: 16px;"></i></button>
-            <button id="fontSmaller" class="fontSizeButton" title="Smaller Font"><i class="fa fa-font"
-                    style="font-size: 12px;"></i></button>
+        <div id="leftContainer" style="display: flex;">
+            <button id="menuButton" style="width: 20px;" title="Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <button id="return">
+                <i class="fas fa-chevron-left" title="Return to main page"></i>
+            </button>
         </div>
+
+        <div id="rightContainer"></div>
     </div>
-    <br>
-    <input type="text" id="title">
-    <div id="init" class="no-drag">
-        <div class="buttons">
-            <button onclick="insertBlock(0)" id="startButton" title="Insert block on top"><i
-                    class="fas fa-plus"></i></button>
+
+    <div id="mainContainer" style="display: flex;">
+        <div id="menu" style="display: none;">
+            <div id="directory-contents-list"></div>
         </div>
-    </div>
-    <div id="blocks">
-        <!-- blocks go here -->
+
+        <div id="editorContainer">
+            <input type="text" id="title">
+            <div id="init" class="no-drag">
+                <div class="buttons">
+                    <button onclick="insertBlock(0)" id="startButton" title="Insert block on top"><i
+                            class="fas fa-plus"></i></button>
+                </div>
+            </div>
+            <div id="blocks">
+                <!-- blocks go here -->
+            </div>
+        </div>
     </div>
 
     <!-- data management -->
@@ -79,7 +83,6 @@
 
     <!-- page management -->
     <script src="addRemoveBlocks.js"></script>
-    <script src="node_modules/sortablejs/Sortable.js"></script>
     <script src="pageFunctions.js"></script>
 
     <!-- electron transportation -->
@@ -160,6 +163,9 @@
             searchDiv.style.display = "none";
         });
     </script>
+
+    <script src="menu.js"></script>
+
 </body>
 
 </html>
