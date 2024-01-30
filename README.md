@@ -4,8 +4,9 @@ This application facilitates block-based note-taking in Markdown, specifically t
 
 ### Usage Instructions
 - Input your notes in Markdown format within the designated blocks.
-- Employ functionalities to **insert**, **remove**, or **reorder** blocks as per your requirements.
+- Employ functionalities to **insert**, **remove**, **reorder**, and **highlight** blocks as per your requirements.
 - **Right-click** on a block to edit, and click elsewhere to see the formatted preview.
+- **Navigate** files in the same folder.
 
 ### Highlights
 - Integrated CodeMirror editors with syntax highlighting and automatic bracket closure for enhanced editing.
