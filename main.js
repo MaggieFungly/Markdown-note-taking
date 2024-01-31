@@ -130,21 +130,26 @@ function openJsonFile(event) {
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
             const filePath = result.filePaths[0];
-            fs.readFile(filePath, 'utf8', (err, data) => {
-                if (err) {
-                    console.error('Error reading file:', err);
-                } else {
-                    currentFilePath = filePath; // Update the current file path
-                    win.loadFile('page.html').then(() => {
-                        const fileNameWithoutExtension = path.basename(filePath, '.json');
-                        win.webContents.send('set-title', fileNameWithoutExtension);
-                        win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
-                    });
-                }
-            });
+            loadNotePage(filePath);
         }
     }).catch(err => {
         console.error('Error opening file dialog:', err);
+    });
+}
+
+function loadNotePage(filePath){
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+        } else {
+            // store current file path
+            currentFilePath = filePath; // Update the current file path
+            win.loadFile('page.html').then(() => {
+                const fileNameWithoutExtension = path.basename(filePath, '.json');
+                win.webContents.send('set-title', fileNameWithoutExtension);
+                win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
+            });
+        }
     });
 }
 
