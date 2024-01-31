@@ -39,8 +39,11 @@ function setupIpcEventListeners() {
     ipcMain.on('open-link-externally', openLinkExternally);
     ipcMain.on('open-new-window', openNewWindow);
     ipcMain.on('find-json-files', findJsonFiles);
-    ipcMain.on('perform-search', (event, searchText) => {
-        findInPage(searchText);
+    ipcMain.on('find-next', (event, searchText) => {
+        findNextInPage(searchText);
+    });
+    ipcMain.on('find-previous', (event, searchText) => {
+        findPreviousInPage(searchText);
     });
     ipcMain.on('stop-search', (event) => {
         stopFindInPage();
@@ -203,12 +206,21 @@ function findJsonFiles(event, dir) {
     });
 }
 
-// search in page
-function findInPage(searchText) {
+// search
+// Find next in page
+function findNextInPage(searchText) {
     if (win && searchText) {
-        win.webContents.findInPage(searchText);
+        win.webContents.findInPage(searchText, { forward: true, findNext: true });
     }
 }
+
+// Find previous in page
+function findPreviousInPage(searchText) {
+    if (win && searchText) {
+        win.webContents.findInPage(searchText, { forward: false, findNext: true });
+    }
+}
+
 // stop searching in page
 function stopFindInPage(action = 'clearSelection') {
     if (win) {
