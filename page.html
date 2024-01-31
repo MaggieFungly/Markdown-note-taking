@@ -15,13 +15,13 @@
 
     <link rel="stylesheet" href="resources/fontawesome/fontawesome-free-6.5.1-web/css/all.css">
     <link rel="stylesheet" href="pagestyle.css">
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="node_modules/highlight.js/styles/atom-one-dark.css">
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="node_modules/marked/marked.min.js"></script>
+    <script src="node_modules/highlight.js/lib/core.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
+    <!-- math equations -->
     <script>
         window.MathJax = {
             tex: {
@@ -36,13 +36,15 @@
             }
         };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="node_modules/mathjax/es5/tex-chtml.js"></script>
 </head>
 
 <body>
+
     <div id="searchDiv" style="display: none;">
-        <input type="text" id="searchBox" placeholder="Enter search term">
-        <button id="searchButton" style="width: 20px;"><i class="fas fa-search"></i></button>
+        <input type="text" id="searchBox" placeholder="Enter search term"></input>
+        <button id="findNextButton"><i class="fa-solid fa-chevron-down"></i></button>
+        <button id="findPreviousButton"><i class="fa-solid fa-chevron-up"></i></button>
         <button id="stopSearchButton" style="width: 20px;"><i class="fas fa-times"></i></button>
     </div>
 
@@ -56,7 +58,11 @@
             </button>
         </div>
 
-        <div id="rightContainer"></div>
+        <div id="rightContainer">
+            <button id="toggleReader" title="Reader mode"><i class="fa-solid fa-book-open"></i></button>
+            <button id="toggleEdit" title="Edit mode"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button id="toggleOutline" title="Toggle outline"><i class="fa-solid fa-list"></i></button>
+        </div>
     </div>
 
     <div id="mainContainer" style="display: flex;">
@@ -76,6 +82,9 @@
                 <!-- blocks go here -->
             </div>
         </div>
+
+        <div id="outline" style="display: none;"></div>
+
     </div>
 
     <!-- data management -->
@@ -89,7 +98,7 @@
     <script>
         const { ipcRenderer } = require('electron');
 
-        var title = document.getElementById('title');
+        const title = document.getElementById('title');
         title.addEventListener("keypress", function (event) {
             // Check if the key pressed is 'Enter'
             if (event.key === 'Enter') {
@@ -109,7 +118,9 @@
         ipcRenderer.on('set-title', (event, fileName) => {
             document.getElementById('title').value = fileName;
         });
+    </script>
 
+    <script>
         function importJsonData(jsonData) {
             const blocksContainer = document.getElementById('blocks');
             blocksContainer.innerHTML = '';
@@ -125,7 +136,9 @@
                 importJsonData(response.data);
             }
         });
+    </script>
 
+    <script>
         document.addEventListener('click', function (event) {
             if (event.target.classList.contains('blockLink')) {
                 event.preventDefault();
@@ -139,32 +152,13 @@
     </script>
 
     <!-- search function -->
-    <script>
-        const searchDiv = document.getElementById("searchDiv");
-        const searchBox = document.getElementById("searchBox");
-        const searchButton = document.getElementById('searchButton');
-        const stopSearchButton = document.getElementById('stopSearchButton');
+    <script src="findInPage.js"></script>
 
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') { // metaKey is for Cmd on macOS
-                e.preventDefault();
-                // trigger in-page search
-                searchDiv.style.display = "flex";
-                searchBox.focus()
-            }
-        });
-
-        searchButton.addEventListener('click', () => {
-            ipcRenderer.send('perform-search', searchBox.value);
-        });
-
-        stopSearchButton.addEventListener('click', () => {
-            ipcRenderer.send('stop-search');
-            searchDiv.style.display = "none";
-        });
-    </script>
-
+    <!-- menu -->
     <script src="menu.js"></script>
+
+    <!-- outline -->
+    <script src="outline.js"></script>
 
 </body>
 

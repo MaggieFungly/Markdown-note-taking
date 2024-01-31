@@ -1,27 +1,12 @@
 const menuButton = document.getElementById('menuButton');
 const menuDiv = document.getElementById('menu');
-let menuLoaded = false; // To track if menu contents are loaded
 
-menuButton.addEventListener('click', function () {
-    const isMenuVisible = menuDiv.style.display === 'block';
-    menuDiv.style.display = isMenuVisible ? 'none' : 'block';
+// Function to fetch and update directory contents
+function fetchAndUpdateDirectoryContents() {
+    ipcRenderer.send('get-directory-contents');
+}
 
-    // Fetch and display directory contents only if not already loaded
-    if (!menuLoaded && !isMenuVisible) {
-        ipcRenderer.send('get-directory-contents');
-        menuLoaded = true;
-    }
-});
-
-ipcRenderer.on('get-directory-contents-response', (event, data) => {
-    if (data.error) {
-        console.error('Error fetching directory contents:', data.message);
-        return;
-    }
-
-    updateUIWithDirectoryContents(data.items);
-});
-
+// Function to update the UI with directory contents
 function updateUIWithDirectoryContents(items) {
     const list = document.getElementById('directory-contents-list');
     list.innerHTML = ''; // Clear existing list
@@ -33,3 +18,25 @@ function updateUIWithDirectoryContents(items) {
         list.appendChild(listItem);
     });
 }
+
+// Function to toggle the menu visibility
+function toggleMenu() {
+    const isMenuVisible = menuDiv.style.display === 'block';
+    menuDiv.style.display = isMenuVisible ? 'none' : 'block';
+
+    // Fetch and display directory contents only if the menu is becoming visible
+    if (!isMenuVisible) {
+        fetchAndUpdateDirectoryContents();
+    }
+}
+
+// Event listener for the menu button click
+menuButton.addEventListener('click', toggleMenu);
+// Event listener for the directory contents response
+ipcRenderer.on('get-directory-contents-response', (event, data) => {
+    if (data.error) {
+        console.error('Error fetching directory contents:', data.message);
+        return;
+    }
+    updateUIWithDirectoryContents(data.items);
+});

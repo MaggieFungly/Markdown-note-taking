@@ -1,6 +1,6 @@
 function showDisplay(textValue, displayDiv, codeMirrorEditor) {
     // Process for custom highlighting syntax
-    const processedText = textValue.replace(/==([^=]+)==/g, '<span style="background-color: yellow">$1</span>');
+    const processedText = textValue.replace(/==([^=]+)==/g, '<span style="background-color: #F9E065">$1</span>');
 
     // Render Markdown
     displayDiv.innerHTML = marked.parse(processedText);
@@ -12,6 +12,11 @@ function showDisplay(textValue, displayDiv, codeMirrorEditor) {
 
     displayDiv.style.display = "block"; // Show the display div
     codeMirrorEditor.getWrapperElement().style.display = "none"; // Hide the editor
+}
+
+function showEdit(displayDiv, codeMirrorEditor){
+    codeMirrorEditor.getWrapperElement().style.display = "block";
+    displayDiv.style.display = "none"; // Hide the display div
 }
 
 function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirrorClassName, displayDivClassName, text) {
@@ -30,7 +35,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         lineNumbers: false,
         theme: "default",
         autoCloseBrackets: {
-            pairs: "()[]{}''\"\"<>**==",
+            pairs: "()[]{}''\"\"<>**$$",
             closeBefore: ")]}'\":;>",
             triples: "",
             explode: "[]{}"
@@ -78,8 +83,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         // Prevent the default context menu
         event.preventDefault();
         // Show the editor
-        codeMirrorEditor.getWrapperElement().style.display = "block";
-        displayDiv.style.display = "none"; // Hide the display div
+        showEdit(displayDiv, codeMirrorEditor)
     });
 }
 

@@ -1,3 +1,7 @@
+.CodeMirror-lines {
+    line-height: 1.25;
+}
+
 .cm-s-default .cm-header {
     color: black;
 }
