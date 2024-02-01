@@ -49,6 +49,12 @@ function setupIpcEventListeners() {
         stopFindInPage();
     });
     ipcMain.on('get-directory-contents', getDirectoryContents);
+    ipcMain.on('load-note-page', (event, path) => {
+        loadNotePage(path)
+    });
+    ipcMain.on('load-blocks', (event, path) => {
+        loadBlocks(path)
+    })
 }
 
 // Event handler to open file dialog
@@ -137,7 +143,7 @@ function openJsonFile(event) {
     });
 }
 
-function loadNotePage(filePath){
+function loadNotePage(filePath) {
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading file:', err);
@@ -148,7 +154,27 @@ function loadNotePage(filePath){
                 const fileNameWithoutExtension = path.basename(filePath, '.json');
                 win.webContents.send('set-title', fileNameWithoutExtension);
                 win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
+
+                // watchDirectory when the file is loaded
+                watchDirectory();
             });
+        }
+    });
+}
+
+function loadBlocks(filePath) {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+        } else {
+            // store current file path
+            currentFilePath = filePath; // Update the current file path
+            const fileNameWithoutExtension = path.basename(filePath, '.json');
+            win.webContents.send('set-title', fileNameWithoutExtension);
+            win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
+
+            // watchDirectory when the file is loaded
+            watchDirectory();
         }
     });
 }
@@ -233,30 +259,51 @@ function stopFindInPage(action = 'clearSelection') {
     }
 }
 
-function getDirectoryContents(event) {
-    // Check if there is a current file path set
+let directoryWatcher = null; // Keep a reference to the watcher to avoid multiple instances
+
+function watchDirectory() {
+    const dirPath = currentFilePath ? path.dirname(currentFilePath) : app.getPath('documents');
+
+    if (directoryWatcher) {
+        directoryWatcher.close();
+    }
+
+    directoryWatcher = fs.watch(dirPath, (eventType, filename) => {
+        if (filename) {
+            win.webContents.send('directory-changed', dirPath); // Notify the renderer process
+        }
+    });
+}
+
+
+// This function needs to be adjusted to use IPC to communicate with the renderer process
+function getDirectoryContents() {
     if (!currentFilePath) {
-        event.reply('get-directory-contents-response', { error: true, message: 'No directory path set' });
+        win.webContents.send('get-directory-contents-response', { error: true, message: 'No directory path set' });
         return;
     }
 
-    // Use the directory of the current file
     const dirPath = path.dirname(currentFilePath);
 
     fs.readdir(dirPath, { withFileTypes: true }, (err, dirents) => {
         if (err) {
-            event.reply('get-directory-contents-response', { error: true, message: err.message });
+            win.webContents.send('get-directory-contents-response', { error: true, message: err.message });
             return;
         }
-
+        
+        // each item contains name, filetype (.json or directory), and absolute path
         const items = dirents
             .filter(dirent => dirent.isDirectory() || path.extname(dirent.name).toLowerCase() === '.json')
-            .map(dirent => dirent.name);
+            .map(dirent => ({
+                name: dirent.name,
+                isDirectory: dirent.isDirectory(),
+                // Provide the full path for each item
+                path: path.join(dirPath, dirent.name)
+            }));
 
-        event.reply('get-directory-contents-response', { error: false, items });
+        win.webContents.send('get-directory-contents-response', { error: false, items });
     });
 }
-
 
 
 // Start the application when ready

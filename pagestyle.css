@@ -1,3 +1,35 @@
+:root {
+    --item-background-color: transparent;
+    --side-column-background-color: #dddddd24;
+    --item-color: rgba(78, 78, 78);
+    --item-margin: 3px;
+    --item-padding: 2px;
+    --item-font-size: 12px;
+    --env-font-family: system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        Oxygen,
+        Ubuntu,
+        Cantarell,
+        'Open Sans',
+        'Helvetica Neue',
+        sans-serif;
+    --transition: background-color 0.3s ease-out;
+    --item-hover-background-color: rgba(162, 162, 162, 0.2);
+}
+
+body,
+html {
+    margin: 0;
+    padding: 5px;
+    height: 100%;
+    /* This ensures the HTML and body fill the entire screen */
+    overflow: hidden;
+    /* This prevents scrollbars on the whole page */
+}
+
 button {
     background-color: transparent;
     border: transparent;
@@ -18,7 +50,7 @@ button:hover {
     width: 200px;
     margin-right: 8px;
     border-right: 1px solid gray;
-    background-color: #dddddd24;
+    background-color: var(--side-column-background-color);
     margin-top: 8px;
 }
 
@@ -27,22 +59,113 @@ button:hover {
 }
 
 .fileItem {
-    color: #727070;
+    color: var(--item-color);
+    background-color: var(--item-background-color);
     transition: background-color 0.3s ease-out;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    font-size: 13px;
-    padding-bottom: 2px;
-    margin: 4px;
-    margin-bottom: 10px;
+    font-family: var(--env-font-family);
+    font-size: var(--item-font-size);
+    margin: var(--item-margin);
+    padding: var(--item-padding);
 }
 
 .fileItem:hover {
-    background-color: #e1e0e03c;
-    border-bottom: 1px solid gray;
+    background-color: var(--item-hover-background-color);
+}
+
+#outline {
+    width: 200px;
+    margin-left: 8px;
+    border-left: 1px solid gray;
+    background-color: var(--side-column-background-color);
+    margin-top: 8px;
+}
+
+#outlineHeader {
+    text-align: center;
+    font-family: var(--env-font-family);
+    font-size: 14px;
+    padding: 10px;
+    padding-bottom: 0px;
+    color: var(--item-color);
+}
+
+#outlineList {
+    padding: 5px;
+}
+
+.outlineItem {
+    min-height: 20px;
+    font-family: var(--env-font-family);
+    font-size: var(--item-font-size);
+    margin: var(--item-margin);
+    padding: var(--item-padding);
+    background-color: var(--item-background-color);
+    transition: var(--transition);
+    color: var(--item-color);
+}
+
+.outlineItem:hover {
+    background-color: var(--item-hover-background-color);
 }
 
 #editorContainer {
     width: 100%;
+    margin: 2px;
+}
+
+#mainContainer {
+    display: flex;
+    height: 100vh;
+    /* Adjust based on your layout needs */
+}
+
+#menu,
+#outline,
+#editorContainer {
+    overflow-y: auto;
+    /* Enables vertical scrolling */
+}
+
+#menu,
+#outline {
+    max-height: 100vh;
+    /* Adjust based on your layout needs */
+    display: none;
+    /* Already set in your HTML */
+}
+
+#editorContainer {
+    flex-grow: 1;
+    /* Allows the editor container to fill remaining space */
+    max-height: 100vh;
+    /* Adjust based on your layout needs */
+}
+
+/* Custom scrollbar styles for Webkit browsers to ensure visibility when active */
+#menu::-webkit-scrollbar,
+#outline::-webkit-scrollbar,
+#editorContainer::-webkit-scrollbar {
+    width: 5px;
+    /* Adjust scrollbar width as needed */
+}
+
+#menu::-webkit-scrollbar-thumb,
+#outline::-webkit-scrollbar-thumb,
+#editorContainer::-webkit-scrollbar-thumb {
+    background-color: var(--item-hover-background-color);
+    /* Adjust scrollbar color as needed */
+    border-radius: 4px;
+    /* Rounds the corners of the scrollbar thumb */
+}
+
+/* Optional: Hide scrollbars for Firefox */
+#menu,
+#outline,
+#editorContainer {
+    scrollbar-width: thin;
+    /* 'auto' or 'thin' to show scrollbars only when necessary */
+    scrollbar-color: darkgrey transparent;
+    /* Adjust scrollbar color as needed */
 }
 
 /* Style for the sidebar menu */
@@ -161,7 +284,10 @@ button:hover {
     font-family: Georgia, 'Times New Roman', Times, serif;
     font-size: 14px;
     height: auto;
-    padding: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 1px;
+    padding-bottom: 1px;
     border-left: 1.2px solid;
     background-color: transparent;
 }

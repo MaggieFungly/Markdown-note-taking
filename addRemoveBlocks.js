@@ -235,7 +235,6 @@ function findFirstLineOfText(markdownText) {
 
         return tempDiv.textContent.trim();
     }
-
     return '';
 }
 

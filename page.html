@@ -66,7 +66,9 @@
     </div>
 
     <div id="mainContainer" style="display: flex;">
+
         <div id="menu" style="display: none;">
+            <button><i class=""></i></button>
             <div id="directory-contents-list"></div>
         </div>
 
@@ -83,8 +85,15 @@
             </div>
         </div>
 
-        <div id="outline" style="display: none;"></div>
-
+        <div id="outline" style="display: none;">
+            <div id="outlineHeader">
+                Outline
+                <hr>
+            </div>
+            <div id="outlineList">
+                <!-- outline list here -->
+            </div>
+        </div>
     </div>
 
     <!-- data management -->
@@ -121,9 +130,17 @@
     </script>
 
     <script>
+        var returnBtn = document.getElementById('return')
+        returnBtn.addEventListener('click', function () {
+            ipcRenderer.send('load-index')
+        })
+    </script>
+
+    <script>
         function importJsonData(jsonData) {
             const blocksContainer = document.getElementById('blocks');
             blocksContainer.innerHTML = '';
+            document.getElementById('outlineList').innerHTML = '';
             jsonData.forEach((blockData, index) => {
                 insertBlock(index, blockData.cue, blockData.note, blockData.highlighted, blockData.id);
             });
