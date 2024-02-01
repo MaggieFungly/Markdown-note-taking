@@ -1,5 +1,6 @@
 const toggleOutlineBtn = document.getElementById("toggleOutline");
-const outline = document.getElementById("outline");
+var outline = document.getElementById("outline");
+var blocks = document.getElementById('blocks');
 
 toggleOutlineBtn.addEventListener('click', toggleOutline);
 
