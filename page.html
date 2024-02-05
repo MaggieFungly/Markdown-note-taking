@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cornell Notes</title>
+
     <!-- codemirror -->
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
@@ -13,11 +14,14 @@
     <script src="node_modules/codemirror/addon/edit/continuelist.js"></script>
     <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
 
+    <!-- styles -->
     <link rel="stylesheet" href="resources/fontawesome/fontawesome-free-6.5.1-web/css/all.css">
     <link rel="stylesheet" href="pagestyle.css">
     <link rel="stylesheet" href="node_modules/highlight.js/styles/atom-one-dark.css">
     <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+    <!-- render processes -->
     <script src="node_modules/marked/marked.min.js"></script>
     <script src="node_modules/highlight.js/lib/core.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
@@ -40,7 +44,6 @@
 </head>
 
 <body>
-
     <div id="searchDiv" style="display: none;">
         <input type="text" id="searchBox" placeholder="Enter search term"></input>
         <button id="findNextButton"><i class="fa-solid fa-chevron-down"></i></button>
@@ -52,9 +55,6 @@
         <div id="leftContainer" style="display: flex;">
             <button id="menuButton" style="width: 20px;" title="Menu">
                 <i class="fa-solid fa-bars"></i>
-            </button>
-            <button id="return">
-                <i class="fas fa-chevron-left" title="Return to main page"></i>
             </button>
         </div>
 
@@ -68,8 +68,16 @@
     <div id="mainContainer" style="display: flex;">
 
         <div id="menu" style="display: none;">
-            <button><i class=""></i></button>
-            <div id="directory-contents-list"></div>
+            <div id="menuButtonDiv">
+                <button id="return" title="Return to home page">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+                <button id="createNewFileButton" title="Create new file">
+                    <i class="fa-solid fa-file-pen"></i>
+                </button>
+            </div>
+
+            <div id="directory-contents-list" data-path=""></div>
         </div>
 
         <div id="editorContainer">
@@ -91,7 +99,7 @@
                 <hr>
             </div>
             <div id="outlineList">
-                <!-- outline list here -->
+                <!-- outline items here -->
             </div>
         </div>
     </div>
@@ -102,6 +110,9 @@
     <!-- page management -->
     <script src="addRemoveBlocks.js"></script>
     <script src="pageFunctions.js"></script>
+    <!-- <script> -->
+    <!-- Split(['#menu', '#editorContainer', '#outline']) -->
+    <!-- </script> -->
 
     <!-- electron transportation -->
     <script>
@@ -114,19 +125,14 @@
                 let newTitle = title.value;
                 // Send the new title to the main process to rename the file
                 ipcRenderer.send('rename-file', newTitle);
-            }
-        });
-        ipcRenderer.on('rename-file', (event, status, newTitleWithoutExtension) => {
-            if (status === 'success') {
-                console.log('File renamed to', newTitleWithoutExtension);
-            } else {
-                console.error('Failed to rename file');
+                title.blur();
             }
         });
 
         ipcRenderer.on('set-title', (event, fileName) => {
             document.getElementById('title').value = fileName;
         });
+
     </script>
 
     <script>
@@ -137,10 +143,15 @@
     </script>
 
     <script>
+
+        function clearContents() {
+            document.getElementById('blocks').innerHTML = '';
+            document.getElementById('outlineList').innerHTML = '';
+        }
+
         function importJsonData(jsonData) {
             const blocksContainer = document.getElementById('blocks');
-            blocksContainer.innerHTML = '';
-            document.getElementById('outlineList').innerHTML = '';
+            clearContents();
             jsonData.forEach((blockData, index) => {
                 insertBlock(index, blockData.cue, blockData.note, blockData.highlighted, blockData.id);
             });
@@ -153,6 +164,8 @@
                 importJsonData(response.data);
             }
         });
+
+        ipcRenderer.on('clear-contents', clearContents);
     </script>
 
     <script>

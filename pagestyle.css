@@ -54,8 +54,36 @@ button:hover {
     margin-top: 8px;
 }
 
+#menuButtonDiv {
+    display: flex;
+}
+
 #directory-contents-list {
     padding-top: 20px;
+}
+
+.split {
+    display: flex;
+    flex-direction: row;
+}
+
+.gutter {
+    background-color: #eee;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    width: 3px;
+}
+
+.gutter .gutter-horizontal {
+    /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg=='); */
+    cursor: col-resize;
+    width: 1px;
+    color: red;
+}
+
+.fa-folder, .fa-file {
+    margin-right: 3px;
+    margin-left: 3px;
 }
 
 .fileItem {
@@ -65,11 +93,31 @@ button:hover {
     font-family: var(--env-font-family);
     font-size: var(--item-font-size);
     margin: var(--item-margin);
+    display: block;
     padding: var(--item-padding);
+    align-items: center;
 }
 
 .fileItem:hover {
     background-color: var(--item-hover-background-color);
+}
+
+.dropdown-menu {
+    width: 150px;
+    min-height: 150px;
+    background-color: #f4f4f4;
+    display: block;
+    border: 1px solid black;
+    border-radius: 1px;
+    padding: 10px;
+}
+
+.dropdown-menu button {
+    width: 100%;
+    padding: 3px;
+    font-size: var(--item-font-size);
+    color: var(--item-color);
+    justify-content: left;
 }
 
 #outline {
@@ -102,15 +150,16 @@ button:hover {
     background-color: var(--item-background-color);
     transition: var(--transition);
     color: var(--item-color);
+    align-items: center;
+    cursor: pointer;
 }
 
 .outlineItem:hover {
     background-color: var(--item-hover-background-color);
 }
 
-#editorContainer {
-    width: 100%;
-    margin: 2px;
+.outlineItem .fa-regular {
+    margin: 3px;
 }
 
 #mainContainer {
@@ -139,6 +188,10 @@ button:hover {
     /* Allows the editor container to fill remaining space */
     max-height: 100vh;
     /* Adjust based on your layout needs */
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    padding: 5px;
 }
 
 /* Custom scrollbar styles for Webkit browsers to ensure visibility when active */
@@ -166,6 +219,11 @@ button:hover {
     /* 'auto' or 'thin' to show scrollbars only when necessary */
     scrollbar-color: darkgrey transparent;
     /* Adjust scrollbar color as needed */
+}
+
+#menuButtonDiv {
+    padding: 5px;
+    align-items: center;
 }
 
 /* Style for the sidebar menu */
@@ -261,6 +319,10 @@ button:hover {
 .buttonContainer {
     width: 3%;
     text-align: center;
+}
+
+.buttonContainer .fa {
+    font-size: 10px;
 }
 
 .cueContainer,

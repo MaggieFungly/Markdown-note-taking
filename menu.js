@@ -1,69 +1,241 @@
 const menuButton = document.getElementById('menuButton');
+// Event listener for the menu button click
+menuButton.addEventListener('click', toggleMenu);
+
 const menuDiv = document.getElementById('menu');
 
-// Function to fetch and update directory contents
-function fetchAndUpdateDirectoryContents() {
-    ipcRenderer.send('get-directory-contents');
-}
+const createNewFileButton = document.getElementById('createNewFileButton');
+createNewFileButton.addEventListener('click', createNewFile);
 
-// Function to update the UI with directory contents
-function updateUIWithDirectoryContents(items) {
-    const list = document.getElementById('directory-contents-list');
-    list.innerHTML = ''; // Clear existing list
 
+function updateUIWithDirectoryContents(items, parentElement) {
     items.forEach(item => {
-        const listItem = document.createElement('div');
-        listItem.className = 'fileItem';
-        listItem.textContent = item.name;
-        listItem.title = item.path; // Tooltip showing the full path
+        const fileItemDiv = document.createElement('div');
+        fileItemDiv.className = 'fileItem';
+        fileItemDiv.setAttribute('data-path', item.path);
+        fileItemDiv.setAttribute('data-is-directory', item.isDirectory.toString());
 
-        // Optionally set a data attribute for the path if needed for handling clicks
-        listItem.setAttribute('data-path', item.path);
-        listItem.setAttribute('data-is-directory', item.isDirectory);
+        fileItemDiv.textContent = item.name;
+        fileItemDiv.title = item.path;
 
-        // Handle clicks on each item
-        listItem.addEventListener('click', () => {
-            if (item.isDirectory) {
-                console.log(`Directory clicked: ${item.path}`);
-                // Here you can send an IPC message back to the main process to change the current directory
-            } else {
-                console.log(`File clicked: ${item.path}`);
-                // Handle file opening here
-                ipcRenderer.send('load-blocks', item.path);
-            }
-        });
+        // Append fileItem directly to the parentElement
+        parentElement.appendChild(fileItemDiv);
 
-        list.appendChild(listItem);
+        if (item.isDirectory) {
+            handleDirectory(item, fileItemDiv);
+        } else {
+            handleFile(item, fileItemDiv);
+        }
     });
 }
 
+function handleDirectory(item, fileItemDiv) {
+    // Initially set the isToggled attribute as a string 'false'
+    fileItemDiv.setAttribute('isToggled', 'false');
 
+    const directoryChildrenDiv = document.createElement('div');
+    directoryChildrenDiv.style.display = 'none';
+    fileItemDiv.appendChild(directoryChildrenDiv);
+
+    fileItemDiv.addEventListener('click', function (event) {
+        // Prevent event from propagating to avoid triggering parent element's click handlers
+        event.stopPropagation();
+
+        if (fileItemDiv.getAttribute('isToggled') === 'true') {
+            directoryChildrenDiv.style.display = 'none';
+            fileItemDiv.setAttribute('isToggled', 'false');
+            console.log('Directory toggled to hidden');
+        } else {
+            directoryChildrenDiv.style.display = 'block';
+            fileItemDiv.setAttribute('isToggled', 'true');
+            fetchDirectoryContents(item.path, directoryChildrenDiv);
+        }
+    });
+
+    fileItemDiv.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        fileItemDiv.addEventListener('contextmenu', function (event) {
+            DirectoryDropDownMenu(item, event);
+        })
+    })
+}
+
+function fetchDirectoryContents(path, itemDiv) {
+    ipcRenderer.send('get-directory-contents', path);
+    ipcRenderer.once('get-directory-contents-response', (event, { error, items }) => {
+        if (error) {
+            console.error('Error fetching directory contents:', error.message);
+            return;
+        } else {
+            itemDiv.innerHTML = '';
+            updateUIWithDirectoryContents(items, itemDiv);
+        }
+    });
+}
+
+function handleFile(item, fileItemDiv) {
+    fileItemDiv.addEventListener('click', function (event) {
+        event.stopPropagation(); // Prevent the directory click handler from being triggered
+        ipcRenderer.send('load-blocks', item.path);
+    });
+
+    fileItemDiv.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+        event.stopPropagation(); // Prevent triggering parent directory's context menu
+        fileDropdownMenu(item, event);
+    });
+}
 
 // Function to toggle the menu visibility
 function toggleMenu() {
     const isMenuVisible = menuDiv.style.display === 'block';
     menuDiv.style.display = isMenuVisible ? 'none' : 'block';
-
-    // Fetch and display directory contents only if the menu is becoming visible
-    if (!isMenuVisible) {
-        fetchAndUpdateDirectoryContents();
-    }
 }
 
-// Event listener for the menu button click
-menuButton.addEventListener('click', toggleMenu);
+function createNewFile() {
+    ipcRenderer.send('create-new-file', '');
+}
 
-// Event listener for the directory contents response
-ipcRenderer.on('get-directory-contents-response', (event, data) => {
-    if (data.error) {
-        console.error('Error fetching directory contents:', data.message);
-        return;
+let currentContextMenu = null;
+function fileDropdownMenu(item, event) {
+    // Prevent the default context menu
+    event.preventDefault();
+
+    // Remove any existing context menu
+    if (currentContextMenu) {
+        currentContextMenu.remove();
+        currentContextMenu = null;
     }
-    updateUIWithDirectoryContents(data.items);
-});
+
+    // Create the dropdown menu
+    const listItemDropDownMenu = document.createElement('div');
+    listItemDropDownMenu.className = 'dropdown-menu';
+    listItemDropDownMenu.style.position = 'absolute';
+    listItemDropDownMenu.style.left = '150px';
+    listItemDropDownMenu.style.top = `${event.pageY}px`;
+
+    // Add buttons or options to the dropdown menu
+    // open file button
+    const openButton = document.createElement('button');
+    openButton.textContent = 'Open Note';
+    openButton.onclick = function () {
+        console.log(`Open clicked: ${item.path}`);
+        ipcRenderer.send('load-blocks', item.path);
+        listItemDropDownMenu.remove(); // Remove menu after action
+        currentContextMenu = null; // Reset current context menu reference
+    };
+    listItemDropDownMenu.appendChild(openButton);
+
+    // delete file button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete Note';
+    deleteButton.onclick = function () {
+        console.log('File moved to trashcan.');
+        ipcRenderer.send('delete-file', item.path);
+        listItemDropDownMenu.remove();
+        currentContextMenu = null;
+    }
+    listItemDropDownMenu.appendChild(deleteButton);
+
+    const createNoteButton = document.createElement('button');
+    createNoteButton.textContent = 'Create Note';
+    createNoteButton.onclick = function () {
+        ipcRenderer.send('create-new-file', item.path);
+    }
+
+    // Append the dropdown menu to the body to display it
+    document.body.appendChild(listItemDropDownMenu);
+
+    // Update the current context menu reference
+    currentContextMenu = listItemDropDownMenu;
+
+    // Setup to hide the dropdown menu when clicking elsewhere
+    document.addEventListener('click', function onClickOutside() {
+        if (currentContextMenu) {
+            currentContextMenu.remove();
+            currentContextMenu = null;
+            document.removeEventListener('click', onClickOutside);
+        }
+    });
+}
+
+function DirectoryDropDownMenu(item, event) {
+    // Prevent the default context menu
+    event.preventDefault();
+
+    // Remove any existing context menu
+    if (currentContextMenu) {
+        currentContextMenu.remove();
+        currentContextMenu = null;
+    }
+
+    // Create the dropdown menu
+    const listItemDropDownMenu = document.createElement('div');
+    listItemDropDownMenu.className = 'dropdown-menu';
+    listItemDropDownMenu.style.position = 'absolute';
+    listItemDropDownMenu.style.left = '150px';
+    listItemDropDownMenu.style.top = `${event.pageY}px`;
+
+    // Add buttons or options to the dropdown menu
+    // open file button
+    const createFileButton = document.createElement('button');
+    createFileButton.textContent = 'Create Note';
+    createFileButton.onclick = function () {
+        ipcRenderer.send('create-new-file', item.path);
+        listItemDropDownMenu.remove(); // Remove menu after action
+        currentContextMenu = null; // Reset current context menu reference
+    };
+    listItemDropDownMenu.appendChild(createFileButton);
+
+
+    // Append the dropdown menu to the body to display it
+    document.body.appendChild(listItemDropDownMenu);
+
+    // Update the current context menu reference
+    currentContextMenu = listItemDropDownMenu;
+
+    // Setup to hide the dropdown menu when clicking elsewhere
+    document.addEventListener('click', function onClickOutside() {
+        if (currentContextMenu) {
+            currentContextMenu.remove();
+            currentContextMenu = null;
+            document.removeEventListener('click', onClickOutside);
+        }
+    });
+}
 
 // when there's a change in the directory, update UI
-ipcRenderer.on('directory-changed', (event, dirPath) => {
-    console.log('directory changed from ipcRenderer')
-    fetchAndUpdateDirectoryContents(); // Fetch and update the UI
+ipcRenderer.on('directory-changed', (event) => {
+    fetchDirectoryContents('', document.getElementById('directory-contents-list'));
+    console.log('directory changed')
+});
+
+// empty page
+ipcRenderer.on('empty-page', (event, args) => {
+    clearContents();
+    document.getElementById('title').value = '';
+});
+
+ipcRenderer.setMaxListeners(1000)
+
+ipcRenderer.on('get-current-file-path', function (event, currentFilePath) {
+    // Ensure the directory-contents-list element exists in your renderer's HTML
+    const directoryContentsList = document.getElementById('directory-contents-list');
+
+    if (!directoryContentsList) {
+        console.error('Directory contents list element not found');
+        return;
+    }
+
+    // Use a template literal or string concatenation to construct the selector
+    const selector = `[data-path="${currentFilePath}"]`;
+    const matchingElement = directoryContentsList.querySelector(selector);
+
+    if (matchingElement) {
+        matchingElement.style.backgroundColor = 'red';
+    } else {
+        console.log('No matching element found for the path:', currentFilePath);
+    }
 });

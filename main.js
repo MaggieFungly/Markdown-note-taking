@@ -4,6 +4,7 @@ const path = require('path');
 
 let win;
 let currentFilePath = ''; // Holds the path of the current file
+let currentDir = '';
 
 // Create the main window
 function createWindow() {
@@ -34,7 +35,7 @@ function setupIpcEventListeners() {
     ipcMain.on('open-file-dialog', openFileDialog);
     ipcMain.on('save-blocks-data', saveBlocksData);
     ipcMain.on('rename-file', renameFile);
-    ipcMain.on('open-json-file', openJsonFile);
+    ipcMain.on('open-json-file', showOpenFileDialog);
     ipcMain.on('load-index', loadIndex);
     ipcMain.on('open-link-externally', openLinkExternally);
     ipcMain.on('open-new-window', openNewWindow);
@@ -48,12 +49,20 @@ function setupIpcEventListeners() {
     ipcMain.on('stop-search', (event) => {
         stopFindInPage();
     });
-    ipcMain.on('get-directory-contents', getDirectoryContents);
+    ipcMain.on('get-directory-contents', (event, dirPath) => {
+        getDirectoryContents(event, dirPath);
+    });
     ipcMain.on('load-note-page', (event, path) => {
         loadNotePage(path)
     });
     ipcMain.on('load-blocks', (event, path) => {
         loadBlocks(path)
+    });
+    ipcMain.on('create-new-file', (event, newPath) => {
+        createNewFile(newPath, 0);
+    });
+    ipcMain.on('delete-file', (event, path) => {
+        deleteFile(path);
     })
 }
 
@@ -63,7 +72,7 @@ function openFileDialog(event) {
         properties: ['openDirectory']
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
-            createNewFile(result.filePaths[0], event);
+            createNewFile(result.filePaths[0], 1, event);
         }
     }).catch(err => {
         console.log('Error opening dialog:', err);
@@ -121,7 +130,6 @@ function renameFile(event, newTitle) {
         } else {
             currentFilePath = newFilePath; // Update the current file path
             const newTitleWithoutExtension = path.basename(newFilePath, '.json');
-            event.reply('rename-file-response', 'success', newTitleWithoutExtension);
             // set the new title to the the page
             win.webContents.send('set-title', newTitleWithoutExtension);
         }
@@ -129,13 +137,15 @@ function renameFile(event, newTitle) {
 }
 
 // Event handler to open a JSON file
-function openJsonFile(event) {
+function showOpenFileDialog(event) {
     dialog.showOpenDialog({
         properties: ['openFile'],
         filters: [{ name: 'JSON Files', extensions: ['json'] }]
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
             const filePath = result.filePaths[0];
+            currentDir = path.dirname(filePath);
+            console.log(currentDir);
             loadNotePage(filePath);
         }
     }).catch(err => {
@@ -144,21 +154,8 @@ function openJsonFile(event) {
 }
 
 function loadNotePage(filePath) {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-        } else {
-            // store current file path
-            currentFilePath = filePath; // Update the current file path
-            win.loadFile('page.html').then(() => {
-                const fileNameWithoutExtension = path.basename(filePath, '.json');
-                win.webContents.send('set-title', fileNameWithoutExtension);
-                win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
-
-                // watchDirectory when the file is loaded
-                watchDirectory();
-            });
-        }
+    win.loadFile('page.html').then(() => {
+        loadBlocks(filePath);
     });
 }
 
@@ -167,8 +164,10 @@ function loadBlocks(filePath) {
         if (err) {
             console.error('Error reading file:', err);
         } else {
-            // store current file path
-            currentFilePath = filePath; // Update the current file path
+            currentFilePath = filePath;
+            console.log(currentFilePath);
+            win.webContents.send('get-current-file-path', currentFilePath);
+
             const fileNameWithoutExtension = path.basename(filePath, '.json');
             win.webContents.send('set-title', fileNameWithoutExtension);
             win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
@@ -196,8 +195,12 @@ function openNewWindow(event) {
 }
 
 // Function to create a new file
-function createNewFile(folderPath, event) {
-    // Logic for creating a new file
+function createNewFile(folderPath, isLoadPage, event) {
+
+    if (folderPath === '') {
+        folderPath = currentDir;
+    }
+
     let fileName = 'Untitled.json';
     let filePath = path.join(folderPath, fileName);
     let fileNumber = 1;
@@ -216,11 +219,13 @@ function createNewFile(folderPath, event) {
             dialog.showErrorBox('File Creation Error', `An error occurred creating the file: ${err.message}`);
         } else {
             currentFilePath = filePath; // Store the new file path
-            win.loadFile('page.html').then(() => {
-                // Send the file name to the renderer after loading page.html
-                const fileNameWithoutExtension = path.basename(filePath, '.json');
-                win.webContents.send('set-title', fileNameWithoutExtension);
-            });
+
+            if (isLoadPage) {
+                loadNotePage(currentFilePath);
+            } else {
+                win.webContents.send('clear-contents');
+                loadBlocks(currentFilePath);
+            }
         }
     });
 }
@@ -260,50 +265,58 @@ function stopFindInPage(action = 'clearSelection') {
 }
 
 let directoryWatcher = null; // Keep a reference to the watcher to avoid multiple instances
-
 function watchDirectory() {
-    const dirPath = currentFilePath ? path.dirname(currentFilePath) : app.getPath('documents');
-
     if (directoryWatcher) {
         directoryWatcher.close();
     }
 
-    directoryWatcher = fs.watch(dirPath, (eventType, filename) => {
+    directoryWatcher = fs.watch(currentDir, (eventType, filename) => {
         if (filename) {
-            win.webContents.send('directory-changed', dirPath); // Notify the renderer process
+            win.webContents.send('directory-changed');
         }
     });
 }
 
 
-// This function needs to be adjusted to use IPC to communicate with the renderer process
-function getDirectoryContents() {
-    if (!currentFilePath) {
-        win.webContents.send('get-directory-contents-response', { error: true, message: 'No directory path set' });
-        return;
-    }
+function getDirectoryContents(event, dirPath = '') {
 
-    const dirPath = path.dirname(currentFilePath);
+    const targetDirPath = dirPath || currentDir;
 
-    fs.readdir(dirPath, { withFileTypes: true }, (err, dirents) => {
+    fs.readdir(targetDirPath, { withFileTypes: true }, (err, dirents) => {
         if (err) {
-            win.webContents.send('get-directory-contents-response', { error: true, message: err.message });
+            event.reply('get-directory-contents-response', { error: true, message: err.message });
             return;
         }
-        
-        // each item contains name, filetype (.json or directory), and absolute path
+
         const items = dirents
             .filter(dirent => dirent.isDirectory() || path.extname(dirent.name).toLowerCase() === '.json')
             .map(dirent => ({
                 name: dirent.name,
                 isDirectory: dirent.isDirectory(),
-                // Provide the full path for each item
-                path: path.join(dirPath, dirent.name)
+                path: path.join(targetDirPath, dirent.name)
             }));
 
-        win.webContents.send('get-directory-contents-response', { error: false, items });
+        event.reply('get-directory-contents-response', { error: false, items });
     });
 }
+
+async function moveToTrash(filePath) {
+    try {
+        await shell.trashItem(filePath);
+        console.log(`File moved to trash: ${filePath}`);
+    } catch (error) {
+        console.error(`Failed to move file to trash: ${error}`);
+    }
+}
+
+function deleteFile(filePath) {
+
+    if (filePath === currentFilePath) {
+        win.webContents.send('empty-page');
+    }
+    moveToTrash(filePath);
+}
+
 
 
 // Start the application when ready
