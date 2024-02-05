@@ -7,84 +7,95 @@ const menuDiv = document.getElementById('menu');
 const createNewFileButton = document.getElementById('createNewFileButton');
 createNewFileButton.addEventListener('click', createNewFile);
 
+const createFolderButton = document.getElementById('createFolderButton');
+createFolderButton.addEventListener('click', function (event) {
+    const path = document.getElementById('directory-contents-list').getAttribute('data-path')
+    ipcRenderer.send('create-folder', path)
+});
 
-function updateUIWithDirectoryContents(items, parentElement) {
-    items.forEach(item => {
-        const fileItemDiv = document.createElement('div');
-        fileItemDiv.className = 'fileItem';
-        fileItemDiv.setAttribute('data-path', item.path);
-        fileItemDiv.setAttribute('data-is-directory', item.isDirectory.toString());
+// keep track of the toggling states
+const directoryToggleStates = {};
+function updateUIWithDirectoryTree(tree, parentElement) {
 
-        fileItemDiv.textContent = item.name;
-        fileItemDiv.title = item.path;
+    tree.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
-        // Append fileItem directly to the parentElement
-        parentElement.appendChild(fileItemDiv);
+    tree.forEach(node => {
+        if (node.isDirectory) {
+            // Create a directory node element
 
-        if (item.isDirectory) {
-            handleDirectory(item, fileItemDiv);
+            const directoryNodeDiv = document.createElement('div');
+            directoryNodeDiv.className = 'directoryNode';
+            directoryNodeDiv.setAttribute('data-path', node.path);
+
+            // Create a label for the directory node
+            const directoryLabel = document.createElement('span');
+            directoryLabel.textContent = node.name;
+            directoryLabel.className = 'directoryLabel';
+
+            directoryNodeDiv.appendChild(directoryLabel);
+
+            parentElement.appendChild(directoryNodeDiv);
+
+            handleDirectory(node, directoryNodeDiv);
+
+            // Recursively update the UI for children
+            if (node.children && node.children.length > 0) {
+                const directoryChildrenDiv = document.createElement('div');
+                directoryChildrenDiv.style.display = directoryToggleStates[node.path] ? 'block' : 'none';
+                directoryChildrenDiv.className = 'directoryChildren';
+
+                directoryNodeDiv.addEventListener('click', function (event) {
+                    if (directoryChildrenDiv.style.display === 'none') {
+                        directoryChildrenDiv.style.display = 'block';
+                        directoryToggleStates[node.path] = true;
+                    } else {
+                        directoryChildrenDiv.style.display = 'none';
+                        directoryToggleStates[node.path] = false;
+                    }
+                });
+
+                // Recursively update UI for children
+                updateUIWithDirectoryTree(node.children, directoryChildrenDiv);
+
+                // Append directoryChildrenDiv to directoryNodeDiv
+                directoryNodeDiv.appendChild(directoryChildrenDiv);
+            }
         } else {
-            handleFile(item, fileItemDiv);
+            // Create a file node element
+            const fileNodeDiv = document.createElement('div');
+            fileNodeDiv.className = 'fileNode';
+            fileNodeDiv.setAttribute('data-path', node.path);
+
+            // Create a label for the file node
+            const fileLabel = document.createElement('span');
+            fileLabel.textContent = node.name;
+            fileLabel.className = 'fileLabel';
+
+            fileNodeDiv.appendChild(fileLabel);
+            parentElement.appendChild(fileNodeDiv);
+
+            handleFile(node, fileNodeDiv);
         }
     });
 }
 
-function handleDirectory(item, fileItemDiv) {
-    // Initially set the isToggled attribute as a string 'false'
-    fileItemDiv.setAttribute('isToggled', 'false');
-
-    const directoryChildrenDiv = document.createElement('div');
-    directoryChildrenDiv.style.display = 'none';
-    fileItemDiv.appendChild(directoryChildrenDiv);
-
-    fileItemDiv.addEventListener('click', function (event) {
-        // Prevent event from propagating to avoid triggering parent element's click handlers
+function handleDirectory(node, directoryNodeDiv) {
+    directoryNodeDiv.addEventListener('contextmenu', function (event) {
         event.stopPropagation();
-
-        if (fileItemDiv.getAttribute('isToggled') === 'true') {
-            directoryChildrenDiv.style.display = 'none';
-            fileItemDiv.setAttribute('isToggled', 'false');
-            console.log('Directory toggled to hidden');
-        } else {
-            directoryChildrenDiv.style.display = 'block';
-            fileItemDiv.setAttribute('isToggled', 'true');
-            fetchDirectoryContents(item.path, directoryChildrenDiv);
-        }
-    });
-
-    fileItemDiv.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        fileItemDiv.addEventListener('contextmenu', function (event) {
-            DirectoryDropDownMenu(item, event);
-        })
+        DirectoryDropDownMenu(node, directoryNodeDiv, event);
     })
 }
 
-function fetchDirectoryContents(path, itemDiv) {
-    ipcRenderer.send('get-directory-contents', path);
-    ipcRenderer.once('get-directory-contents-response', (event, { error, items }) => {
-        if (error) {
-            console.error('Error fetching directory contents:', error.message);
-            return;
-        } else {
-            itemDiv.innerHTML = '';
-            updateUIWithDirectoryContents(items, itemDiv);
-        }
-    });
-}
-
-function handleFile(item, fileItemDiv) {
-    fileItemDiv.addEventListener('click', function (event) {
+function handleFile(node, fileNodeDiv) {
+    fileNodeDiv.addEventListener('click', function (event) {
         event.stopPropagation(); // Prevent the directory click handler from being triggered
-        ipcRenderer.send('load-blocks', item.path);
+        ipcRenderer.send('load-blocks', node.path);
     });
 
-    fileItemDiv.addEventListener('contextmenu', function (event) {
+    fileNodeDiv.addEventListener('contextmenu', function (event) {
         event.preventDefault();
         event.stopPropagation(); // Prevent triggering parent directory's context menu
-        fileDropdownMenu(item, event);
+        fileDropdownMenu(node, event);
     });
 }
 
@@ -95,7 +106,7 @@ function toggleMenu() {
 }
 
 function createNewFile() {
-    ipcRenderer.send('create-new-file', '');
+    ipcRenderer.send('create-new-file', document.getElementById('directory-contents-list').getAttribute('data-path'));
 }
 
 let currentContextMenu = null;
@@ -161,7 +172,7 @@ function fileDropdownMenu(item, event) {
     });
 }
 
-function DirectoryDropDownMenu(item, event) {
+function DirectoryDropDownMenu(node, directoryNodeDiv, event) {
     // Prevent the default context menu
     event.preventDefault();
 
@@ -183,12 +194,36 @@ function DirectoryDropDownMenu(item, event) {
     const createFileButton = document.createElement('button');
     createFileButton.textContent = 'Create Note';
     createFileButton.onclick = function () {
-        ipcRenderer.send('create-new-file', item.path);
+        ipcRenderer.send('create-new-file', node.path);
         listItemDropDownMenu.remove(); // Remove menu after action
         currentContextMenu = null; // Reset current context menu reference
     };
     listItemDropDownMenu.appendChild(createFileButton);
 
+
+    const renameFolderButton = document.createElement('button');
+    renameFolderButton.textContent = 'Rename';
+    renameFolderButton.onclick = function () {
+        const directoryLabel = directoryNodeDiv.querySelector('.directoryLabel')
+
+        directoryLabel.contentEditable = 'true';
+        directoryLabel.focus();
+
+        directoryLabel.addEventListener("keypress", function (event) {
+            if (event.key === 'Enter') {
+                directoryLabel.contentEditable = 'false'
+                directoryNodeDiv.focus()
+                ipcRenderer.send('rename-folder', directoryLabel.textContent, node.path);
+            }
+        }
+        );
+    }
+    listItemDropDownMenu.appendChild(renameFolderButton);
+
+
+    const deleteFolderButton = document.createElement('button');
+    deleteFolderButton.textContent('Delete Folder');
+    listItemDropDownMenu.appendChild(deleteFolderButton);
 
     // Append the dropdown menu to the body to display it
     document.body.appendChild(listItemDropDownMenu);
@@ -206,10 +241,24 @@ function DirectoryDropDownMenu(item, event) {
     });
 }
 
+
+ipcRenderer.on('get-directory-contents-response', (event, { error, tree }) => {
+    if (error) {
+        console.error('Error fetching directory contents:', error.message);
+        return;
+    } else {
+        // Clear the existing content
+        const directoryContentsList = document.getElementById('directory-contents-list');
+        directoryContentsList.innerHTML = '';
+
+        // Call a function to update the UI with the tree structure
+        updateUIWithDirectoryTree(tree, directoryContentsList);
+    }
+});
+
 // when there's a change in the directory, update UI
 ipcRenderer.on('directory-changed', (event) => {
-    fetchDirectoryContents('', document.getElementById('directory-contents-list'));
-    console.log('directory changed')
+    ipcRenderer.send('get-directory-contents')
 });
 
 // empty page
@@ -218,24 +267,6 @@ ipcRenderer.on('empty-page', (event, args) => {
     document.getElementById('title').value = '';
 });
 
-ipcRenderer.setMaxListeners(1000)
-
-ipcRenderer.on('get-current-file-path', function (event, currentFilePath) {
-    // Ensure the directory-contents-list element exists in your renderer's HTML
-    const directoryContentsList = document.getElementById('directory-contents-list');
-
-    if (!directoryContentsList) {
-        console.error('Directory contents list element not found');
-        return;
-    }
-
-    // Use a template literal or string concatenation to construct the selector
-    const selector = `[data-path="${currentFilePath}"]`;
-    const matchingElement = directoryContentsList.querySelector(selector);
-
-    if (matchingElement) {
-        matchingElement.style.backgroundColor = 'red';
-    } else {
-        console.log('No matching element found for the path:', currentFilePath);
-    }
+ipcRenderer.on('folder-created', (event, folderPath) => {
+    let newCreatedFolderPath = folderPath;
 });

@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, webContents, globalShortcut } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const chokidar = require('chokidar');
 
 let win;
 let currentFilePath = ''; // Holds the path of the current file
@@ -63,6 +64,12 @@ function setupIpcEventListeners() {
     });
     ipcMain.on('delete-file', (event, path) => {
         deleteFile(path);
+    });
+    ipcMain.on('create-folder', (event, path) => {
+        createFolder(path);
+    });
+    ipcMain.on('rename-folder', (event, name, path) => {
+        renameFolder(event, name, path);
     })
 }
 
@@ -156,6 +163,9 @@ function showOpenFileDialog(event) {
 function loadNotePage(filePath) {
     win.loadFile('page.html').then(() => {
         loadBlocks(filePath);
+        console.log(currentDir);
+        win.webContents.send('get-current-dir', currentDir);
+        win.webContents.send('directory-changed');
     });
 }
 
@@ -196,10 +206,6 @@ function openNewWindow(event) {
 
 // Function to create a new file
 function createNewFile(folderPath, isLoadPage, event) {
-
-    if (folderPath === '') {
-        folderPath = currentDir;
-    }
 
     let fileName = 'Untitled.json';
     let filePath = path.join(folderPath, fileName);
@@ -264,39 +270,85 @@ function stopFindInPage(action = 'clearSelection') {
     }
 }
 
-let directoryWatcher = null; // Keep a reference to the watcher to avoid multiple instances
+let watcher = null; // Keep a reference to the watcher to avoid multiple instances
+
 function watchDirectory() {
-    if (directoryWatcher) {
-        directoryWatcher.close();
+    if (watcher) {
+        watcher.close();
     }
 
-    directoryWatcher = fs.watch(currentDir, (eventType, filename) => {
-        if (filename) {
-            win.webContents.send('directory-changed');
-        }
+    watcher = chokidar.watch(currentDir, {
+        ignored: /node_modules|\.git/,
+        persistent: true,
+        ignoreInitial: true,
+        depth: Infinity, // Watch all levels of subdirectories
+    });
+
+    watcher.on('all', (event, currentDir) => {
+        win.webContents.send('directory-changed');
     });
 }
 
+// Call watchDirectory with the initial directory you want to watch
+watchDirectory(currentDir);
 
-function getDirectoryContents(event, dirPath = '') {
+function getDirectoryContents(event) {
+    const targetDirPath = currentDir;
+    // Ensure currentDir is correctly initialized and accessible
 
-    const targetDirPath = dirPath || currentDir;
+    function readDirRecursive(dir, callback) {
+        fs.readdir(dir, { withFileTypes: true }, (err, dirents) => {
+            if (err) return callback(err);
 
-    fs.readdir(targetDirPath, { withFileTypes: true }, (err, dirents) => {
+            let pending = dirents.length;
+            if (!pending) return callback(null, []);
+
+            const tree = [];
+
+            dirents.forEach(dirent => {
+                const resPath = path.join(dir, dirent.name);
+
+                if (dirent.isDirectory()) {
+                    // Include directories as nodes in the tree
+                    const directoryNode = {
+                        name: dirent.name,
+                        isDirectory: true,
+                        path: resPath,
+                        children: [] // Initialize an empty array for children
+                    };
+                    // Recursively read subdirectory
+                    readDirRecursive(resPath, (err, children) => {
+                        if (err) return callback(err);
+
+                        directoryNode.children.push(...children); // Add children to the parent directory
+                        tree.push(directoryNode); // Add the directory node to the tree
+                        pending -= 1;
+                        if (!pending) callback(null, tree);
+                    });
+                } else {
+                    // Include .json files as leaf nodes in the tree
+                    if (path.extname(dirent.name).toLowerCase() === '.json') {
+                        tree.push({
+                            name: dirent.name,
+                            isDirectory: false,
+                            path: resPath,
+                            directory: dir
+                        });
+                    }
+                    pending -= 1;
+                    if (!pending) callback(null, tree);
+                }
+            });
+        });
+    }
+
+    readDirRecursive(targetDirPath, (err, tree) => {
         if (err) {
             event.reply('get-directory-contents-response', { error: true, message: err.message });
-            return;
+        } else {
+            // Reply with the tree structure
+            event.reply('get-directory-contents-response', { error: false, tree });
         }
-
-        const items = dirents
-            .filter(dirent => dirent.isDirectory() || path.extname(dirent.name).toLowerCase() === '.json')
-            .map(dirent => ({
-                name: dirent.name,
-                isDirectory: dirent.isDirectory(),
-                path: path.join(targetDirPath, dirent.name)
-            }));
-
-        event.reply('get-directory-contents-response', { error: false, items });
     });
 }
 
@@ -310,13 +362,54 @@ async function moveToTrash(filePath) {
 }
 
 function deleteFile(filePath) {
-
     if (filePath === currentFilePath) {
         win.webContents.send('empty-page');
     }
     moveToTrash(filePath);
 }
 
+function createFolder(directoryPath, folderName = 'Untitled') {
+    // Create the full path for the new folder
+    let folderPath = path.join(directoryPath, folderName);
+
+    // Check if the folder already exists
+    let folderExists = fs.existsSync(folderPath);
+
+    // If the folder exists, add a number to the folder name
+    let count = 1;
+    while (folderExists) {
+        folderName = `Untitled ${count}`;
+        folderPath = path.join(directoryPath, folderName);
+        folderExists = fs.existsSync(folderPath);
+        count++;
+    }
+
+    try {
+        // Create the folder
+        fs.mkdirSync(folderPath);
+        console.log(`Folder '${folderName}' created successfully in '${directoryPath}'.`);
+        win.webContents.send('folder-created', folderPath);
+    } catch (error) {
+        console.error(`Error creating folder '${folderName}' in '${directoryPath}': ${error.message}`);
+    }
+}
+
+
+function renameFolder(event, newName, folderPath) {
+    const parentDir = path.dirname(folderPath);
+    const newFolderPath = path.join(parentDir, newName);
+
+    console.log(parentDir)
+    console.log(newFolderPath);
+    // Rename the folder
+    fs.rename(folderPath, newFolderPath, (err) => {
+        if (err) {
+            console.error('Failed to rename folder:', err);
+        } else {
+            console.log('Folder renamed successfully');
+        }
+    });
+}
 
 
 // Start the application when ready

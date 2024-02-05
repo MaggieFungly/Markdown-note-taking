@@ -75,6 +75,9 @@
                 <button id="createNewFileButton" title="Create new file">
                     <i class="fa-solid fa-file-pen"></i>
                 </button>
+                <button id="createFolderButton" title="Create Folder">
+                    <i class="fa-solid fa-folder-plus"></i>
+                </button>
             </div>
 
             <div id="directory-contents-list" data-path=""></div>
@@ -186,6 +189,11 @@
 
     <!-- menu -->
     <script src="menu.js"></script>
+    <script>
+        ipcRenderer.on('get-current-dir', (event, path) => {
+            document.getElementById('directory-contents-list').setAttribute('data-path', path);
+        });
+    </script>
 
     <!-- outline -->
     <script src="outline.js"></script>

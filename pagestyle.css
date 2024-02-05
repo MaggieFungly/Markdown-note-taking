@@ -3,7 +3,7 @@
     --side-column-background-color: #dddddd24;
     --item-color: rgba(78, 78, 78);
     --item-margin: 3px;
-    --item-padding: 2px;
+    --item-padding: 3px;
     --item-font-size: 12px;
     --env-font-family: system-ui,
         -apple-system,
@@ -81,12 +81,14 @@ button:hover {
     color: red;
 }
 
-.fa-folder, .fa-file {
+.fa-folder,
+.fa-file {
     margin-right: 3px;
     margin-left: 3px;
 }
 
-.fileItem {
+.fileNode,
+.directoryNode {
     color: var(--item-color);
     background-color: var(--item-background-color);
     transition: background-color 0.3s ease-out;
@@ -98,8 +100,29 @@ button:hover {
     align-items: center;
 }
 
-.fileItem:hover {
+.directoryNode, 
+.directoryChildren {
+    border-left: 1.3px solid gray;
+}
+
+.fileNode:hover,
+.directoryNode:hover {
     background-color: var(--item-hover-background-color);
+}
+
+.fileNode:focus, 
+.directoryNode:focus {
+    background-color: red;
+}
+
+.directoryLabel:focus {
+    outline: 1px solid gray;
+    min-width: 10px;
+}
+
+.fileNode::after, 
+.directoryNode::after {
+    background-color: red;
 }
 
 .dropdown-menu {
