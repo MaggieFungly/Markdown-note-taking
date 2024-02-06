@@ -23,12 +23,6 @@ function createWindow() {
 
     // Setup IPC event listeners
     setupIpcEventListeners();
-
-    const undoShortcut = process.platform === 'darwin' ? 'Cmd+Z' : 'Ctrl+Z';
-    globalShortcut.register(undoShortcut, () => {
-        win.webContents.undo();
-    });
-
 }
 
 // Set up IPC event listeners
