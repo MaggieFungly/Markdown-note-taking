@@ -71,6 +71,15 @@ function setupIpcEventListeners() {
     ipcMain.on('rename-folder', (event, name, path) => {
         renameFolder(event, name, path);
     })
+    ipcMain.on('rename-selected-file', (event, oldPath, Newname) => {
+        renameSelectedFile(event, oldPath, Newname);
+    });
+    ipcMain.on('delete-folder', (event, path) => {
+        deleteDirectory(path);
+    });
+    ipcMain.on('show-file-explorer', (event, path) => {
+        showFileExplorer(path);
+    })
 }
 
 // Event handler to open file dialog
@@ -135,10 +144,13 @@ function renameFile(event, newTitle) {
             dialog.showErrorBox('File Rename Error', `An error occurred renaming the file: ${err.message}`);
             event.reply('rename-file-response', 'error');
         } else {
-            currentFilePath = newFilePath; // Update the current file path
+            // Update the current file path
+            currentFilePath = newFilePath;
             const newTitleWithoutExtension = path.basename(newFilePath, '.json');
             // set the new title to the the page
             win.webContents.send('set-title', newTitleWithoutExtension);
+            win.webContents.send('get-current-file-path', currentFilePath);
+            win.webContents.send('directory-changed');
         }
     });
 }
@@ -174,8 +186,9 @@ function loadBlocks(filePath) {
         if (err) {
             console.error('Error reading file:', err);
         } else {
+            // change current file path
             currentFilePath = filePath;
-            console.log(currentFilePath);
+            win.webContents.send('directory-changed');
             win.webContents.send('get-current-file-path', currentFilePath);
 
             const fileNameWithoutExtension = path.basename(filePath, '.json');
@@ -230,7 +243,7 @@ function createNewFile(folderPath, isLoadPage, event) {
                 loadNotePage(currentFilePath);
             } else {
                 win.webContents.send('clear-contents');
-                loadBlocks(currentFilePath);
+                // loadBlocks(currentFilePath);
             }
         }
     });
@@ -271,26 +284,32 @@ function stopFindInPage(action = 'clearSelection') {
 }
 
 let watcher = null; // Keep a reference to the watcher to avoid multiple instances
-
 function watchDirectory() {
     if (watcher) {
-        watcher.close();
+        watcher.close(); // Close any existing watcher
     }
 
     watcher = chokidar.watch(currentDir, {
         ignored: /node_modules|\.git/,
         persistent: true,
         ignoreInitial: true,
-        depth: Infinity, // Watch all levels of subdirectories
+        // watch all subdirectories
+        depth: Infinity,
     });
 
-    watcher.on('all', (event, currentDir) => {
+    // Listen for add and unlink events only to detect new files, deletions, and renames
+    watcher.on('add', path => {
         win.webContents.send('directory-changed');
-    });
+    }).on('unlink', path => {
+        win.webContents.send('directory-changed');
+    }).on('unlinkDir', path => {
+        win.webContents.send('directory-changed');
+    }).on('addDir', path => {
+        win.webContents.send('directory-changed');
+    })
+    // No need to explicitly handle 'change' events as you don't want to monitor changes inside the files
 }
 
-// Call watchDirectory with the initial directory you want to watch
-watchDirectory(currentDir);
 
 function getDirectoryContents(event) {
     const targetDirPath = currentDir;
@@ -329,7 +348,7 @@ function getDirectoryContents(event) {
                     // Include .json files as leaf nodes in the tree
                     if (path.extname(dirent.name).toLowerCase() === '.json') {
                         tree.push({
-                            name: dirent.name,
+                            name: path.basename(dirent.name, '.json'),
                             isDirectory: false,
                             path: resPath,
                             directory: dir
@@ -411,6 +430,54 @@ function renameFolder(event, newName, folderPath) {
     });
 }
 
+function renameSelectedFile(event, oldPath, newName) {
+    const directory = path.dirname(oldPath);
+
+    // Ensure newName ends with .json extension
+    const newNameWithExtension = newName.endsWith('.json') ? newName : `${newName}.json`;
+
+    const newFilePath = path.join(directory, newNameWithExtension);
+
+    fs.rename(oldPath, newFilePath, (err) => {
+        if (err) {
+            console.error('Error renaming file:', err);
+            win.webContents.send('directory-changed');
+        } else {
+            if (oldPath === currentFilePath) {
+                currentFilePath = newFilePath; // Update currentFilePath to the new path
+                loadBlocks(newFilePath); // Reload blocks from the new file path
+            }
+        }
+    });
+}
+
+const fsPromise = require('fs/promises');
+function deleteDirectory(directoryPath) {
+    fsPromise.rm(directoryPath, { recursive: true, force: true })
+        .then(() => {
+            console.log(`Directory deleted successfully: ${directoryPath}`);
+        })
+        .catch((err) => {
+            console.error(`Error deleting directory: ${err}`);
+        });
+}
+
+function showFileExplorer(filePath) {
+
+    directoryPath = path.dirname(filePath);
+
+    shell.openPath(directoryPath)
+        .then((error) => {
+            if (error) {
+                console.error('Error opening file explorer:', error);
+            } else {
+                console.log('File explorer opened successfully.');
+            }
+        })
+        .catch((err) => {
+            console.error('Failed to open file explorer:', err);
+        });
+}
 
 // Start the application when ready
 app.whenReady().then(createWindow);

@@ -78,7 +78,6 @@ button:hover {
     /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg=='); */
     cursor: col-resize;
     width: 1px;
-    color: red;
 }
 
 .fa-folder,
@@ -100,29 +99,29 @@ button:hover {
     align-items: center;
 }
 
+
+.parent:hover > .child {
+  background-color: initial; /* This resets the style for direct children */
+}
+
+.active {
+    background-color: var(--item-hover-background-color);
+}
+
 .directoryNode, 
 .directoryChildren {
     border-left: 1.3px solid gray;
 }
 
-.fileNode:hover,
-.directoryNode:hover {
+.fileNode:hover {
     background-color: var(--item-hover-background-color);
 }
 
-.fileNode:focus, 
-.directoryNode:focus {
-    background-color: red;
-}
-
+.fileLabel:focus,
 .directoryLabel:focus {
-    outline: 1px solid gray;
-    min-width: 10px;
-}
-
-.fileNode::after, 
-.directoryNode::after {
-    background-color: red;
+    border-bottom: 1px solid gray;
+    outline: none;
+    background-color: white;
 }
 
 .dropdown-menu {
@@ -200,7 +199,7 @@ button:hover {
 
 #menu,
 #outline {
-    max-height: 100vh;
+    padding-bottom: 300px;
     /* Adjust based on your layout needs */
     display: none;
     /* Already set in your HTML */
