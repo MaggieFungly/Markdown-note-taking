@@ -1,6 +1,6 @@
 function showDisplay(textValue, displayDiv, codeMirrorEditor) {
     // Process for custom highlighting syntax
-    const processedText = textValue.replace(/==([^=]+)==/g, '<span style="background-color: #F9E065">$1</span>');
+    const processedText = textValue.replace(/==([^=]+)==/g, '<span class="highlighted-text">$1</span>');
 
     // Render Markdown
     displayDiv.innerHTML = marked.parse(processedText);
@@ -34,6 +34,8 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     var codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
         lineNumbers: false,
         theme: "default",
+        mode: "highlightCustomSyntax", 
+        backdrop: "markdown",
         autoCloseBrackets: {
             pairs: "()[]{}''\"\"<>**$$",
             closeBefore: ")]}'\":;>",
@@ -53,6 +55,9 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         },
         override: true,
     });
+
+    autoCloseEquals(codeMirrorEditor);
+    
     codeMirrorEditor.className = codeMirrorClassName;
     codeMirrorEditor.setValue(text);
 
