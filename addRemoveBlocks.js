@@ -1,6 +1,6 @@
 function showDisplay(textValue, displayDiv, codeMirrorEditor) {
     // Process for custom highlighting syntax
-    const processedText = textValue.replace(/==([^=]+)==/g, '<span class="highlighted-text">$1</span>');
+    const processedText = textValue.replace(/==([^=]+)==/g, '<span class="highlight-text">$1</span>');
 
     // Render Markdown
     displayDiv.innerHTML = marked.parse(processedText);
@@ -29,12 +29,13 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     editTextArea.className = textAreaClassName;
     editTextArea.style.display = 'block';
     editTextArea.style.whiteSpace = 'pre-wrap';
+    editTextArea.textContent = text;
     editorDiv.appendChild(editTextArea);
 
     var codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
         lineNumbers: false,
         theme: "default",
-        mode: "highlightCustomSyntax", 
+        mode: "highlightCustomSyntax",
         backdrop: "markdown",
         autoCloseBrackets: {
             pairs: "()[]{}''\"\"<>**$$",
@@ -57,13 +58,14 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     });
 
     autoCloseEquals(codeMirrorEditor);
-    
+    codeMirrorEditor.on('paste', handlePasteEvent);
     codeMirrorEditor.className = codeMirrorClassName;
     codeMirrorEditor.setValue(text);
 
     setTimeout(() => {
         codeMirrorEditor.refresh();
-    }, 0); // Sometimes a delay of 0 is enough, but you might need to adjust this
+    }, 0);
+    // Sometimes a delay of 0 is enough, but you might need to adjust this
 
     codeMirrorEditor.on("change", function () {
         updateBlocksData();
@@ -140,10 +142,10 @@ function highlightButtonConfig(highlightButton, blockContainer) {
     highlightIcon.className = 'fas fa-highlighter';
     highlightButton.appendChild(highlightIcon);
     highlightButton.addEventListener('click', function () {
-        if (blockContainer.style.backgroundColor === 'transparent') {
-            blockContainer.style.backgroundColor = 'rgba(245, 236, 171, 0.3)';
+        if (blockContainer.classList.contains('highlighted-block')) {
+            blockContainer.classList.remove('highlighted-block');
         } else {
-            blockContainer.style.backgroundColor = 'transparent';
+            blockContainer.classList.add('highlighted-block');
         }
     });
 }
@@ -155,8 +157,11 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     // Create a new container for the block
     var blockContainer = document.createElement('div');
     blockContainer.style.display = 'flex';
-    blockContainer.style.backgroundColor = highlighted ? 'rgba(245, 236, 171, 0.3)' : 'transparent';
     blockContainer.className = 'block';
+
+    if (highlighted) {
+        blockContainer.classList.add('highlighted-block');
+    }
 
     // generate a uuid
     if (!id || id === '') {
@@ -164,6 +169,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     }
     blockContainer.dataset.id = id;
 
+    // create codemirror editors
     var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", cue)
     var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", note)
 
@@ -195,6 +201,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
 
     blockContainer.appendChild(buttonContainer);
 
+    // create corresponding outline items
     var outlineItem = document.createElement('div');
     outlineItem.dataset.id = id;
     outlineItem.className = 'outlineItem';
@@ -205,6 +212,17 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
         var firstLine = findFirstLineOfText(currentValue);
         outlineItem.innerText = firstLine;
     });
+
+    outlineItem.addEventListener('click', function (event) {
+        event.preventDefault(); 
+        event.stopPropagation();
+        blockContainer.scrollIntoView({
+            behavior: 'smooth', 
+            block: 'nearest',
+            inline: 'start',
+        })
+        console.log('scrolled into view')
+    })
 
 
     // Determine where to insert the new block

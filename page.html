@@ -9,10 +9,14 @@
     <!-- codemirror -->
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
-    <link rel="stylesheet" href="cm.css">
     <script src="node_modules/codemirror/mode/markdown/markdown.js"></script>
     <script src="node_modules/codemirror/addon/edit/continuelist.js"></script>
     <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
+    <script src="node_modules/codemirror/addon/mode/overlay.js"></script>
+    <script src="node_modules/codemirror/addon/search/search.js"></script>
+    <script src="cmMode.js"></script>
+    <link rel="stylesheet" href="cm.css">
+
 
     <!-- styles -->
     <link rel="stylesheet" href="resources/fontawesome/fontawesome-free-6.5.1-web/css/all.css">
@@ -45,10 +49,10 @@
 
 <body>
     <div id="searchDiv" style="display: none;">
-        <input type="text" id="searchBox" placeholder="Enter search term"></input>
-        <button id="findNextButton"><i class="fa-solid fa-chevron-down"></i></button>
-        <button id="findPreviousButton"><i class="fa-solid fa-chevron-up"></i></button>
-        <button id="stopSearchButton" style="width: 20px;"><i class="fas fa-times"></i></button>
+        <input type="search" id="searchBox" placeholder="Enter search term"></input>
+        <button id="findNextButton" title="Find next (Ctrl + G)"><i class="fa-solid fa-chevron-down"></i></button>
+        <button id="findPreviousButton" title="Find previous (Ctrl + Shift + G)"><i class="fa-solid fa-chevron-up"></i></button>
+        <button id="stopSearchButton" style="width: 20px;" title="Stop searching (Esc)"><i class="fas fa-times"></i></button>
     </div>
 
     <div id="toolbar">
@@ -59,9 +63,27 @@
         </div>
 
         <div id="rightContainer">
-            <button id="toggleReader" title="Reader mode"><i class="fa-solid fa-book-open"></i></button>
-            <button id="toggleEdit" title="Edit mode"><i class="fa-solid fa-pen-to-square"></i></button>
-            <button id="toggleOutline" title="Toggle outline"><i class="fa-solid fa-list"></i></button>
+            <button id="toggleReader" title="Reader mode">
+                <i class="fa-solid fa-book-open"></i>
+            </button>
+            <button id="toggleEdit" title="Edit mode">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button id="exportMarkdown" title="Export to Markdown">
+                <i class="fa-brands fa-markdown"></i>
+            </button>
+            <div id="toggleColumn">
+                <button id="toggleColumnButton" title="Toggle notes or cues">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                </button>
+                <div id="dropdown-content">
+                    <label><input type="checkbox" id="cueCheckbox" value="true" checked>Cue</label>
+                    <label><input type="checkbox" id="noteCheckbox" value="true" checked>Note</label>
+                </div>
+            </div>
+            <button id="toggleOutline" title="Toggle outline">
+                <i class="fa-solid fa-list"></i>
+            </button>            
         </div>
     </div>
 
@@ -97,10 +119,6 @@
         </div>
 
         <div id="outline" style="display: none;">
-            <div id="outlineHeader">
-                Outline
-                <hr>
-            </div>
             <div id="outlineList">
                 <!-- outline items here -->
             </div>
@@ -146,7 +164,6 @@
     </script>
 
     <script>
-
         function clearContents() {
             document.getElementById('blocks').innerHTML = '';
             document.getElementById('outlineList').innerHTML = '';
@@ -197,7 +214,6 @@
 
     <!-- outline -->
     <script src="outline.js"></script>
-
 </body>
 
 </html>

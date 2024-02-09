@@ -18,18 +18,18 @@
         sans-serif;
     --transition: background-color 0.3s ease-out;
     --item-hover-background-color: rgba(162, 162, 162, 0.2);
-    --display-font-size: 10pt;
+    --display-font-size: 11pt;
     --display-line-height: 1.25;
 }
 
 body,
 html {
     margin: 0;
-    padding: 5px;
+    /* padding: 5px; */
     height: 100%;
-    /* This ensures the HTML and body fill the entire screen */
-    overflow: hidden;
-    /* This prevents scrollbars on the whole page */
+    overflow: clip;
+    font-family: var(--env-font-family);
+    color: var(--item-color);
 }
 
 button {
@@ -46,18 +46,6 @@ button {
 button:hover {
     background-color: #c4c4c43c;
     transition: 0.3s;
-}
-
-#menu {
-    width: 200px;
-    margin-right: 8px;
-    border-right: 1px solid gray;
-    background-color: var(--side-column-background-color);
-    margin-top: 8px;
-}
-
-#menuButtonDiv {
-    display: flex;
 }
 
 #directory-contents-list {
@@ -142,20 +130,66 @@ button:hover {
     padding: 10px;
 }
 
-.dropdown-menu button {
+.dropdown-menu button{
     width: 100%;
-    padding: 3px;
-    font-size: var(--item-font-size);
     color: var(--item-color);
     justify-content: left;
+    font-size: var(--item-font-size);
+    padding: var(--item-padding);
+}
+
+#toggleColumn {
+    position: relative;
+    display: inline-block;
+}
+
+#dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    font-size: var(--item-font-size);
+    width: 80px;
+    right: 0;
+}
+
+/* Style the checkboxes within the dropdown */
+#dropdown-content input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* Label styling for better clickability and visual */
+#dropdown-content label {
+    display: block;
+    text-decoration: none;
+}
+
+/* Change background color of labels on hover for visual feedback */
+#dropdown-content label:hover {
+    background-color: #f1f1f1;
+}
+
+/* Show the dropdown menu on hover over the container */
+#toggleColumn:hover #dropdown-content {
+    display: block;
+}
+
+#menu {
+    width: 200px;
+    border-right: 1px solid gray;
+    background-color: var(--side-column-background-color);
+}
+
+#menuButtonDiv {
+    display: flex;
 }
 
 #outline {
     width: 200px;
-    margin-left: 8px;
     border-left: 1px solid gray;
     background-color: var(--side-column-background-color);
-    margin-top: 8px;
+    margin-left: 1px;
 }
 
 #outlineHeader {
@@ -191,12 +225,6 @@ button:hover {
 
 .outlineItem .fa-regular {
     margin: 3px;
-}
-
-#mainContainer {
-    display: flex;
-    height: 100vh;
-    /* Adjust based on your layout needs */
 }
 
 #menu,
@@ -306,10 +334,24 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* position: fixed; */
+    top: 0;
+    width: 100%;
+    padding: 2px;
+    /* height: 15px; */
+}
+
+#mainContainer {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    /* position: relative; */
 }
 
 #rightContainer {
     display: flex;
+    margin-left: auto;
+    padding-right: 3px;
 }
 
 .fontSizeButton {
@@ -350,6 +392,8 @@ button:hover {
 .buttonContainer {
     width: 3%;
     text-align: center;
+    align-items: center;
+    justify-content: center;
 }
 
 .buttonContainer .fa {
@@ -384,9 +428,10 @@ button:hover {
     padding-bottom: 1px;
     border-left: 1.2px solid;
     background-color: transparent;
+    color: black;
 }
 
-.highlighted-text{
+.highlight-text {
     background-color: #F9E065;
 }
 
@@ -412,6 +457,10 @@ button:hover {
     transition: background-color 0.3s ease-out;
     overflow-x: auto;
     border-left-color: black;
+}
+
+.highlighted-block {
+    background-color: rgba(245, 236, 171, 0.3);
 }
 
 .cueEdit:hover,
@@ -443,9 +492,9 @@ button:hover {
 .noteDisplay code {
     font-family: 'Consolas';
     padding: 1px;
-    background-color: #bacccf85;
-    color: #5778A2;
-    font-size: 12px;
+    background-color: #e1e8e985;
+    font-size: var(--display-font-size);
+    color: var(--item-color);
 }
 
 .cueDisplay pre>code,
@@ -476,6 +525,20 @@ button:hover {
 .noteDisplay img {
     max-width: 100%;
     margin: 0 auto;
+}
+
+.cueDisplay u, 
+.noteDisplay u {
+    padding-top: var(--item-font-size);
+    padding-bottom: var(--item-font-size);
+}
+
+.hideContainer {
+    display: none;
+}
+
+.onlyContainer {
+    width: 97%;
 }
 
 table {
