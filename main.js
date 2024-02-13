@@ -4,7 +4,7 @@ const path = require('path');
 const chokidar = require('chokidar');
 
 let win;
-let currentFilePath = ''; // Holds the path of the current file
+let currentFilePath = '';
 let currentDir = '';
 
 // Create the main window
@@ -73,7 +73,11 @@ function setupIpcEventListeners() {
     });
     ipcMain.on('show-file-explorer', (event, path) => {
         showFileExplorer(path);
-    })
+    });
+    ipcMain.on('export-to-markdown', exportToMarkdown);
+    ipcMain.on('save-image', (event, image) => {
+        saveImage(event, image);
+    });
 }
 
 // Event handler to open file dialog
@@ -83,6 +87,7 @@ function openFileDialog(event) {
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
             createNewFile(result.filePaths[0], 1, event);
+            currentDir = result.filePaths[0];
         }
     }).catch(err => {
         console.log('Error opening dialog:', err);
@@ -152,23 +157,22 @@ function renameFile(event, newTitle) {
 // Event handler to open a JSON file
 function showOpenFileDialog(event) {
     dialog.showOpenDialog({
-        properties: ['openFile'],
-        filters: [{ name: 'JSON Files', extensions: ['json'] }]
+        properties: ['openDirectory']
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
-            const filePath = result.filePaths[0];
-            currentDir = path.dirname(filePath);
+            const directoryPath = result.filePaths[0];
+            currentDir = directoryPath; // Update your current directory path
             console.log(currentDir);
-            loadNotePage(filePath);
+            loadNotePage(directoryPath); // Call loadNotePage with the directory path
         }
     }).catch(err => {
-        console.error('Error opening file dialog:', err);
+        console.error('Error opening directory dialog:', err);
     });
 }
 
 function loadNotePage(filePath) {
     win.loadFile('page.html').then(() => {
-        loadBlocks(filePath);
+        // loadBlocks(filePath);
         console.log(currentDir);
         win.webContents.send('get-current-dir', currentDir);
         win.webContents.send('directory-changed');
@@ -176,6 +180,7 @@ function loadNotePage(filePath) {
 }
 
 function loadBlocks(filePath) {
+
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading file:', err);
@@ -289,6 +294,7 @@ function watchDirectory() {
         ignoreInitial: true,
         // watch all subdirectories
         depth: Infinity,
+        usePolling: true
     });
 
     // Listen for add and unlink events only to detect new files, deletions, and renames
@@ -369,8 +375,10 @@ async function moveToTrash(filePath) {
     try {
         await shell.trashItem(filePath);
         console.log(`File moved to trash: ${filePath}`);
+        win.webContents.send('log-message', `File moved to trash: ${filePath}`);
     } catch (error) {
         console.error(`Failed to move file to trash: ${error}`);
+        win.webContents.send('log-message', `Failed to move file to trash: ${error}`);
     }
 }
 
@@ -400,8 +408,8 @@ function createFolder(directoryPath, folderName = 'Untitled') {
     try {
         // Create the folder
         fs.mkdirSync(folderPath);
-        console.log(`Folder '${folderName}' created successfully in '${directoryPath}'.`);
         win.webContents.send('folder-created', folderPath);
+        win.webContents.send('log-message', `Folder '${folderName}' created successfully in '${directoryPath}'.`)
     } catch (error) {
         console.error(`Error creating folder '${folderName}' in '${directoryPath}': ${error.message}`);
     }
@@ -412,14 +420,17 @@ function renameFolder(event, newName, folderPath) {
     const parentDir = path.dirname(folderPath);
     const newFolderPath = path.join(parentDir, newName);
 
-    console.log(parentDir)
-    console.log(newFolderPath);
     // Rename the folder
     fs.rename(folderPath, newFolderPath, (err) => {
         if (err) {
             console.error('Failed to rename folder:', err);
+            win.webContents.send('directory-changed');
+            win.webContents.send('log-message', 'Failed to rename folder');
+            return;
         } else {
             console.log('Folder renamed successfully');
+            win.webContents.send('directory-changed');
+            win.webContents.send('log-message', `Folder renamed to '${newName}'.`)
         }
     });
 }
@@ -435,6 +446,7 @@ function renameSelectedFile(event, oldPath, newName) {
     fs.rename(oldPath, newFilePath, (err) => {
         if (err) {
             console.error('Error renaming file:', err);
+            win.webContents.send('log-message', `Error renaming file: '${err}$'`)
             win.webContents.send('directory-changed');
         } else {
             if (oldPath === currentFilePath) {
@@ -446,13 +458,16 @@ function renameSelectedFile(event, oldPath, newName) {
 }
 
 const fsPromise = require('fs/promises');
+const { eventNames } = require('process');
 function deleteDirectory(directoryPath) {
     fsPromise.rm(directoryPath, { recursive: true, force: true })
         .then(() => {
             console.log(`Directory deleted successfully: ${directoryPath}`);
+            win.webContents.send('log-message', `Directory deleted successfully: ${directoryPath}`)
         })
         .catch((err) => {
             console.error(`Error deleting directory: ${err}`);
+            win.webContents.send('log-message', `Error deleting directory: ${err}`)
         });
 }
 
@@ -471,6 +486,83 @@ function showFileExplorer(filePath) {
         .catch((err) => {
             console.error('Failed to open file explorer:', err);
         });
+}
+
+function exportToMarkdown() {
+    fs.readFile(currentFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            return;
+        }
+
+        // Assuming the file content is a JSON array of notes
+        try {
+            const notesData = JSON.parse(data);
+            const directoryPath = path.dirname(currentFilePath);
+            const baseFilename = path.basename(currentFilePath, path.extname(currentFilePath));
+
+            // Prepare content for note and cue markdown files
+            let noteContent = '';
+            let cueContent = '';
+
+            notesData.forEach(entry => {
+                noteContent += `${entry.note}\n\n`;
+                cueContent += `${entry.cue}\n\n`;
+            });
+
+            // File paths for note and cue markdown files
+            const noteFilePath = path.join(directoryPath, `${baseFilename}-note.md`);
+            const cueFilePath = path.join(directoryPath, `${baseFilename}-cue.md`);
+
+            // Write note content to its markdown file
+            fs.writeFile(noteFilePath, noteContent, (err) => {
+                if (err) {
+                    console.error('Error writing note markdown file:', err);
+                } else {
+                    console.log(`Note Markdown file has been saved: ${noteFilePath}`);
+                    win.webContents.send('log-message', `Note Markdown file has been saved: ${noteFilePath}`)
+                }
+            });
+
+            // Write cue content to its markdown file
+            fs.writeFile(cueFilePath, cueContent, (err) => {
+                if (err) {
+                    console.error('Error writing cue markdown file:', err);
+                    win.webContents.send(`Error writing cue markdown file: ${err}`)
+                } else {
+                    console.log(`Cue Markdown file has been saved: ${cueFilePath}`);
+                    win.webContents.send('log-message', `Cue Markdown file has been saved: ${cueFilePath}`)
+                }
+            });
+
+        } catch (parseErr) {
+            console.error('Error parsing JSON from file:', parseErr);
+        }
+    });
+}
+
+function saveImage(event, base64Image) {
+    const imagesPath = path.join(currentDir, 'Attachments');
+    if (!fs.existsSync(imagesPath)) {
+        fs.mkdirSync(imagesPath, { recursive: true });
+    }
+    const imagePath = path.join(imagesPath, `image-${Date.now()}.png`);
+
+    // Convert base64 string to binary data
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+    const dataBuffer = Buffer.from(base64Data, 'base64');
+
+    // Save the image to disk
+    fs.writeFile(imagePath, dataBuffer, (err) => {
+        if (err) {
+            console.error('Failed to save image:', err);
+            win.webContents.send('log-message', `Failed to save image: ${err}`);
+        } else {
+            console.log('Image saved successfully:', imagePath);
+            win.webContents.send('log-message', `Image saved successfully: ${imagePath}`);
+            event.reply('image-saved', imagePath);
+        }
+    });
 }
 
 // Start the application when ready

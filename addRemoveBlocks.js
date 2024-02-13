@@ -58,14 +58,11 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     });
 
     autoCloseEquals(codeMirrorEditor);
-    codeMirrorEditor.on('paste', handlePasteEvent);
-    codeMirrorEditor.className = codeMirrorClassName;
-    codeMirrorEditor.setValue(text);
+    setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor);
 
     setTimeout(() => {
         codeMirrorEditor.refresh();
     }, 0);
-    // Sometimes a delay of 0 is enough, but you might need to adjust this
 
     codeMirrorEditor.on("change", function () {
         updateBlocksData();
@@ -249,16 +246,24 @@ function removeBlock(index) {
 function findFirstLineOfText(markdownText) {
     const lines = markdownText.split('\n');
 
-    if (lines.length > 0) {
-        const firstLine = lines[0];
-        const html = marked.parse(firstLine);
-        const tempDiv = document.createElement('div');
+    for (let line of lines) {
+        if (line.trim() !== '') {
+            const html = marked.parse(line);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
 
-        tempDiv.innerHTML = html;
+            const content = tempDiv.textContent.trim();
+            const words = content.split(' ');
 
-        return tempDiv.textContent.trim();
+            if (words.length > 20) {
+                return words.slice(0, 20).join(' ') + '...';
+            } else {
+                return content;
+            }
+        }
     }
     return '';
 }
+
 
 
