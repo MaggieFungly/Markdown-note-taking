@@ -78,6 +78,7 @@ function setupIpcEventListeners() {
     ipcMain.on('save-image', (event, image) => {
         saveImage(event, image);
     });
+    ipcMain.on('document-search', getDocumentContents);
 }
 
 // Event handler to open file dialog
@@ -420,6 +421,13 @@ function renameFolder(event, newName, folderPath) {
     const parentDir = path.dirname(folderPath);
     const newFolderPath = path.join(parentDir, newName);
 
+    // check if currentFilePath is within the renamed folder
+    if (currentFilePath && currentFilePath.startsWith(folderPath)) {
+        // Calculate the new path for the current file
+        const relativePath = path.relative(folderPath, currentFilePath);
+        var newCurrentFilePath = path.join(newFolderPath, relativePath);
+    }
+
     // Rename the folder
     fs.rename(folderPath, newFolderPath, (err) => {
         if (err) {
@@ -431,8 +439,15 @@ function renameFolder(event, newName, folderPath) {
             console.log('Folder renamed successfully');
             win.webContents.send('directory-changed');
             win.webContents.send('log-message', `Folder renamed to '${newName}'.`)
+
+            if (newCurrentFilePath) {
+                currentFilePath = newCurrentFilePath;
+                loadBlocks(currentFilePath);
+            }
+
         }
     });
+
 }
 
 function renameSelectedFile(event, oldPath, newName) {
@@ -459,6 +474,7 @@ function renameSelectedFile(event, oldPath, newName) {
 
 const fsPromise = require('fs/promises');
 const { eventNames } = require('process');
+const { event } = require('quasar');
 function deleteDirectory(directoryPath) {
     fsPromise.rm(directoryPath, { recursive: true, force: true })
         .then(() => {
@@ -564,6 +580,26 @@ function saveImage(event, base64Image) {
         }
     });
 }
+
+
+const fse = require('fs-extra');
+const glob = require('glob');
+
+async function mergeJsonFilesInDirectory(dirPath) {
+    const files = glob.sync(`${dirPath}/**/*.json`);
+    const merged = await Promise.all(files.map(async (file) => {
+        const content = await fse.readJson(file);
+        return { fileName: path.basename(file, '.json'), path: file, contents: content };
+    }));
+    return merged;
+}
+
+function getDocumentContents() {
+    mergeJsonFilesInDirectory(currentDir)
+        .then(mergedContents => win.webContents.send('get-merged-contents', mergedContents))
+        .catch(error => win.webContents.send('log-message', error.toString()));
+}
+
 
 // Start the application when ready
 app.whenReady().then(createWindow);

@@ -20,6 +20,7 @@
     --item-hover-background-color: rgba(162, 162, 162, 0.2);
     --display-font-size: 11pt;
     --display-line-height: 1.25;
+    --link-color: #2796cb
 }
 
 body,
@@ -49,6 +50,7 @@ button:hover {
 }
 
 #directory-contents-list {
+    padding: 8px;
     padding-top: 20px;
 }
 
@@ -130,7 +132,7 @@ button:hover {
     padding: 10px;
 }
 
-.dropdown-menu button{
+.dropdown-menu button {
     width: 100%;
     color: var(--item-color);
     justify-content: left;
@@ -190,6 +192,7 @@ button:hover {
     border-left: 1px solid gray;
     background-color: var(--side-column-background-color);
     margin-left: 1px;
+    padding-top: 10px;
 }
 
 #outlineHeader {
@@ -285,6 +288,42 @@ button:hover {
     align-items: center;
 }
 
+#searchDocuments {
+    display: flex;
+}
+
+#search-documents-input {
+    background-color: white;
+    width: 80%;
+    font-size: var(--item-font-size);
+    height: 20px;
+    align-items: center;
+}
+
+#search-documents-input:focus {
+    outline: none;
+}
+
+.searched-item {
+    font-size: var(--item-font-size);
+    color: var(--item-color);
+    padding: var(--item-padding);
+    display: block;
+    transition: var(--transition);
+}
+
+.searched-item:hover {
+    background-color: var(--item-hover-background-color);
+}
+
+.searched-file-name {
+    font-weight: bold;
+}
+
+.matched-content {
+    font-size: var(--item-font-size);
+}
+
 /* Style for the sidebar menu */
 #searchDiv {
     position: fixed;
@@ -361,6 +400,18 @@ button:hover {
     width: 20px;
 }
 
+#bottomBar {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: whitesmoke;
+    font-size: var(--item-font-size);
+    color: var(--item-color);
+    height: 15px;
+    padding-left: 10px;
+}
+
 #title {
     border: none;
     border-bottom: 1px solid #000000;
@@ -387,6 +438,10 @@ button:hover {
     width: 100%;
     display: block;
     margin-bottom: 2px;
+}
+
+.block i {
+    color: rgb(204, 204, 204);
 }
 
 .buttonContainer {
@@ -484,7 +539,7 @@ button:hover {
     border-left: 1.5px solid #7D93B0;
     background-color: #f6f6f642;
     padding-left: 2px;
-    margin-left: 2px;
+    margin: 5px;
 }
 
 .CodeMirror .cm-comment,
@@ -518,7 +573,7 @@ button:hover {
 .CodeMirror .cm-link,
 .cueDisplay a,
 .noteDisplay a {
-    color: #2796cb;
+    color: var(--link-color);
 }
 
 .cueDisplay img,
@@ -527,7 +582,7 @@ button:hover {
     margin: 0 auto;
 }
 
-.cueDisplay u, 
+.cueDisplay u,
 .noteDisplay u {
     padding-top: var(--item-font-size);
     padding-bottom: var(--item-font-size);

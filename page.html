@@ -51,8 +51,10 @@
     <div id="searchDiv" style="display: none;">
         <input type="search" id="searchBox" placeholder="Enter search term"></input>
         <button id="findNextButton" title="Find next (Ctrl + G)"><i class="fa-solid fa-chevron-down"></i></button>
-        <button id="findPreviousButton" title="Find previous (Ctrl + Shift + G)"><i class="fa-solid fa-chevron-up"></i></button>
-        <button id="stopSearchButton" style="width: 20px;" title="Stop searching (Esc)"><i class="fas fa-times"></i></button>
+        <button id="findPreviousButton" title="Find previous (Ctrl + Shift + G)"><i
+                class="fa-solid fa-chevron-up"></i></button>
+        <button id="stopSearchButton" style="width: 20px;" title="Stop searching (Esc)"><i
+                class="fas fa-times"></i></button>
     </div>
 
     <div id="toolbar">
@@ -83,13 +85,13 @@
             </div>
             <button id="toggleOutline" title="Toggle outline">
                 <i class="fa-solid fa-list"></i>
-            </button>            
+            </button>
         </div>
     </div>
 
     <div id="mainContainer" style="display: flex;">
 
-        <div id="menu" style="display: none;">
+        <div id="menu" style="display: block;">
             <div id="menuButtonDiv">
                 <button id="return" title="Return to home page">
                     <i class="fa-solid fa-house"></i>
@@ -102,7 +104,16 @@
                 </button>
             </div>
 
+            <div id="searchDocuments">
+                <button id="searchDocumentsButton">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <div id="search-documents-input" contenteditable="true"></div>
+            </div>
+
             <div id="directory-contents-list" data-path=""></div>
+
+            <div id="search-documents-list"></div>
         </div>
 
         <div id="editorContainer">
@@ -125,6 +136,10 @@
         </div>
     </div>
 
+    <div id="bottomBar">
+        <div id="log"></div>
+    </div>
+
     <!-- data management -->
     <script src="saveData.js"></script>
 
@@ -137,7 +152,7 @@
 
     <!-- electron transportation -->
     <script>
-        const { ipcRenderer } = require('electron');
+        // const { ipcRenderer } = require('electron');
 
         const title = document.getElementById('title');
         title.addEventListener("keypress", function (event) {
@@ -167,6 +182,10 @@
         function clearContents() {
             document.getElementById('blocks').innerHTML = '';
             document.getElementById('outlineList').innerHTML = '';
+
+            // checkbox
+            document.getElementById('cueCheckbox').checked = true;
+            document.getElementById('noteCheckbox').checked = true;
         }
 
         function importJsonData(jsonData) {
@@ -203,6 +222,7 @@
 
     <!-- search function -->
     <script src="findInPage.js"></script>
+    <script src="searchDocuments.js"></script>
 
     <!-- menu -->
     <script src="menu.js"></script>
@@ -214,6 +234,20 @@
 
     <!-- outline -->
     <script src="outline.js"></script>
+
+    <!-- log -->
+    <script>
+        ipcRenderer.on('log-message', (event, message) => {
+            const logElement = document.getElementById('log');
+            logElement.innerHTML = '';
+            logElement.innerHTML = message;
+
+            // Set a timeout to clear the message after 10 seconds (10000 milliseconds)
+            setTimeout(() => {
+                logElement.innerHTML = ''; // Clear the message
+            }, 5000); // 10000 milliseconds = 10 seconds
+        });
+    </script>
 </body>
 
 </html>
