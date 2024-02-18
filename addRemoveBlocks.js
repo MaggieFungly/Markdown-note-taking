@@ -1,9 +1,13 @@
-function showDisplay(textValue, displayDiv, codeMirrorEditor) {
-    // Process for custom highlighting syntax
+// renders markdown to html
+function renderText(textValue){
     const processedText = textValue.replace(/==([^=]+)==/g, '<span class="highlight-text">$1</span>');
+    const html = marked.parse(processedText);
+    return html
+}
 
-    // Render Markdown
-    displayDiv.innerHTML = marked.parse(processedText);
+function showDisplay(textValue, displayDiv, codeMirrorEditor) {
+    
+    displayDiv.innerHTML = renderText(textValue);
 
     // Handle math equations
     MathJax.typesetPromise([displayDiv]).then(() => {
@@ -92,8 +96,35 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         showEdit(displayDiv, codeMirrorEditor)
     });
 
+    // link blocks
+    codeMirrorEditor.on('change', (instance, changeObj) => {
+        const cursor = instance.getCursor(); // Get the current cursor position
+        const textBeforeCursor = instance.getRange({ line: cursor.line, ch: 0 }, cursor);
+
+        if (textBeforeCursor.endsWith('[[')) {
+            console.log('link blocks');
+            showFileBox(codeMirrorEditor, cursor); // Pass the cursor position to showFileBox
+        }
+    });
+
     return codeMirrorEditor;
 }
+
+function showFileBox(codeMirrorEditor, cursorPosition) {
+    const searchBox = document.getElementById('searchBox');
+    // Ensure cursorPosition is used to get cursor coordinates
+    const cursorCoords = codeMirrorEditor.cursorCoords(cursorPosition, "window"); // "window" for screen coordinates
+
+    // Position the search box using cursor coordinates
+    searchBox.style.left = cursorCoords.left + 'px';
+    searchBox.style.top = cursorCoords.bottom + 'px'; // Placing it below the cursor
+    searchBox.style.display = 'block';
+
+    // Optionally, you might want to clear previous search results or handle focus
+    searchBox.innerHTML = ''; // Clear previous content
+    // You might want to implement functionality here to populate searchBox with file names
+}
+
 
 function removeButtonConfig(removeButton, blocksContainer) {
     removeButton.className = 'removeButton';
@@ -244,26 +275,43 @@ function removeBlock(index) {
 }
 
 function findFirstLineOfText(markdownText) {
+    let headings = [];
+    let firstSentence = '';
+    let firstLine = '';
     const lines = markdownText.split('\n');
 
     for (let line of lines) {
-        if (line.trim() !== '') {
+        if (line.trim().startsWith('#')) {
+            // Collect headings markdown lines
+            headings.push(line.trim());
+        } else if (!firstSentence && line.trim() !== '') {
+            if (!firstLine) {
+                // Keep the first non-empty, non-heading line as a fallback
+                firstLine = line.trim();
+            }
+            // Attempt to extract the first sentence from non-heading lines
             const html = marked.parse(line);
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-
-            const content = tempDiv.textContent.trim();
-            const words = content.split(' ');
-
-            if (words.length > 20) {
-                return words.slice(0, 20).join(' ') + '...';
-            } else {
-                return content;
+            const content = tempDiv.textContent || tempDiv.innerText || "";
+            const match = content.match(/[^.!?]+[.!?]/);
+            if (match) {
+                firstSentence = match[0].trim();
+                break; // Found the first sentence, exit the loop
             }
         }
     }
-    return '';
+
+    if (headings.length > 0) {
+        const headingsHtml = marked.parse(headings.join('\n'));
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = headingsHtml;
+        return tempDiv.textContent || tempDiv.innerText || "";
+    } else if (firstSentence !== '') {
+        return firstSentence;
+    } else if (firstLine !== '') {
+        return firstLine; // Return the first non-empty, non-heading line if no sentence was found
+    } else {
+        return 'No content found.';
+    }
 }
-
-
-

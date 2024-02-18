@@ -1,3 +1,5 @@
+const nlp = require('compromise');
+
 const MiniSearch = require('minisearch');
 let miniSearch = new MiniSearch({
     fields: ['note', 'cue', 'fileName', 'path'],
@@ -19,7 +21,7 @@ ipcRenderer.on('get-merged-contents', (event, mergedContents) => {
         doc.contents.map(content => ({
             id: `${doc.fileName}-${content.id}`,
             note: content.note || '',
-            cue: content.cue || '', // Ensure cue is a string even if missing
+            cue: content.cue || '',
             fileName: doc.fileName,
             path: doc.path
         }))
@@ -38,7 +40,14 @@ searchDocumentInput.addEventListener('keydown', function (event) {
 });
 
 searchDocumentInput.addEventListener('blur', function (event) {
-    if(searchDocumentInput.textContent === ''){
+    if (searchDocumentInput.textContent === '') {
+        document.getElementById('directory-contents-list').style.display = 'block';
+        searchDocumentsList.style.display = 'none';
+    }
+})
+
+searchDocumentInput.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
         document.getElementById('directory-contents-list').style.display = 'block';
         searchDocumentsList.style.display = 'none';
     }
@@ -56,8 +65,21 @@ function getSearchResults(searchContent) {
     matchedResults = searchResults.map(result => ({
         fileName: result.fileName,
         path: result.path,
-        matchedText: `${result.note}`
+        matchedText: getMatchedFieldContent(result, searchContent),
     }));
+}
+
+function getMatchedFieldContent(result, searchTerm) {
+    const fieldsToCheck = ['note', 'cue', 'fileName']; // Define fields to check for the match
+    const normalizedSearchTerm = searchTerm.toLowerCase(); // Normalize search term for case-insensitive comparison
+
+    // Iterate over the fields to find where the searchTerm is contained
+    for (let field of fieldsToCheck) {
+        if (result[field] && result[field].toLowerCase().includes(normalizedSearchTerm)) {
+            return result[field]; // Return the content of the first matching field
+        }
+    }
+    return ''; // Return an empty string if no match is found in any field
 }
 
 function displaySearchResults() {
@@ -78,7 +100,7 @@ function displaySearchResults() {
 
         matchedContent = document.createElement('div')
         matchedContent.className = 'matched-content'
-        matchedContent.textContent = truncateText(result.matchedText);
+        matchedContent.innerHTML = findSentenceWithTerm(result.matchedText, searchContent);
         item.appendChild(matchedContent);
 
         searchDocumentsList.appendChild(item);
@@ -89,8 +111,34 @@ function displaySearchResults() {
     });
 }
 
-function truncateText(text, maxLength) {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+function findSentenceWithTerm(text, term) {
+    // Normalize the term for case-insensitive search
+    const normalizedTerm = term.toLowerCase();
+
+    // Use compromise to split the text into sentences
+    const sentences = nlp(text).sentences().out('array');
+
+    // Initialize a variable to store the first matching highlighted sentence
+    let highlightedSentence = "";
+
+    // Loop through sentences to find and highlight the first one containing the term
+    for (let sentence of sentences) {
+        if (sentence.toLowerCase().includes(normalizedTerm)) {
+            // Escape special characters in 'term' for use in regex
+            const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            // Create a RegExp for the search term, 'gi' for global and case-insensitive
+            const regex = new RegExp(`(${escapedTerm})`, 'gi');
+
+            // Replace the term in the sentence with a highlighted version
+            highlightedSentence = sentence.replace(regex, `<span class="matched-term">$1</span>`);
+
+            // Break after finding the first match
+            break;
+        }
+    }
+
+    // Return the first matching highlighted sentence or a default message if not found
+    return highlightedSentence || "No match found.";
 }
+
 

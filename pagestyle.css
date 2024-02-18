@@ -2,9 +2,13 @@
     --item-background-color: transparent;
     --side-column-background-color: #dddddd24;
     --item-color: rgba(78, 78, 78);
+    --icon-color: rgba(102, 99, 94, 0.7);
+    --icon-size: 18px;
+    --item-sub-color: gray;
     --item-margin: 3px;
     --item-padding: 3px;
     --item-font-size: 12px;
+    --item-sub-font-size: 10px;
     --env-font-family: system-ui,
         -apple-system,
         BlinkMacSystemFont,
@@ -20,7 +24,7 @@
     --item-hover-background-color: rgba(162, 162, 162, 0.2);
     --display-font-size: 11pt;
     --display-line-height: 1.25;
-    --link-color: #2796cb
+    --link-color: #2796cb;
 }
 
 body,
@@ -33,15 +37,21 @@ html {
     color: var(--item-color);
 }
 
+i {
+    width: var(--icon-size);
+    color: var(--icon-color);
+}
+
 button {
     background-color: transparent;
     border: transparent;
-    color: rgba(102, 99, 94, 0.7);
+    color: var(--icon-color);
     justify-content: center;
     align-items: center;
     text-align: center;
     display: flex;
     width: 20px;
+    padding: 1px;
 }
 
 button:hover {
@@ -49,9 +59,9 @@ button:hover {
     transition: 0.3s;
 }
 
-#directory-contents-list {
-    padding: 8px;
-    padding-top: 20px;
+#directory-contents-list,
+#search-documents-list {
+    padding: 5px;
 }
 
 .split {
@@ -183,10 +193,6 @@ button:hover {
     background-color: var(--side-column-background-color);
 }
 
-#menuButtonDiv {
-    display: flex;
-}
-
 #outline {
     width: 200px;
     border-left: 1px solid gray;
@@ -283,21 +289,31 @@ button:hover {
     /* Adjust scrollbar color as needed */
 }
 
-#menuButtonDiv {
+#menuButtonDiv,
+#searchDocuments {
     padding: 5px;
     align-items: center;
+    display: flex;
 }
 
 #searchDocuments {
-    display: flex;
+    justify-content: space-between;
+    padding-left: 8px;
+}
+
+#searchDocuments .fa-magnifying-glass {
+    height: 15px;
+    width: 15px;
 }
 
 #search-documents-input {
     background-color: white;
-    width: 80%;
+    width: 85%;
     font-size: var(--item-font-size);
     height: 20px;
     align-items: center;
+    /* justify-content: center; */
+    display: flex;
 }
 
 #search-documents-input:focus {
@@ -318,10 +334,16 @@ button:hover {
 
 .searched-file-name {
     font-weight: bold;
+    color: var(--item-sub-color);
 }
 
 .matched-content {
-    font-size: var(--item-font-size);
+    font-size: var(--item-sub-font-size-size);
+    color: var(--item-sub-color);
+}
+
+.matched-term {
+    color: var(--link-color);
 }
 
 /* Style for the sidebar menu */

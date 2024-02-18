@@ -182,23 +182,27 @@ function loadNotePage(filePath) {
 
 function loadBlocks(filePath) {
 
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-        } else {
-            // change current file path
-            currentFilePath = filePath;
-            win.webContents.send('directory-changed');
-            win.webContents.send('get-current-file-path', currentFilePath);
+    if (filePath !== currentFilePath) {
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                console.error('Error reading file:', err);
+            } else {
+                // change current file path
+                currentFilePath = filePath;
+                win.webContents.send('directory-changed');
+                win.webContents.send('get-current-file-path', currentFilePath);
 
-            const fileNameWithoutExtension = path.basename(filePath, '.json');
-            win.webContents.send('set-title', fileNameWithoutExtension);
-            win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
+                const fileNameWithoutExtension = path.basename(filePath, '.json');
+                win.webContents.send('set-title', fileNameWithoutExtension);
+                win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
 
-            // watchDirectory when the file is loaded
-            watchDirectory();
-        }
-    });
+                win.webContents.send('log-message', `Note ${fileNameWithoutExtension} loaded.`)
+
+                // watchDirectory when the file is loaded
+                watchDirectory();
+            }
+        });
+    }
 }
 
 // Event handler to load the index page
