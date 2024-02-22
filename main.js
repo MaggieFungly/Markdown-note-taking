@@ -2,10 +2,13 @@ const { app, BrowserWindow, ipcMain, dialog, shell, webContents, globalShortcut 
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
+const fse = require('fs-extra');
+const glob = require('glob');
 
 let win;
 let currentFilePath = '';
 let currentDir = '';
+let documents = '';
 
 // Create the main window
 function createWindow() {
@@ -54,7 +57,7 @@ function setupIpcEventListeners() {
         loadBlocks(path)
     });
     ipcMain.on('create-new-file', (event, newPath) => {
-        createNewFile(newPath, 0);
+        createNewFile(newPath);
     });
     ipcMain.on('delete-file', (event, path) => {
         deleteFile(path);
@@ -79,6 +82,12 @@ function setupIpcEventListeners() {
         saveImage(event, image);
     });
     ipcMain.on('document-search', getDocumentContents);
+    ipcMain.on('open-internal-link', (event, id, name) => {
+        openInternalLink(id, name);
+    });
+    ipcMain.on('open-linked-note', (event, id) => {
+        openLinkedNote(id);
+    })
 }
 
 // Event handler to open file dialog
@@ -95,6 +104,18 @@ function openFileDialog(event) {
     });
 }
 
+function updateDocument(targetPath, newContents) {
+    const documentIndex = documents.findIndex(doc => {
+        return path.normalize(doc.path) === path.normalize(targetPath);
+    });
+
+    if (documentIndex !== -1) {
+        documents[documentIndex].contents = newContents;
+        return true;
+    }
+    return false;
+}
+
 // Event handler to save blocks data
 function saveBlocksData(event, blocksData) {
     if (currentFilePath === '') {
@@ -106,11 +127,11 @@ function saveBlocksData(event, blocksData) {
         if (err) {
             console.error('Error writing file:', err);
             dialog.showErrorBox('File Write Error', `An error occurred writing the file: ${err.message}`);
-            event.reply('save-blocks-data-response', 'error');
         } else {
-            event.reply('save-blocks-data-response', 'success');
         }
     });
+
+    updateDocument(currentFilePath, blocksData);
 }
 
 // Event handler to rename a file
@@ -151,6 +172,8 @@ function renameFile(event, newTitle) {
             win.webContents.send('set-title', newTitleWithoutExtension);
             win.webContents.send('get-current-file-path', currentFilePath);
             win.webContents.send('directory-changed');
+
+            win.webContents.send(`Note renamed to ${newTitle}.`)
         }
     });
 }
@@ -163,7 +186,6 @@ function showOpenFileDialog(event) {
         if (!result.canceled && result.filePaths.length > 0) {
             const directoryPath = result.filePaths[0];
             currentDir = directoryPath; // Update your current directory path
-            console.log(currentDir);
             loadNotePage(directoryPath); // Call loadNotePage with the directory path
         }
     }).catch(err => {
@@ -173,10 +195,17 @@ function showOpenFileDialog(event) {
 
 function loadNotePage(filePath) {
     win.loadFile('page.html').then(() => {
-        // loadBlocks(filePath);
         console.log(currentDir);
         win.webContents.send('get-current-dir', currentDir);
         win.webContents.send('directory-changed');
+
+        mergeJsonFilesInDirectory(currentDir)
+            .then((merged) => {
+                documents = merged;
+            })
+            .catch((error) => {
+                console.error('Failed to load documents:', error);
+            });
     });
 }
 
@@ -222,7 +251,7 @@ function openNewWindow(event) {
 }
 
 // Function to create a new file
-function createNewFile(folderPath, isLoadPage, event) {
+function createNewFile(folderPath) {
 
     let fileName = 'Untitled.json';
     let filePath = path.join(folderPath, fileName);
@@ -241,14 +270,6 @@ function createNewFile(folderPath, isLoadPage, event) {
             console.error('Error creating file:', err);
             dialog.showErrorBox('File Creation Error', `An error occurred creating the file: ${err.message}`);
         } else {
-            currentFilePath = filePath; // Store the new file path
-
-            if (isLoadPage) {
-                loadNotePage(currentFilePath);
-            } else {
-                win.webContents.send('clear-contents');
-                // loadBlocks(currentFilePath);
-            }
         }
     });
 }
@@ -305,12 +326,16 @@ function watchDirectory() {
     // Listen for add and unlink events only to detect new files, deletions, and renames
     watcher.on('add', path => {
         win.webContents.send('directory-changed');
+        updateMergedDocuments();
     }).on('unlink', path => {
         win.webContents.send('directory-changed');
+        updateMergedDocuments();
     }).on('unlinkDir', path => {
         win.webContents.send('directory-changed');
+        updateMergedDocuments();
     }).on('addDir', path => {
         win.webContents.send('directory-changed');
+        updateMergedDocuments();
     })
     // No need to explicitly handle 'change' events as you don't want to monitor changes inside the files
 }
@@ -469,8 +494,7 @@ function renameSelectedFile(event, oldPath, newName) {
             win.webContents.send('directory-changed');
         } else {
             if (oldPath === currentFilePath) {
-                currentFilePath = newFilePath; // Update currentFilePath to the new path
-                loadBlocks(newFilePath); // Reload blocks from the new file path
+                loadBlocks(newFilePath);
             }
         }
     });
@@ -500,10 +524,11 @@ function showFileExplorer(filePath) {
             if (error) {
                 console.error('Error opening file explorer:', error);
             } else {
-                console.log('File explorer opened successfully.');
+                win.webContents.send('log-message', 'File explorer opened successfully.');
             }
         })
         .catch((err) => {
+            win.webContents.send('log-message', `'Failed to open file explorer: ${err}`);
             console.error('Failed to open file explorer:', err);
         });
 }
@@ -585,23 +610,98 @@ function saveImage(event, base64Image) {
     });
 }
 
-
-const fse = require('fs-extra');
-const glob = require('glob');
-
 async function mergeJsonFilesInDirectory(dirPath) {
     const files = glob.sync(`${dirPath}/**/*.json`);
+
     const merged = await Promise.all(files.map(async (file) => {
         const content = await fse.readJson(file);
-        return { fileName: path.basename(file, '.json'), path: file, contents: content };
+        return {
+            fileName: path.basename(file, '.json'),
+            path: file,
+            contents: content,
+            relativePath: path.join(path.relative(currentDir, path.parse(file).dir), path.parse(file).name)
+        };
     }));
+
     return merged;
 }
 
-function getDocumentContents() {
+function updateMergedDocuments() {
     mergeJsonFilesInDirectory(currentDir)
-        .then(mergedContents => win.webContents.send('get-merged-contents', mergedContents))
-        .catch(error => win.webContents.send('log-message', error.toString()));
+        .then((merged) => {
+            documents = merged;
+        })
+        .catch((error) => {
+            console.error('Failed to load documents:', error);
+        });
+}
+
+
+function getDocumentContents() {
+    win.webContents.send('get-merged-contents', documents);
+    win.webContents.send('log-message', 'Documents fetched.');
+}
+
+
+let blockWin = null;
+let currentContext = null;
+function openInternalLink(id, name) {
+    // Store id and name in currentContext
+    currentContext = { id, name };
+
+    if (blockWin === null || blockWin.isDestroyed()) {
+        blockWin = new BrowserWindow({
+            width: 600,
+            height: 300,
+            webPreferences: {
+                nodeIntegration: true,
+                // Consider using contextIsolation and a preload script for better security
+                contextIsolation: false,
+            },
+        });
+
+        blockWin.loadFile('./blockWindow.html').then(() => {
+            const result = findBlockById(currentContext.id);
+
+            if (result) { // Corrected from `if (block)` to `if (result)`
+                blockWin.webContents.send('block-data', result.block);
+                blockWin.webContents.send('block-name', currentContext.name);
+            } else {
+                console.error('Block not found.');
+                win.webContents.send('log-message', 'Block not found.')
+            }
+        });
+
+        blockWin.on('closed', () => {
+            blockWin = null;
+            currentContext = null; // Clear context when window is closed
+        });
+    } else {
+        blockWin.focus();
+        blockWin.setAlwaysOnTop(true, "floating");
+    }
+}
+
+
+function findBlockById(targetId) {
+
+    for (let document of documents) {
+        // Use .filter() to find blocks with the matching id within the document's contents
+        let matchingBlocks = document.contents.filter(block => block.id === targetId);
+
+        // If matching blocks are found, return the first one along with the document's path
+        if (matchingBlocks.length > 0) {
+            return { block: matchingBlocks[0], path: document.path };
+        }
+    }
+    // Return null if no matching block is found
+    return null;
+}
+
+function openLinkedNote(id) {
+    const result = findBlockById(id);
+    loadBlocks(result.path);
+
 }
 
 

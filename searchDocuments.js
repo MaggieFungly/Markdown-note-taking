@@ -2,8 +2,11 @@ const nlp = require('compromise');
 
 const MiniSearch = require('minisearch');
 let miniSearch = new MiniSearch({
-    fields: ['note', 'cue', 'fileName', 'path'],
-    storeFields: ['fileName', 'path', 'note', 'cue']
+    fields: ['note', 'cue', 'fileName', 'relativePath', 'path'],
+    storeFields: ['note', 'cue', 'fileName', 'relativePath', 'path'],
+    searchOptions: {
+        fuzzy: 0.2
+    }
 });
 
 let allDocumentContents = [];
@@ -19,15 +22,15 @@ ipcRenderer.on('get-merged-contents', (event, mergedContents) => {
     allDocumentContents = mergedContents;
     tempFlattenedDocuments = allDocumentContents.flatMap(doc =>
         doc.contents.map(content => ({
-            id: `${doc.fileName}-${content.id}`,
+            id: content.id,
             note: content.note || '',
             cue: content.cue || '',
             fileName: doc.fileName,
-            path: doc.path
+            path: doc.path,
+            relativePath: doc.relativePath,
         }))
     );
 });
-
 
 searchDocumentInput.addEventListener('keydown', function (event) {
     if (event.key === 'Enter' && !event.shiftKey) {

@@ -1,3 +1,5 @@
+const { ipcRenderer } = require("electron");
+
 CodeMirror.defineMode("highlightCustomSyntax", function (config, parserConfig) {
     var customSyntaxOverlay = {
         token: function (stream, state) {
@@ -54,14 +56,13 @@ function setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor) {
     });
 
     codeMirrorEditor.on('paste', handlePasteEvent);
-
-    // Adjust the ipcRenderer listener to respond within the context of this setup function
-    ipcRenderer.on('image-saved', (event, imagePath) => {
-        if (activeCodeMirrorEditor === codeMirrorEditor) {
-            insertImagePathIntoEditor(codeMirrorEditor, imagePath);
-        }
-    });
 }
+
+// Adjust the ipcRenderer listener to respond within the context of this setup function
+ipcRenderer.on('image-saved', (event, imagePath) => {
+    insertImagePathIntoEditor(activeCodeMirrorEditor, imagePath);
+});
+
 
 function handlePasteEvent(codeMirrorInstance, event) {
     const items = (event.clipboardData || event.originalEvent.clipboardData).items;
@@ -92,3 +93,4 @@ function insertImagePathIntoEditor(codeMirrorEditor, imagePath) {
     const endCursor = doc.getCursor(); // Get the new cursor position after insertion
     doc.setCursor({ line: endCursor.line, ch: endCursor.ch });
 }
+

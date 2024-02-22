@@ -9,6 +9,7 @@
     --item-padding: 3px;
     --item-font-size: 12px;
     --item-sub-font-size: 10px;
+    --item-height: 20px;
     --env-font-family: system-ui,
         -apple-system,
         BlinkMacSystemFont,
@@ -23,6 +24,12 @@
     --transition: background-color 0.3s ease-out;
     --item-hover-background-color: rgba(162, 162, 162, 0.2);
     --display-font-size: 11pt;
+    --display-font-family: Cambria,
+        Cochin,
+        Georgia,
+        Times,
+        'Times New Roman',
+        serif;
     --display-line-height: 1.25;
     --link-color: #2796cb;
 }
@@ -35,6 +42,10 @@ html {
     overflow: clip;
     font-family: var(--env-font-family);
     color: var(--item-color);
+}
+
+:focus {
+    outline: none;
 }
 
 i {
@@ -116,6 +127,7 @@ button:hover {
     border-left: 1.3px solid gray;
 }
 
+.directoryLabel:hover,
 .fileNode:hover {
     background-color: var(--item-hover-background-color);
 }
@@ -123,13 +135,14 @@ button:hover {
 .fileLabel:focus,
 .directoryLabel:focus {
     border-bottom: 1px solid gray;
-    outline: none;
     background-color: white;
 }
 
 .directoryLabel {
+    padding: var(--item-padding);
     padding-left: 4px;
     border-left: 1.5px solid rgb(183, 183, 183);
+    transition: var(--transition);
 }
 
 .dropdown-menu {
@@ -232,8 +245,96 @@ button:hover {
     background-color: var(--item-hover-background-color);
 }
 
-.outlineItem .fa-regular {
-    margin: 3px;
+.outlineItem .heading-level-1 {
+    margin-left: 0ch;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.outlineItem .heading-level-2 {
+    margin-left: 1ch;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.outlineItem .heading-level-3 {
+    margin-left: 2ch;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.outlineItem .heading-level-4 {
+    margin-left: 4ch;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.outlineItem .heading-level-5 {
+    margin-left: 6ch;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.outlineItem .heading-level-6 {
+    margin-left: 8ch;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#suggestions {
+    display: none;
+    position: fixed;
+    /* Changed from absolute to fixed for viewport positioning */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    /* Centers the div */
+    border: 1px solid #ccc;
+    background-color: #fff;
+    padding: 10px;
+    width: 80vh;
+    /* Fixed width */
+    height: 80vh;
+    /* Fixed height */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
+    z-index: 1000;
+    overflow-y: auto;
+    /* Scrollbar as needed */
+}
+
+#suggestion-input {
+    margin: 10px;
+    height: 20px;
+    width: 80%;
+}
+
+.suggestion-item {
+    background-color: var(--item-background-color);
+    transition: var(--transition);
+    cursor: pointer;
+    padding: 10px;
+}
+
+.suggestion-item:hover {
+    background-color: var(--item-hover-background-color);
+}
+
+.suggestion-item-file-path {
+    font-size: var(--item-font-size);
+    font-weight: bold;
+}
+
+.suggestion-item-id {
+    font-size: var(--item-sub-font-size);
+}
+
+.suggestion-item-note {
+    font-size: var(--item-sub-font-size);
+    color: var(--item-color);
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid black;
+    padding: 10px;
 }
 
 #menu,
@@ -263,20 +364,15 @@ button:hover {
 }
 
 /* Custom scrollbar styles for Webkit browsers to ensure visibility when active */
-#menu::-webkit-scrollbar,
-#outline::-webkit-scrollbar,
-#editorContainer::-webkit-scrollbar {
+
+::-webkit-scrollbar {
     width: 5px;
     /* Adjust scrollbar width as needed */
 }
 
-#menu::-webkit-scrollbar-thumb,
-#outline::-webkit-scrollbar-thumb,
-#editorContainer::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background-color: var(--item-hover-background-color);
-    /* Adjust scrollbar color as needed */
     border-radius: 4px;
-    /* Rounds the corners of the scrollbar thumb */
 }
 
 /* Optional: Hide scrollbars for Firefox */
@@ -314,10 +410,7 @@ button:hover {
     align-items: center;
     /* justify-content: center; */
     display: flex;
-}
-
-#search-documents-input:focus {
-    outline: none;
+    overflow-x: hidden;
 }
 
 .searched-item {
@@ -326,6 +419,7 @@ button:hover {
     padding: var(--item-padding);
     display: block;
     transition: var(--transition);
+    overflow-x: hidden;
 }
 
 .searched-item:hover {
@@ -466,6 +560,14 @@ button:hover {
     color: rgb(204, 204, 204);
 }
 
+.block i:hover {
+    color: gray;
+}
+
+.block button:hover {
+    background-color: transparent;
+}
+
 .buttonContainer {
     width: 3%;
     text-align: center;
@@ -495,7 +597,7 @@ button:hover {
 .CodeMirror,
 .cueDisplay,
 .noteDisplay {
-    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-family: var(--display-font-family);
     font-size: var(--display-font-size);
     line-height: var(--display-line-height);
     height: auto;
@@ -596,6 +698,11 @@ button:hover {
 .cueDisplay a,
 .noteDisplay a {
     color: var(--link-color);
+}
+
+.cueDisplay a,
+.noteDisplay a {
+    cursor: pointer;
 }
 
 .cueDisplay img,

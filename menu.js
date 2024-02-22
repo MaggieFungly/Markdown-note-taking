@@ -1,3 +1,5 @@
+const pathManagement = require('path')
+
 const menuButton = document.getElementById('menuButton');
 // Event listener for the menu button click
 menuButton.addEventListener('click', toggleMenu);
@@ -17,7 +19,7 @@ let currentFilePath = '';
 let safePath = '';
 ipcRenderer.on('get-current-file-path', (event, path) => {
     currentFilePath = path;
-    safePath = currentFilePath.replace(/\\/g, '\\\\');
+    safePath = currentFilePath.replace(/\//g, '\\');
 });
 
 // keep track of the toggling states
@@ -32,6 +34,7 @@ function updateUIWithDirectoryTree(tree, parentElement) {
 
             const directoryNodeDiv = document.createElement('div');
             directoryNodeDiv.className = 'directoryNode';
+            directoryNodeDiv.title = node.path;
             directoryNodeDiv.setAttribute('data-path', node.path);
 
             // Create a label for the directory node
@@ -72,6 +75,7 @@ function updateUIWithDirectoryTree(tree, parentElement) {
             // Create a file node element
             const fileNodeDiv = document.createElement('div');
             fileNodeDiv.className = 'fileNode';
+            fileNodeDiv.title = node.path;
             fileNodeDiv.setAttribute('data-path', node.path);
 
             // Create a label for the file node
@@ -79,7 +83,7 @@ function updateUIWithDirectoryTree(tree, parentElement) {
             fileLabel.textContent = node.name;
             fileLabel.className = 'fileLabel';
 
-            if (node.path === currentFilePath){
+            if (pathManagement.normalize(node.path) === pathManagement.normalize(currentFilePath)) {
                 fileNodeDiv.classList.add('active');
             }
 
@@ -93,21 +97,18 @@ function updateUIWithDirectoryTree(tree, parentElement) {
 
 function handleDirectory(node, directoryNodeDiv) {
     directoryNodeDiv.addEventListener('contextmenu', function (event) {
-        event.stopPropagation();
-        DirectoryDropDownMenu(node, directoryNodeDiv, event);
+        CreatedirectoryDropDownMenu(node, directoryNodeDiv, event);
     })
 }
 
 function handleFile(node, fileNodeDiv) {
     fileNodeDiv.addEventListener('click', function (event) {
-        event.stopPropagation(); // Prevent the directory click handler from being triggered
+        event.stopPropagation();
         ipcRenderer.send('load-blocks', node.path);
     });
 
     fileNodeDiv.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-        event.stopPropagation(); // Prevent triggering parent directory's context menu
-        fileDropdownMenu(fileNodeDiv, node, event);
+        createFileDropDownMenu(fileNodeDiv, node, event);
     });
 }
 
@@ -122,22 +123,10 @@ function createNewFile() {
 }
 
 let currentContextMenu = null;
-function fileDropdownMenu(fileNodeDiv, node, event) {
-    // Prevent the default context menu
-    event.preventDefault();
-
-    // Remove any existing context menu
-    if (currentContextMenu) {
-        currentContextMenu.remove();
-        currentContextMenu = null;
-    }
-
+function createFileDropDownMenu(fileNodeDiv, node, event) {
     // Create the dropdown menu
     const fileDropDownMenu = document.createElement('div');
-    fileDropDownMenu.className = 'dropdown-menu';
-    fileDropDownMenu.style.position = 'absolute';
-    fileDropDownMenu.style.left = '150px';
-    fileDropDownMenu.style.top = `${event.pageY}px`;
+    createDropDownMenu(event, fileDropDownMenu, fileNodeDiv);
 
     // Add buttons or options to the dropdown menu
     // open file button
@@ -185,39 +174,12 @@ function fileDropdownMenu(fileNodeDiv, node, event) {
         ipcRenderer.send('show-file-explorer', node.path);
     })
     fileDropDownMenu.appendChild(showInExplorerButton);
-
-    // Append the dropdown menu to the body to display it
-    document.body.appendChild(fileDropDownMenu);
-
-    // Update the current context menu reference
-    currentContextMenu = fileDropDownMenu;
-
-    // Setup to hide the dropdown menu when clicking elsewhere
-    document.addEventListener('click', function onClickOutside() {
-        if (currentContextMenu) {
-            currentContextMenu.remove();
-            currentContextMenu = null;
-            document.removeEventListener('click', onClickOutside);
-        }
-    });
 }
 
-function DirectoryDropDownMenu(node, directoryNodeDiv, event) {
-    // Prevent the default context menu
-    event.preventDefault();
-
-    // Remove any existing context menu
-    if (currentContextMenu) {
-        currentContextMenu.remove();
-        currentContextMenu = null;
-    }
-
+function CreatedirectoryDropDownMenu(node, directoryNodeDiv, event) {
     // Create the dropdown menu
     const directoryDropDownMenu = document.createElement('div');
-    directoryDropDownMenu.className = 'dropdown-menu';
-    directoryDropDownMenu.style.position = 'absolute';
-    directoryDropDownMenu.style.left = '150px';
-    directoryDropDownMenu.style.top = `${event.pageY}px`;
+    createDropDownMenu(event, directoryDropDownMenu, directoryNodeDiv);
 
     // Add buttons or options to the dropdown menu
     // open file button
@@ -230,9 +192,8 @@ function DirectoryDropDownMenu(node, directoryNodeDiv, event) {
     };
     directoryDropDownMenu.appendChild(createFileButton);
 
-
     const renameFolderButton = document.createElement('button');
-    renameFolderButton.textContent = 'Rename';
+    renameFolderButton.textContent = 'Rename Folder';
     renameFolderButton.onclick = function () {
         const directoryLabel = directoryNodeDiv.querySelector('.directoryLabel')
 
@@ -250,38 +211,62 @@ function DirectoryDropDownMenu(node, directoryNodeDiv, event) {
     }
     directoryDropDownMenu.appendChild(renameFolderButton);
 
-
     const deleteFolderButton = document.createElement('button');
     deleteFolderButton.textContent = 'Delete Folder';
-    deleteFolderButton.addEventListener('click', function(event){
+    deleteFolderButton.addEventListener('click', function (event) {
         event.stopPropagation();
         ipcRenderer.send('delete-folder', node.path);
+        currentContextMenu.remove();
+        currentContextMenu = null;
     })
     directoryDropDownMenu.appendChild(deleteFolderButton);
 
-
     const showInExplorerButton = document.createElement('button');
     showInExplorerButton.textContent = 'Show in File Explorer';
-    showInExplorerButton.addEventListener('click', function(event){
+    showInExplorerButton.addEventListener('click', function (event) {
         event.stopPropagation();
         ipcRenderer.send('show-file-explorer', node.path);
     })
     directoryDropDownMenu.appendChild(showInExplorerButton);
 
-    // Append the dropdown menu to the body to display it
-    document.body.appendChild(directoryDropDownMenu);
+    const createFolderButton = document.createElement('button');
+    createFolderButton.textContent = 'Create Folder';
+    createFolderButton.addEventListener('click', function (event) {
+        ipcRenderer.send('create-folder', node.path);
+    })
+    directoryDropDownMenu.appendChild(createFolderButton);
+}
 
-    // Update the current context menu reference
-    currentContextMenu = directoryDropDownMenu;
+function createDropDownMenu(event, dropDownMenu, nodeDiv) {
 
-    // Setup to hide the dropdown menu when clicking elsewhere
-    document.addEventListener('click', function onClickOutside() {
+    event.preventDefault();
+    event.stopPropagation();
+    nodeDiv.classList.add('active-context-menu');
+
+    // Remove any existing context menu
+    if (currentContextMenu) {
+        currentContextMenu.remove();
+        currentContextMenu = null;
+    }
+
+    dropDownMenu.className = 'dropdown-menu';
+    dropDownMenu.style.position = 'absolute';
+    dropDownMenu.style.left = '150px';
+    dropDownMenu.style.top = `${event.pageY}px`;
+
+    document.body.appendChild(dropDownMenu);
+    currentContextMenu = dropDownMenu;
+
+    document.addEventListener('click', onClickOutside);
+    document.addEventListener('contextmenu', onClickOutside);
+
+    function onClickOutside(event) {
         if (currentContextMenu) {
             currentContextMenu.remove();
             currentContextMenu = null;
-            document.removeEventListener('click', onClickOutside);
+            nodeDiv.classList.remove('active-context-menu');
         }
-    });
+    }
 }
 
 
@@ -312,4 +297,8 @@ ipcRenderer.on('empty-page', (event, args) => {
 
 ipcRenderer.on('folder-created', (event, folderPath) => {
     let newCreatedFolderPath = folderPath;
+});
+
+ipcRenderer.on('get-current-dir', (event, path) => {
+    document.getElementById('directory-contents-list').setAttribute('data-path', path);
 });

@@ -26,7 +26,6 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 
     <!-- render processes -->
-    <script src="node_modules/marked/marked.min.js"></script>
     <script src="node_modules/highlight.js/lib/core.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
     <!-- math equations -->
@@ -55,6 +54,11 @@
                 class="fa-solid fa-chevron-up"></i></button>
         <button id="stopSearchButton" style="width: 20px;" title="Stop searching (Esc)"><i
                 class="fas fa-times"></i></button>
+    </div>
+
+    <div id="suggestions">
+        <input type="text" id="suggestion-input">
+        <div id="suggestion-options"></div>
     </div>
 
     <div id="toolbar">
@@ -221,14 +225,10 @@
     <!-- search function -->
     <script src="findInPage.js"></script>
     <script src="searchDocuments.js"></script>
+    <script src="linkBlocks.js"></script>
 
     <!-- menu -->
     <script src="menu.js"></script>
-    <script>
-        ipcRenderer.on('get-current-dir', (event, path) => {
-            document.getElementById('directory-contents-list').setAttribute('data-path', path);
-        });
-    </script>
 
     <!-- outline -->
     <script src="outline.js"></script>
@@ -246,6 +246,7 @@
             }, 5000); // 10000 milliseconds = 10 seconds
         });
     </script>
+
 </body>
 
 </html>
