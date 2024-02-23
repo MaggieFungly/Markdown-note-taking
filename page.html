@@ -14,6 +14,7 @@
     <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
     <script src="node_modules/codemirror/addon/mode/overlay.js"></script>
     <script src="node_modules/codemirror/addon/search/search.js"></script>
+    <script src="node_modules/codemirror/addon/fold/markdown-fold.js"></script>
     <script src="cmMode.js"></script>
     <link rel="stylesheet" href="cm.css">
 
@@ -22,7 +23,6 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             mermaid.initialize({ startOnLoad: false });
         });
-
     </script>
 
     <!-- styles -->
@@ -198,11 +198,21 @@
         function importJsonData(jsonData) {
             const blocksContainer = document.getElementById('blocks');
             clearContents();
-            jsonData.forEach((blockData, index) => {
-                insertBlock(index, blockData.cue, blockData.note, blockData.highlighted, blockData.id);
-            });
+            // Preserving the original state before making changes
+            const originalInnerHTML = blocksContainer.innerHTML;
+
+            try {
+                jsonData.forEach((blockData, index) => {
+                    insertBlock(index, blockData.cue, blockData.note, blockData.highlighted, blockData.id);
+                });
+            } catch (error) {
+                // If an error occurs, log it and revert the DOM content to its original state
+                console.error('Failed to insert block:', error);
+                blocksContainer.innerHTML = originalInnerHTML;
+            }
         }
 
+        
         ipcRenderer.on('json-file-data', (event, response) => {
             if (response.error) {
                 console.error('Error loading JSON file:', response.message);
@@ -251,7 +261,6 @@
             }, 5000); // 10000 milliseconds = 10 seconds
         });
     </script>
-
 </body>
 
 </html>

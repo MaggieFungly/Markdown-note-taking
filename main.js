@@ -211,7 +211,7 @@ function loadNotePage(filePath) {
 
 function loadBlocks(filePath) {
 
-    if (filePath !== currentFilePath) {
+    if (path.normalize(filePath) !== path.normalize(currentFilePath)) {
         fs.readFile(filePath, 'utf8', (err, data) => {
             if (err) {
                 console.error('Error reading file:', err);
@@ -646,6 +646,7 @@ function getDocumentContents() {
 let blockWin = null;
 let currentContext = null;
 function openInternalLink(id, name) {
+
     // Store id and name in currentContext
     currentContext = { id, name };
 
@@ -707,4 +708,6 @@ function openLinkedNote(id) {
 
 // Start the application when ready
 app.whenReady().then(createWindow);
-
+app.on('ready', () => {
+    app.commandLine.appendSwitch('no-proxy-server')
+});

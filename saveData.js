@@ -13,7 +13,7 @@ function updateBlocksData() {
         let noteText = noteCodeMirrorInstance ? noteCodeMirrorInstance.getValue() : '';
         let cueText = cueCodeMirrorInstance ? cueCodeMirrorInstance.getValue() : '';
 
-        let isHighlighted = block.style.backgroundColor !== 'transparent';
+        let isHighlighted = block.classList.contains('highlighted-block');
         let id = block.dataset.id;
 
         blocksData.push({ note: noteText, cue: cueText, highlighted: isHighlighted, id: id });

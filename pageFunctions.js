@@ -62,7 +62,6 @@ function addClickEvent(items, otherEl) {
     });
 }
 
-// Usage example (assuming you have two elements outlineList and blocks)
 const outlineList = document.getElementById('outlineList')
 addClickEvent(Array.from(outlineList.children), blocks);
 addClickEvent(Array.from(blocks.children), outlineList);
@@ -124,3 +123,54 @@ function toggleEditMode() {
         }
     });
 }
+
+document.getElementById('exportMarkdown').addEventListener('click', function () {
+    ipcRenderer.send('export-to-markdown');
+})
+
+function updateVisibility() {
+    let cueCheckbox = document.getElementById('cueCheckbox');
+    let noteCheckbox = document.getElementById('noteCheckbox');
+    let cueElements = document.querySelectorAll('.cueContainer');
+    let noteElements = document.querySelectorAll('.noteContainer');
+
+    // Function to add or remove a class from elements
+    function toggleClass(elements, className, shouldAdd) {
+        elements.forEach(element => {
+            if (shouldAdd) {
+                element.classList.add(className);
+            } else {
+                element.classList.remove(className);
+            }
+        });
+    }
+
+    // Determine visibility and exclusive visibility
+    let cueVisible = cueCheckbox.checked;
+    let noteVisible = noteCheckbox.checked;
+
+    // Update class based on visibility
+    toggleClass(cueElements, 'hideContainer', !cueVisible);
+    toggleClass(noteElements, 'hideContainer', !noteVisible);
+
+    // Handle exclusive visibility
+    if (cueVisible !== noteVisible) { // Only one is visible
+        if (cueVisible) {
+            toggleClass(cueElements, 'onlyContainer', true);
+            toggleClass(noteElements, 'onlyContainer', false);
+        } else {
+            toggleClass(noteElements, 'onlyContainer', true);
+            toggleClass(cueElements, 'onlyContainer', false);
+        }
+    } else { // Both are visible or both are hidden
+        toggleClass(cueElements, 'onlyContainer', false);
+        toggleClass(noteElements, 'onlyContainer', false);
+    }
+}
+
+// Add event listeners
+document.getElementById('cueCheckbox').addEventListener('change', updateVisibility);
+document.getElementById('noteCheckbox').addEventListener('change', updateVisibility);
+
+// Initial update
+updateVisibility();

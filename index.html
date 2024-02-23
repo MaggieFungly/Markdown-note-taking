@@ -28,7 +28,7 @@
         <button id="startEdit">Create Note (Ctrl + N)</button>
         <br>
         <br>
-        <button id="openFile">Open File (Ctrl + O)</button>
+        <button id="openFolder">Open Folder (Ctrl + O)</button>
     </div>
 
     <script>
@@ -53,10 +53,10 @@
 
     <script>
         // open file
-        const openFileButton = document.getElementById('openFile');
+        const openFolderButton = document.getElementById('openFolder');
 
         document.addEventListener('DOMContentLoaded', () => {
-            openFileButton.addEventListener('click', () => {
+            openFolderButton.addEventListener('click', () => {
                 ipcRenderer.send('open-json-file');
             });
         });
@@ -64,7 +64,7 @@
         document.addEventListener('keydown', (event) => {
             if (event.ctrlKey && event.key === 'o') {
                 event.preventDefault(); // Prevent the default action for Ctrl + N
-                openFileButton.click();
+                openFolderButton.click();
             }
         });
     </script>
