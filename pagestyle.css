@@ -23,6 +23,7 @@
         sans-serif;
     --transition: background-color 0.3s ease-out;
     --item-hover-background-color: rgba(162, 162, 162, 0.2);
+    --display-hover-background-color: #e1e0e03c;
     --display-font-size: 11pt;
     --display-font-family: Cambria,
         Cochin,
@@ -232,7 +233,6 @@ button:hover {
     font-family: var(--env-font-family);
     font-size: var(--item-font-size);
     margin: var(--item-margin);
-    padding: var(--item-padding);
     background-color: var(--item-background-color);
     transition: var(--transition);
     color: var(--item-color);
@@ -247,38 +247,38 @@ button:hover {
 
 .outlineItem .heading-level-1 {
     margin-left: 0ch;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .outlineItem .heading-level-2 {
     margin-left: 1ch;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .outlineItem .heading-level-3 {
     margin-left: 2ch;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .outlineItem .heading-level-4 {
     margin-left: 4ch;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .outlineItem .heading-level-5 {
     margin-left: 6ch;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .outlineItem .heading-level-6 {
     margin-left: 8ch;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 #suggestions {
@@ -404,13 +404,16 @@ button:hover {
 
 #search-documents-input {
     background-color: white;
-    width: 85%;
+    width: 80%;
     font-size: var(--item-font-size);
-    height: 20px;
+    height: 18px;
     align-items: center;
     /* justify-content: center; */
     display: flex;
     overflow-x: hidden;
+    outline: 1px solid gray;
+    border-radius: 5px;
+    padding: 2px;
 }
 
 .searched-item {
@@ -573,10 +576,16 @@ button:hover {
     text-align: center;
     align-items: center;
     justify-content: center;
+    display: none;
 }
 
 .buttonContainer .fa {
     font-size: 10px;
+}
+
+.dragButton:hover .cueContainer,
+.dragButton:hover .noteContainer {
+    background-color: var(--display-hover-background-color);
 }
 
 .cueContainer,
@@ -650,7 +659,7 @@ button:hover {
 .cueDisplay:focus,
 .noteEdit:focus,
 .noteDisplay:focus {
-    background-color: #e1e0e03c;
+    background-color: var(--display-hover-background-color);
 }
 
 .cueEdit:focus,
