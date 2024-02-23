@@ -1,13 +1,56 @@
-// renders markdown to html
-function renderText(textValue){
-    const processedText = textValue.replace(/==([^=]+)==/g, '<span class="highlight-text">$1</span>');
-    const html = marked.parse(processedText);
-    return html
+const { default: hljs } = require("highlight.js");
+const { marked } = require("marked");
+const shortid = require("shortid");
+
+// Renders markdown to HTML with custom processing for highlights and internal links.
+function renderText(textValue) {
+    const highlightRegex = /==([^=]+)==/g;
+    const linkBlockRegex = /\[\[([^\[\]]+)@([^\[\]]+)\]\]/g;
+
+    // Process the textValue to handle custom syntax before markdown conversion.
+    const processedText = textValue
+        .replace(highlightRegex, '<span class="highlight-text">$1</span>')
+        .replace(linkBlockRegex, (match, title, id) => {
+            // Replace the custom syntax with an HTML link.
+            return `<a class="internal-block" data-id="${id}">${title}</a>`;
+        });
+
+    // Customize the renderer for marked to handle specific languages, like mermaid diagrams.
+    const renderer = new marked.Renderer();
+    renderer.code = (code, language) => {
+        if (language === "mermaid") {
+            return `<div class="mermaid">${code}</div>`;
+        } else {
+            // Use highlight.js for syntax highlighting in other languages.
+            const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+            return `<pre><code class="hljs ${validLanguage}">${hljs.highlight(code, { language: validLanguage }).value}</code></pre>`;
+        }
+    };
+
+    marked.setOptions({
+        renderer,
+        // Enable syntax highlighting for code blocks using highlight.js.
+        highlight: function (code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+            return hljs.highlight(code, { language }).value;
+        }
+    });
+
+    // Convert the processed text to HTML.
+    const html = marked(processedText);
+    return html;
 }
 
+
 function showDisplay(textValue, displayDiv, codeMirrorEditor) {
-    
+
     displayDiv.innerHTML = renderText(textValue);
+
+    if (window.mermaid) {
+        window.mermaid.init(undefined, displayDiv.querySelectorAll('.mermaid'));
+    } else {
+        console.error('Mermaid library is not loaded.');
+    }
 
     // Handle math equations
     MathJax.typesetPromise([displayDiv]).then(() => {
@@ -36,6 +79,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     editTextArea.textContent = text;
     editorDiv.appendChild(editTextArea);
 
+    // codemirror config
     var codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
         lineNumbers: false,
         theme: "default",
@@ -60,19 +104,13 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         },
         override: true,
     });
-
     autoCloseEquals(codeMirrorEditor);
     setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor);
+    setUpLinkBlocks(codeMirrorEditor);
 
     setTimeout(() => {
         codeMirrorEditor.refresh();
     }, 0);
-
-    codeMirrorEditor.on("change", function () {
-        updateBlocksData();
-        // save data when there's a change
-        saveBlocksData();
-    });
 
     // default display
     codeMirrorEditor.getWrapperElement().style.display = "block";
@@ -81,6 +119,13 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     editorDiv.appendChild(displayDiv);
     displayDiv.className = displayDivClassName;
     displayDiv.style.display = 'none';
+
+
+    // save data when there's a change
+    codeMirrorEditor.on("change", function () {
+        updateBlocksData();
+        saveBlocksData();
+    });
 
     // Editor behavior
     codeMirrorEditor.on("blur", function () {
@@ -95,36 +140,8 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         // Show the editor when right clicked
         showEdit(displayDiv, codeMirrorEditor)
     });
-
-    // link blocks
-    codeMirrorEditor.on('change', (instance, changeObj) => {
-        const cursor = instance.getCursor(); // Get the current cursor position
-        const textBeforeCursor = instance.getRange({ line: cursor.line, ch: 0 }, cursor);
-
-        if (textBeforeCursor.endsWith('[[')) {
-            console.log('link blocks');
-            showFileBox(codeMirrorEditor, cursor); // Pass the cursor position to showFileBox
-        }
-    });
-
     return codeMirrorEditor;
 }
-
-function showFileBox(codeMirrorEditor, cursorPosition) {
-    const searchBox = document.getElementById('searchBox');
-    // Ensure cursorPosition is used to get cursor coordinates
-    const cursorCoords = codeMirrorEditor.cursorCoords(cursorPosition, "window"); // "window" for screen coordinates
-
-    // Position the search box using cursor coordinates
-    searchBox.style.left = cursorCoords.left + 'px';
-    searchBox.style.top = cursorCoords.bottom + 'px'; // Placing it below the cursor
-    searchBox.style.display = 'block';
-
-    // Optionally, you might want to clear previous search results or handle focus
-    searchBox.innerHTML = ''; // Clear previous content
-    // You might want to implement functionality here to populate searchBox with file names
-}
-
 
 function removeButtonConfig(removeButton, blocksContainer) {
     removeButton.className = 'removeButton';
@@ -193,7 +210,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
 
     // generate a uuid
     if (!id || id === '') {
-        id = uuid.v4();
+        id = shortid.generate();
     }
     blockContainer.dataset.id = id;
 
@@ -233,24 +250,31 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var outlineItem = document.createElement('div');
     outlineItem.dataset.id = id;
     outlineItem.className = 'outlineItem';
-    outlineItem.innerText = findFirstLineOfText(note);
+    outlineItem.innerHTML = getOutlineContents(note);
 
     noteCodeMirrorEditor.on('change', function (instance) {
         var currentValue = instance.getValue();
-        var firstLine = findFirstLineOfText(currentValue);
-        outlineItem.innerText = firstLine;
+        outlineItem.innerHTML = getOutlineContents(currentValue);
     });
 
-    outlineItem.addEventListener('click', function (event) {
-        event.preventDefault(); 
-        event.stopPropagation();
-        blockContainer.scrollIntoView({
-            behavior: 'smooth', 
-            block: 'nearest',
-            inline: 'start',
-        })
-        console.log('scrolled into view')
-    })
+
+    scrollToBlock(outlineItem, blockContainer)
+
+    // ctrl + enter to insert new block below
+    noteCodeMirrorEditor.on('keydown', function (instance, event) {
+        // Check if Ctrl+Enter or Cmd+Enter is pressed
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+            event.preventDefault(); // Prevent default action of Enter key
+            insertButton.click(); // Programmatically click the insertButton
+        }
+    });
+    cueCodeMirrorEditor.on('keydown', function (instance, event) {
+        // Check if Ctrl+Enter or Cmd+Enter is pressed
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+            event.preventDefault(); // Prevent default action of Enter key
+            insertButton.click(); // Programmatically click the insertButton
+        }
+    });
 
 
     // Determine where to insert the new block
@@ -274,44 +298,36 @@ function removeBlock(index) {
     }
 }
 
-function findFirstLineOfText(markdownText) {
-    let headings = [];
-    let firstSentence = '';
-    let firstLine = '';
-    const lines = markdownText.split('\n');
+function getOutlineContents(markdownText) {
+    const fragment = document.createElement('div');
+    fragment.innerHTML = renderText(markdownText); // Transform Markdown into HTML
 
-    for (let line of lines) {
-        if (line.trim().startsWith('#')) {
-            // Collect headings markdown lines
-            headings.push(line.trim());
-        } else if (!firstSentence && line.trim() !== '') {
-            if (!firstLine) {
-                // Keep the first non-empty, non-heading line as a fallback
-                firstLine = line.trim();
-            }
-            // Attempt to extract the first sentence from non-heading lines
-            const html = marked.parse(line);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            const content = tempDiv.textContent || tempDiv.innerText || "";
-            const match = content.match(/[^.!?]+[.!?]/);
-            if (match) {
-                firstSentence = match[0].trim();
-                break; // Found the first sentence, exit the loop
-            }
-        }
-    }
+    // Select all heading elements within the fragment
+    const headings = fragment.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    let htmlOutput = document.createElement('div');
 
-    if (headings.length > 0) {
-        const headingsHtml = marked.parse(headings.join('\n'));
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = headingsHtml;
-        return tempDiv.textContent || tempDiv.innerText || "";
-    } else if (firstSentence !== '') {
-        return firstSentence;
-    } else if (firstLine !== '') {
-        return firstLine; // Return the first non-empty, non-heading line if no sentence was found
-    } else {
-        return 'No content found.';
-    }
+    headings.forEach(heading => {
+        // Extract the heading level from the tag name
+        const level = parseInt(heading.tagName.substring(1));
+
+        const headingDiv = document.createElement('div');
+        headingDiv.textContent = heading.textContent
+        headingDiv.className = `heading-level-${level}`
+        htmlOutput.appendChild(headingDiv);
+    });
+    return htmlOutput.innerHTML;
 }
+
+function scrollToBlock(outlineItem, blockContainer) {
+    outlineItem.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        blockContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'start',
+        })
+    })
+}
+
+module.exports.renderText = renderText;
