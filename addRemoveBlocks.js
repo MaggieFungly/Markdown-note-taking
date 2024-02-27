@@ -1,6 +1,8 @@
 const { default: hljs } = require("highlight.js");
 const { marked } = require("marked");
 const shortid = require("shortid");
+const { viewer } = require('./imageViewer');
+
 
 // Renders markdown to HTML with custom processing for highlights and internal links.
 function renderText(textValue) {
@@ -56,6 +58,8 @@ function showDisplay(textValue, displayDiv, codeMirrorEditor) {
     MathJax.typesetPromise([displayDiv]).then(() => {
         // Additional actions after typesetting, if necessary
     });
+
+    viewer(displayDiv)
 
     displayDiv.style.display = "block"; // Show the display div
     codeMirrorEditor.getWrapperElement().style.display = "none"; // Hide the editor
@@ -129,9 +133,9 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
 
     // Editor behavior
     codeMirrorEditor.on("blur", function () {
-        textValue = codeMirrorEditor.getValue()
+        textValue = codeMirrorEditor.getValue();
         // when editor is not focused, display the div
-        showDisplay(textValue, displayDiv, codeMirrorEditor)
+        showDisplay(textValue, displayDiv, codeMirrorEditor);
     });
 
     // double click to edit

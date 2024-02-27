@@ -718,6 +718,7 @@ button:hover {
 .noteDisplay img {
     max-width: 100%;
     margin: 0 auto;
+    cursor: pointer;
 }
 
 .cueDisplay u,

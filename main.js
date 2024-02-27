@@ -4,6 +4,7 @@ const path = require('path');
 const chokidar = require('chokidar');
 const fse = require('fs-extra');
 const glob = require('glob');
+const fsPromise = require('fs/promises');
 
 let win;
 let currentFilePath = '';
@@ -194,6 +195,8 @@ function showOpenFileDialog(event) {
 }
 
 function loadNotePage(filePath) {
+    const currentDir = path.normalize(filePath);
+
     win.loadFile('page.html').then(() => {
         console.log(currentDir);
         win.webContents.send('get-current-dir', currentDir);
@@ -206,6 +209,8 @@ function loadNotePage(filePath) {
             .catch((error) => {
                 console.error('Failed to load documents:', error);
             });
+    }).catch((error) => {
+        console.error('Failed to load page.html:', error);
     });
 }
 
@@ -500,9 +505,6 @@ function renameSelectedFile(event, oldPath, newName) {
     });
 }
 
-const fsPromise = require('fs/promises');
-const { eventNames } = require('process');
-const { event } = require('quasar');
 function deleteDirectory(directoryPath) {
     fsPromise.rm(directoryPath, { recursive: true, force: true })
         .then(() => {
@@ -708,6 +710,6 @@ function openLinkedNote(id) {
 
 // Start the application when ready
 app.whenReady().then(createWindow);
-app.on('ready', () => {
-    app.commandLine.appendSwitch('no-proxy-server')
-});
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+})
