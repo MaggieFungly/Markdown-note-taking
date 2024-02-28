@@ -97,6 +97,7 @@ function toggleReaderMode() {
         }
     });
 }
+module.exports.toggleReaderMode = toggleReaderMode;
 
 // toggle edit mode
 const toggleEdit = document.getElementById('toggleEdit')
@@ -200,7 +201,6 @@ function manageNavigationButtonColor(button, stackLength) {
 
 ipcRenderer.on('previous-stack-length', (event, stackLength) => {
     manageNavigationButtonColor(document.getElementById('navigate-back'), stackLength)
-    console.log(stackLength);
 })
 ipcRenderer.on('forward-stack-length', (event, stackLength) => {
     manageNavigationButtonColor(document.getElementById('navigate-forward'), stackLength)

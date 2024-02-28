@@ -94,6 +94,7 @@ function setupIpcEventListeners() {
     });
     ipcMain.on('navigate-forward', navigateForward);
     ipcMain.on('navigate-back', navigateBack);
+    ipcMain.on('move-item', (event, args) => moveFile(event, args))
 }
 
 // Event handler to open file dialog
@@ -184,6 +185,27 @@ function renameFile(event, newTitle) {
     });
 }
 
+async function moveFile(event, { itemPath, toPath }) {
+
+    itemPath = path.normalize(itemPath);
+    toPath = path.normalize(toPath);
+
+    if (itemPath && toPath) {
+        const destination = path.join(toPath, path.basename(itemPath));
+        try {
+            await fsPromise.rename(itemPath, destination);
+            event.sender.send('log-message', `Successfully moved ${itemPath} to ${destination}`);
+        } catch (err) {
+            event.sender.send('log-message', `Error moving ${itemPath} to ${destination}: ${err}`);
+        }
+
+        if (itemPath === currentFilePath) {
+            loadBlocks(destination);
+        }
+    }
+}
+
+
 // Event handler to open a JSON file
 function showOpenFileDialog(event) {
     dialog.showOpenDialog({
@@ -220,7 +242,7 @@ function loadBlocks(filePath, isNavigate = false) {
     if ((filePath) && (path.normalize(filePath) !== path.normalize(currentFilePath))) {
         fs.readFile(filePath, 'utf8', (err, data) => {
             if (err) {
-                console.error('Error reading file:', err);
+                win.webContents.send('log-message', err)
             } else {
 
                 if (!isNavigate) {
@@ -666,7 +688,7 @@ async function checkAndRegenerateIds(mergedDocuments) {
         // Only write back if this document had duplicated IDs and was updated
         if (documentUpdated) {
             saveBlocksData(document.path, document.contents);
-            console.log(`Updated IDs and wrote changes to ${document.path}`);
+            win.webContents.send('log-message', `Updated IDs and wrote changes to ${document.path}`);
         }
     }
 }
@@ -676,13 +698,14 @@ function updateMergedDocuments() {
         .then((merged) => {
             documents = merged;
             checkAndRegenerateIds(documents) // Pass the correct parameter
-                .then(() => win.webContents.send('log-message', 'Update block IDs.'))
+                .then()
                 .catch((error) => console.error(error));
         })
         .catch((error) => console.error('Failed to load documents:', error));
 }
 
 function getDocumentContents() {
+    updateMergedDocuments()
     win.webContents.send('get-merged-contents', documents);
     win.webContents.send('log-message', 'Documents fetched.');
 }

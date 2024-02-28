@@ -25,7 +25,9 @@ function renderText(textValue) {
         } else {
             // Use highlight.js for syntax highlighting in other languages.
             const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
-            return `<pre><code class="hljs ${validLanguage}">${hljs.highlight(code, { language: validLanguage }).value}</code></pre>`;
+            // Correctly highlighting the code with the specified language
+            const highlighted = hljs.highlight(validLanguage, code, true).value;
+            return `<pre><code class="hljs ${validLanguage}">${highlighted}</code></pre>`;
         }
     };
 

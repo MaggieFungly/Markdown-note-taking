@@ -55,6 +55,7 @@ function updateUIWithDirectoryTree(tree, parentElement) {
                 const directoryChildrenDiv = document.createElement('div');
                 directoryChildrenDiv.style.display = directoryToggleStates[node.path] ? 'block' : 'none';
                 directoryChildrenDiv.className = 'directoryChildren';
+                directoryChildrenDiv.setAttribute('data-path', node.path);
 
                 directoryNodeDiv.addEventListener('click', function (event) {
                     event.stopPropagation();
@@ -95,6 +96,32 @@ function updateUIWithDirectoryTree(tree, parentElement) {
             handleFile(node, fileNodeDiv);
         }
     });
+    setUpSortFiles()
+}
+
+function setUpSortFiles() {
+    const nestedSortables = document.getElementsByClassName('directoryChildren');
+    for (var i = 0; i < nestedSortables.length; i++) {
+        new Sortable(nestedSortables[i], {
+            group: {
+                name: 'shared',
+                put: true,
+                sort: false,
+            },
+            animation: 300,
+            onEnd: function (evt) {
+                // Destructure necessary properties from the event
+                const { item, to } = evt;
+
+                // Assuming 'data-path' attribute holds the path for each item
+                const itemPath = item.getAttribute('data-path');
+                const toPath = to.getAttribute('data-path');
+
+                ipcRenderer.send('move-item', { itemPath, toPath });
+            },
+            
+        });
+    };
 }
 
 function handleDirectory(node, directoryNodeDiv) {
