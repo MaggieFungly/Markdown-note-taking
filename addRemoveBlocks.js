@@ -217,7 +217,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
         id = shortid.generate();
     }
     blockContainer.dataset.id = id;
-
+    
     // create codemirror editors
     var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", cue)
     var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", note)

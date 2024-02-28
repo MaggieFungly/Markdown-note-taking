@@ -5,6 +5,7 @@ const chokidar = require('chokidar');
 const fse = require('fs-extra');
 const glob = require('glob');
 const fsPromise = require('fs/promises');
+const shortid = require('shortid')
 
 let win;
 let currentFilePath = '';
@@ -32,7 +33,9 @@ function createWindow() {
 // Set up IPC event listeners
 function setupIpcEventListeners() {
     ipcMain.on('open-file-dialog', openFileDialog);
-    ipcMain.on('save-blocks-data', saveBlocksData);
+    ipcMain.on('save-blocks-data', (event, blocksData) => {
+        saveBlocksData(currentFilePath, blocksData);
+    });
     ipcMain.on('rename-file', renameFile);
     ipcMain.on('open-json-file', showOpenFileDialog);
     ipcMain.on('load-index', loadIndex);
@@ -118,21 +121,21 @@ function updateDocument(targetPath, newContents) {
 }
 
 // Event handler to save blocks data
-function saveBlocksData(event, blocksData) {
-    if (currentFilePath === '') {
+function saveBlocksData(filePath, blocksData) {
+    if (filePath === '') {
         console.error('No file path specified for saving data');
         return;
     }
 
-    fs.writeFile(currentFilePath, JSON.stringify(blocksData, null, 4), (err) => {
+    fs.writeFile(filePath, JSON.stringify(blocksData, null, 4), (err) => {
         if (err) {
             console.error('Error writing file:', err);
             dialog.showErrorBox('File Write Error', `An error occurred writing the file: ${err.message}`);
-        } else {
+        }
+        else {
         }
     });
-
-    updateDocument(currentFilePath, blocksData);
+    updateDocument(filePath, blocksData);
 }
 
 // Event handler to rename a file
@@ -196,21 +199,12 @@ function showOpenFileDialog(event) {
 
 function loadNotePage(filePath) {
     const currentDir = path.normalize(filePath);
+    updateMergedDocuments();
 
     win.loadFile('page.html').then(() => {
         console.log(currentDir);
         win.webContents.send('get-current-dir', currentDir);
         win.webContents.send('directory-changed');
-
-        mergeJsonFilesInDirectory(currentDir)
-            .then((merged) => {
-                documents = merged;
-            })
-            .catch((error) => {
-                console.error('Failed to load documents:', error);
-            });
-    }).catch((error) => {
-        console.error('Failed to load page.html:', error);
     });
 }
 
@@ -616,28 +610,61 @@ async function mergeJsonFilesInDirectory(dirPath) {
     const files = glob.sync(`${dirPath}/**/*.json`);
 
     const merged = await Promise.all(files.map(async (file) => {
-        const content = await fse.readJson(file);
-        return {
-            fileName: path.basename(file, '.json'),
-            path: file,
-            contents: content,
-            relativePath: path.join(path.relative(currentDir, path.parse(file).dir), path.parse(file).name)
-        };
-    }));
+        try {
+            const content = await fse.readJson(file);
+            return {
+                fileName: path.basename(file, '.json'),
+                path: file,
+                contents: content,
+                relativePath: path.join(path.relative(currentDir, path.parse(file).dir), path.parse(file).name)
+            };
+        } catch (error) {
+            console.error(`Failed to read JSON from ${file}:`, error);
+            return null; // Skip this file by returning null
+        }
+    })).then(results => results.filter(result => result !== null)); // Filter out the nulls
 
     return merged;
+}
+
+async function checkAndRegenerateIds(mergedDocuments) {
+    let idMap = new Map();
+
+    for (const document of mergedDocuments) {
+        let documentUpdated = false;
+
+        for (let i = 0; i < document.contents.length; i++) {
+            let block = document.contents[i];
+            if (idMap.has(block.id)) {
+                let newId;
+                do {
+                    newId = shortid.generate();
+                } while (idMap.has(newId));
+                block.id = newId; // Update the block's id with the new one
+                documentUpdated = true;
+            } else {
+                idMap.set(block.id, true); // Set the block id in the map if not already present
+            }
+        }
+
+        // Only write back if this document had duplicated IDs and was updated
+        if (documentUpdated) {
+            saveBlocksData(document.path, document.contents);
+            console.log(`Updated IDs and wrote changes to ${document.path}`);
+        }
+    }
 }
 
 function updateMergedDocuments() {
     mergeJsonFilesInDirectory(currentDir)
         .then((merged) => {
             documents = merged;
+            checkAndRegenerateIds(documents) // Pass the correct parameter
+                .then(() => win.webContents.send('log-message', 'Update block IDs.'))
+                .catch((error) => console.error(error));
         })
-        .catch((error) => {
-            console.error('Failed to load documents:', error);
-        });
+        .catch((error) => console.error('Failed to load documents:', error));
 }
-
 
 function getDocumentContents() {
     win.webContents.send('get-merged-contents', documents);

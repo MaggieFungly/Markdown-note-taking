@@ -246,7 +246,7 @@ button:hover {
 }
 
 .outlineItem .heading-level-1 {
-    margin-left: 0ch;
+    margin-left: 3px;
     padding-top: 2px;
     padding-bottom: 2px;
 }
@@ -346,7 +346,7 @@ button:hover {
 
 #menu,
 #outline {
-    padding-bottom: 300px;
+    padding-bottom: 100px;
     /* Adjust based on your layout needs */
     display: none;
     /* Already set in your HTML */
@@ -571,6 +571,10 @@ button:hover {
     background-color: transparent;
 }
 
+.block button {
+    cursor: pointer;
+}
+
 .buttonContainer {
     width: 3%;
     text-align: center;
@@ -673,6 +677,11 @@ button:hover {
     background-color: #f6f6f642;
     padding-left: 2px;
     margin: 5px;
+}
+
+.cueDisplay li::marker,
+.noteDisplay li::marker{
+    color: gray;
 }
 
 .CodeMirror .cm-comment,

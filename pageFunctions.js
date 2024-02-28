@@ -174,3 +174,13 @@ document.getElementById('noteCheckbox').addEventListener('change', updateVisibil
 
 // Initial update
 updateVisibility();
+
+
+// go to previous page
+document.getElementById('previousPage').addEventListener('click', function () {
+    ipcRenderer.send('previous-page')
+});
+
+document.getElementById('nextPage').addEventListener('click', function () {
+    ipcRenderer.send('next-page')
+})

@@ -6,7 +6,7 @@ let miniSearch = new MiniSearch({
     storeFields: ['note', 'cue', 'fileName', 'relativePath', 'path'],
     searchOptions: {
         fuzzy: 0.2
-    }
+    },
 });
 
 let allDocumentContents = [];
