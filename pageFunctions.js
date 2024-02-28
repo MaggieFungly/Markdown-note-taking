@@ -177,10 +177,31 @@ updateVisibility();
 
 
 // go to previous page
-document.getElementById('previousPage').addEventListener('click', function () {
-    ipcRenderer.send('previous-page')
+document.getElementById('navigate-back').addEventListener('click', function () {
+    ipcRenderer.send('navigate-back')
 });
 
-document.getElementById('nextPage').addEventListener('click', function () {
-    ipcRenderer.send('next-page')
+document.getElementById('navigate-forward').addEventListener('click', function () {
+    ipcRenderer.send('navigate-forward')
+})
+
+function manageNavigationButtonColor(button, stackLength) {
+    // Access the <i> element only once for efficiency
+    const icon = button.querySelector('i');
+
+    if (stackLength > 0) {
+        icon.classList.remove('no-navigate');
+    }
+    if (stackLength === 0) {
+        icon.classList.add('no-navigate');
+    }
+}
+
+
+ipcRenderer.on('previous-stack-length', (event, stackLength) => {
+    manageNavigationButtonColor(document.getElementById('navigate-back'), stackLength)
+    console.log(stackLength);
+})
+ipcRenderer.on('forward-stack-length', (event, stackLength) => {
+    manageNavigationButtonColor(document.getElementById('navigate-forward'), stackLength)
 })

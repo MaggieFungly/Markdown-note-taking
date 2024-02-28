@@ -1,4 +1,6 @@
 const pathManagement = require('path')
+const Sortable = require("sortablejs");
+
 
 const menuButton = document.getElementById('menuButton');
 // Event listener for the menu button click

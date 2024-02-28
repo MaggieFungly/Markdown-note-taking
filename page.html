@@ -74,11 +74,11 @@
             <button id="menuButton" style="width: 20px;" title="Menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <button id="previousPage" title="Previous Page">
-                <i class="fa-solid fa-arrow-left"></i>
+            <button id="navigate-back" title="Previous Page">
+                <i class="fa-solid fa-arrow-left no-navigate"></i>
             </button>
-            <button id="nextPage" title="Next Page">
-                <i class="fa-solid fa-arrow-right"></i>
+            <button id="navigate-forward" title="Next Page">
+                <i class="fa-solid fa-arrow-right no-navigate"></i>
             </button>
         </div>
 
@@ -127,7 +127,7 @@
                 <div id="search-documents-input" contenteditable="true"></div>
             </div>
 
-            <div id="directory-contents-list" data-path=""></div>
+            <div id="directory-contents-list" class="directoryChildren" data-path=""></div>
 
             <div id="search-documents-list"></div>
         </div>
@@ -161,7 +161,7 @@
 
     <!-- page management -->
     <script src="addRemoveBlocks.js"></script>
-    <script src="pageFunctions.js"></script>
+    <script type="module" src="pageFunctions.js"></script>
     <!-- <script> -->
     <!-- Split(['#menu', '#editorContainer', '#outline']) -->
     <!-- </script> -->

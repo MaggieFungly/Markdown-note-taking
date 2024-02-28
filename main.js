@@ -91,7 +91,9 @@ function setupIpcEventListeners() {
     });
     ipcMain.on('open-linked-note', (event, id) => {
         openLinkedNote(id);
-    })
+    });
+    ipcMain.on('navigate-forward', navigateForward);
+    ipcMain.on('navigate-back', navigateBack);
 }
 
 // Event handler to open file dialog
@@ -198,27 +200,41 @@ function showOpenFileDialog(event) {
 }
 
 function loadNotePage(filePath) {
-    const currentDir = path.normalize(filePath);
+    currentDir = path.normalize(filePath);
     updateMergedDocuments();
+
+    forwardStack = [];
+    previousStack = [];
 
     win.loadFile('page.html').then(() => {
         console.log(currentDir);
         win.webContents.send('get-current-dir', currentDir);
         win.webContents.send('directory-changed');
+        win.webContents.send('forward-stack-length', forwardStack.length);
+        win.webContents.send('previous-stack-length', previousStack.length);
     });
 }
 
-function loadBlocks(filePath) {
+function loadBlocks(filePath, isNavigate = false) {
 
-    if (path.normalize(filePath) !== path.normalize(currentFilePath)) {
+    if ((filePath) && (path.normalize(filePath) !== path.normalize(currentFilePath))) {
         fs.readFile(filePath, 'utf8', (err, data) => {
             if (err) {
                 console.error('Error reading file:', err);
             } else {
+
+                if (!isNavigate) {
+                    previousStack.push(currentFilePath);
+                    forwardStack = [];
+                }
+
                 // change current file path
                 currentFilePath = filePath;
                 win.webContents.send('directory-changed');
                 win.webContents.send('get-current-file-path', currentFilePath);
+
+                win.webContents.send('previous-stack-length', previousStack.length);
+                win.webContents.send('forward-stack-length', forwardStack.length)
 
                 const fileNameWithoutExtension = path.basename(filePath, '.json');
                 win.webContents.send('set-title', fileNameWithoutExtension);
@@ -732,6 +748,32 @@ function openLinkedNote(id) {
     const result = findBlockById(id);
     loadBlocks(result.path);
 
+}
+
+let previousStack = [];
+let forwardStack = [];
+
+function navigateBack() {
+    if (previousStack.length > 0) {
+        const previousPath = previousStack.pop();
+        forwardStack.push(currentFilePath);
+        loadBlocks(previousPath, true); // Pass true to indicate this is a navigation action
+        win.webContents.send('previous-stack-length', previousStack.length)
+
+    } else {
+        win.webContents.send('log-message', "No more previous pages to navigate to.");
+    }
+}
+
+function navigateForward() {
+    if (forwardStack.length > 0) {
+        const nextPath = forwardStack.pop();
+        previousStack.push(currentFilePath);
+        loadBlocks(nextPath, true); // Pass true to indicate this is a navigation action
+    } else {
+        win.webContents.send('log-message', "No more forward pages to navigate to.");
+
+    }
 }
 
 
