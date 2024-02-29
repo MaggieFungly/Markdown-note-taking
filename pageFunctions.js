@@ -205,3 +205,9 @@ ipcRenderer.on('previous-stack-length', (event, stackLength) => {
 ipcRenderer.on('forward-stack-length', (event, stackLength) => {
     manageNavigationButtonColor(document.getElementById('navigate-forward'), stackLength)
 })
+
+// return home
+var returnBtn = document.getElementById('return')
+returnBtn.addEventListener('click', function () {
+    ipcRenderer.send('load-index')
+})

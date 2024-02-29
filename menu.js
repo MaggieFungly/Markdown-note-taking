@@ -1,5 +1,4 @@
 const pathManagement = require('path')
-const Sortable = require("sortablejs");
 const { clearContents } = require('./importData');
 
 let currentFilePath = '';
@@ -11,6 +10,43 @@ main();
 function main() {
     initializeMenuUI();
     setUpIpcRenderers();
+}
+
+function initializeDragAndDrop() {
+    // Find all draggable nodes
+    const nodes = document.querySelectorAll('.node');
+    // Find the target container
+    const directoryChildren = document.querySelector('.directoryChildren');
+
+    // Apply drag start event to all nodes
+    nodes.forEach(node => {
+        node.addEventListener('dragstart', handleDragStart);
+    });
+
+    // Enable the directoryChildren to be a drop target
+    directoryChildren.addEventListener('dragover', handleDragOver);
+    directoryChildren.addEventListener('drop', handleDrop);
+
+    let draggedItem = null; // To hold the reference to the currently dragged item
+
+    function handleDragStart(e) {
+        draggedItem = this; // 'this' refers to the dragged node
+        e.dataTransfer.effectAllowed = 'move'; // Specifies the allowed drag operation
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault(); // Necessary to allow dropping
+        e.dataTransfer.dropEffect = 'move'; // Specifies the visual feedback for the drag operation
+    }
+
+    function handleDrop(e) {
+        e.preventDefault(); // Prevent default action (opening as link for some elements)
+        if (draggedItem && e.target === directoryChildren) {
+            // Append the dragged node to the directoryChildren container
+            directoryChildren.appendChild(draggedItem);
+            draggedItem = null; // Reset the draggedItem reference after drop
+        }
+    }
 }
 
 function initializeMenuUI() {
@@ -34,15 +70,31 @@ function createNewFile(path) {
 }
 
 function storeDirectoryToggleStates() {
-    const directoryNodes = document.querySelectorAll('.directoryNode');
-    directoryNodes.forEach(node => {
-        const path = node.getAttribute('data-path');
-        const isExpanded = !node.querySelector('.directoryChildren').classList.contains('hide-children-node');
+    const directoryChildren = document.querySelectorAll('.directoryChildren');
+    directoryChildren.forEach(directoryChildrenDiv => {
+        const path = directoryChildrenDiv.getAttribute('data-path');
+        const isExpanded = !directoryChildrenDiv.classList.contains('hide-children-node');
         directoryToggleStates[path] = isExpanded;
     });
 }
 
+function restoreDirectoryToggleStates() {
+    Object.keys(directoryToggleStates).forEach(path => {
+        const directoryChildren = document.querySelector(`.directoryChildren[data-path="${path}"]`);
+        console.log(directoryChildren);
+        if (directoryChildren) {
+            if (directoryToggleStates[path]) {
+                directoryChildren.classList.remove('hide-children-node');
+            } else {
+                directoryChildren.classList.add('hide-children-node');
+            }
+        }
+    });
+}
+
+
 function updateUIWithDirectoryTree(tree, parentElement) {
+
     tree.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
     tree.forEach(node => {
@@ -57,13 +109,14 @@ function updateUIWithDirectoryTree(tree, parentElement) {
             parentElement.appendChild(fileNodeDiv);
         }
     });
-    setUpSortFiles();
-    restoreDirectoryToggleStates();
+    initializeDragAndDrop();
 }
 
 function setUpDirectoryNode(node) {
     const directoryNodeDiv = document.createElement('div');
     directoryNodeDiv.className = 'directoryNode';
+    directoryNodeDiv.classList.add('node');
+
     directoryNodeDiv.title = node.path;
     directoryNodeDiv.setAttribute('data-path', node.path);
 
@@ -75,6 +128,14 @@ function setUpDirectoryNode(node) {
 
     const directoryChildrenDiv = document.createElement('div');
     directoryNodeDiv.appendChild(directoryChildrenDiv);
+    directoryChildrenDiv.className = 'directoryChildren';
+    directoryChildrenDiv.setAttribute('data-path', node.path);
+
+    if (directoryToggleStates[node.path]) {
+        directoryChildrenDiv.classList.remove('hide-children-node')
+    } else {
+        directoryChildrenDiv.classList.add('hide-children-node')
+    }
 
     // directory children visibility
     directoryNodeDiv.addEventListener('click', function (event) {
@@ -87,18 +148,10 @@ function setUpDirectoryNode(node) {
     })
 
     if (node.children && node.children.length > 0) {
-        setUpDirectoryChildren(directoryChildrenDiv, node)
+        updateUIWithDirectoryTree(node.children, directoryChildrenDiv);
     }
 
     return directoryNodeDiv;
-}
-
-function setUpDirectoryChildren(directoryChildrenDiv, node) {
-    directoryChildrenDiv.className = 'directoryChildren';
-    directoryChildrenDiv.setAttribute('data-path', node.path);
-
-    // Recursively update UI for children
-    updateUIWithDirectoryTree(node.children, directoryChildrenDiv);
 }
 
 
@@ -106,6 +159,7 @@ function setUpFileNode(node) {
     // Create a file node element
     const fileNodeDiv = document.createElement('div');
     fileNodeDiv.className = 'fileNode';
+    fileNodeDiv.classList.add('node')
     fileNodeDiv.title = node.path;
     fileNodeDiv.setAttribute('data-path', node.path);
 
@@ -123,32 +177,6 @@ function setUpFileNode(node) {
 
     return fileNodeDiv;
 }
-
-function setUpSortFiles() {
-    const nestedSortables = document.getElementsByClassName('directoryChildren');
-    for (var i = 0; i < nestedSortables.length; i++) {
-        new Sortable(nestedSortables[i], {
-            group: {
-                name: 'shared',
-                put: true,
-                sort: false,
-            },
-            animation: 300,
-            onEnd: function (evt) {
-                // Destructure necessary properties from the event
-                const { item, to } = evt;
-
-                // Assuming 'data-path' attribute holds the path for each item
-                const itemPath = item.getAttribute('data-path');
-                const toPath = to.getAttribute('data-path');
-
-                ipcRenderer.send('move-item', { itemPath, toPath });
-            },
-
-        });
-    };
-}
-
 
 function handleFile(node, fileNodeDiv) {
     fileNodeDiv.addEventListener('click', function (event) {
@@ -311,22 +339,6 @@ function createDropDownMenu(event, dropDownMenu, nodeDiv) {
     }
 }
 
-function restoreDirectoryToggleStates() {
-    Object.keys(directoryToggleStates).forEach(path => {
-        const directoryNode = document.querySelector(`.directoryNode[data-path="${path}"]`);
-        if (directoryNode) {
-            const directoryChildrenDiv = directoryNode.querySelector('.directoryChildren');
-            if (directoryToggleStates[path]) {
-                directoryChildrenDiv.classList.remove('hide-children-node');
-            } else {
-                directoryChildrenDiv.classList.add('hide-children-node');
-            }
-        }
-    });
-}
-
-
-
 function setUpIpcRenderers() {
     ipcRenderer.on('get-directory-contents-response', (event, { error, tree }) => {
         if (error) {
@@ -336,7 +348,7 @@ function setUpIpcRenderers() {
             // Clear the existing content
             const directoryContentsList = document.getElementById('directory-contents-list');
             directoryContentsList.innerHTML = '';
-            
+
             // Call a function to update the UI with the tree structure
             updateUIWithDirectoryTree(tree, directoryContentsList);
         }
@@ -344,7 +356,7 @@ function setUpIpcRenderers() {
 
     // when there's a change in the directory, update UI
     ipcRenderer.on('directory-changed', (event) => {
-        storeDirectoryToggleStates(); 
+        storeDirectoryToggleStates();
         ipcRenderer.send('get-directory-contents')
     });
 

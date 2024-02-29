@@ -31,7 +31,6 @@
     <!-- styles -->
     <link rel="stylesheet" href="node_modules/@fortawesome/fontawesome-free/css/all.min.css">
     <link rel="stylesheet" href="pagestyle.css">
-    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> -->
     <link rel="stylesheet" href="node_modules/highlight.js/styles/atom-one-dark.min.css">
 
     <!-- render processes -->
@@ -127,7 +126,7 @@
                 <div id="search-documents-input" contenteditable="true"></div>
             </div>
 
-            <div id="directory-contents-list" class="directoryChildren" data-path=""></div>
+            <div id="directory-contents-list" class="directoryNode" data-path=""></div>
 
             <div id="search-documents-list"></div>
         </div>
@@ -166,72 +165,7 @@
     <!-- Split(['#menu', '#editorContainer', '#outline']) -->
     <!-- </script> -->
 
-    <!-- electron transportation -->
-    <script>
-        // const { ipcRenderer } = require('electron');
-
-        const title = document.getElementById('title');
-        title.addEventListener("keypress", function (event) {
-            // Check if the key pressed is 'Enter'
-            if (event.key === 'Enter') {
-                let newTitle = title.value;
-                // Send the new title to the main process to rename the file
-                ipcRenderer.send('rename-file', newTitle);
-                title.blur();
-            }
-        });
-
-        ipcRenderer.on('set-title', (event, fileName) => {
-            document.getElementById('title').value = fileName;
-        });
-
-    </script>
-
-    <script>
-        var returnBtn = document.getElementById('return')
-        returnBtn.addEventListener('click', function () {
-            ipcRenderer.send('load-index')
-        })
-    </script>
-
-    <script>
-        function clearContents() {
-            document.getElementById('blocks').innerHTML = '';
-            document.getElementById('outlineList').innerHTML = '';
-
-            // checkbox
-            document.getElementById('cueCheckbox').checked = true;
-            document.getElementById('noteCheckbox').checked = true;
-        }
-
-        function importJsonData(jsonData) {
-            const blocksContainer = document.getElementById('blocks');
-            clearContents();
-            // Preserving the original state before making changes
-            const originalInnerHTML = blocksContainer.innerHTML;
-
-            try {
-                jsonData.forEach((blockData, index) => {
-                    insertBlock(index, blockData.cue, blockData.note, blockData.highlighted, blockData.id);
-                });
-            } catch (error) {
-                // If an error occurs, log it and revert the DOM content to its original state
-                console.error('Failed to insert block:', error);
-                blocksContainer.innerHTML = originalInnerHTML;
-            }
-        }
-
-
-        ipcRenderer.on('json-file-data', (event, response) => {
-            if (response.error) {
-                console.error('Error loading JSON file:', response.message);
-            } else {
-                importJsonData(response.data);
-            }
-        });
-
-        ipcRenderer.on('clear-contents', clearContents);
-    </script>
+    <script type="module" src="importData.js"></script>
 
     <script>
         document.addEventListener('click', function (event) {

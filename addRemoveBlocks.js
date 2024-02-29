@@ -121,6 +121,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     var displayDiv = document.createElement('div');
     editorDiv.appendChild(displayDiv);
     displayDiv.className = displayDivClassName;
+    displayDiv.classList.add('displayDiv')
     displayDiv.style.display = 'none';
 
 

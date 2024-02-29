@@ -128,6 +128,14 @@ button:hover {
     border-left: 1.3px solid gray;
 }
 
+.hide-children-node {
+    display: none;
+}
+
+.node{
+    user-select: none;
+}
+
 .directoryLabel:hover,
 .fileNode:hover {
     background-color: var(--item-hover-background-color);

@@ -73,7 +73,7 @@ function insertBlockLink(codeMirrorEditor, blockLink) {
     setTimeout(() => {
         codeMirrorEditor.refresh();
     }, 100);
-
+    
     showDisplay(codeMirrorEditor.getValue(), codeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), codeMirrorEditor)
 }
 
