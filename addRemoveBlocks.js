@@ -23,21 +23,18 @@ function renderText(textValue) {
         if (language === "mermaid") {
             return `<div class="mermaid">${code}</div>`;
         } else {
-            // Use highlight.js for syntax highlighting in other languages.
             const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
-            // Correctly highlighting the code with the specified language
-            const highlighted = hljs.highlight(validLanguage, code, true).value;
+            // Ensure the correct API call for syntax highlighting
+            const highlighted = validLanguage !== 'plaintext'
+                ? hljs.highlight(code, { language: validLanguage, ignoreIllegals: true }).value
+                : hljs.highlightAuto(code).value; // Fallback to auto-highlighting if plaintext or unsupported language
+
             return `<pre><code class="hljs ${validLanguage}">${highlighted}</code></pre>`;
         }
     };
 
     marked.setOptions({
         renderer,
-        // Enable syntax highlighting for code blocks using highlight.js.
-        highlight: function (code, lang) {
-            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-            return hljs.highlight(code, { language }).value;
-        }
     });
 
     // Convert the processed text to HTML.
@@ -219,7 +216,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
         id = shortid.generate();
     }
     blockContainer.dataset.id = id;
-    
+
     // create codemirror editors
     var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", cue)
     var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", note)
