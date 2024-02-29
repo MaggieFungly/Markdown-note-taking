@@ -2,8 +2,6 @@ const suggestionInput = document.getElementById('suggestion-input');
 const suggestionOptions = document.getElementById('suggestion-options');
 const suggestions = document.getElementById('suggestions')
 
-const pageFunctions = require('./pageFunctions.js')
-
 suggestionInput.addEventListener('input', function (event) {
     searchContent = suggestionInput.value.trim();
     getSearchResults(searchContent);
@@ -71,6 +69,12 @@ function insertBlockLink(codeMirrorEditor, blockLink) {
 
     const endCursor = doc.getCursor();
     doc.setCursor({ line: endCursor.line, ch: endCursor.ch });
+
+    setTimeout(() => {
+        codeMirrorEditor.refresh();
+    }, 100);
+
+    showDisplay(codeMirrorEditor.getValue(), codeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), codeMirrorEditor)
 }
 
 document.addEventListener('keydown', function (event) {
