@@ -1,102 +1,127 @@
 const pathManagement = require('path')
 const Sortable = require("sortablejs");
-
-
-const menuButton = document.getElementById('menuButton');
-// Event listener for the menu button click
-menuButton.addEventListener('click', toggleMenu);
-
-const menuDiv = document.getElementById('menu');
-
-const createNewFileButton = document.getElementById('createNewFileButton');
-createNewFileButton.addEventListener('click', createNewFile);
-
-const createFolderButton = document.getElementById('createFolderButton');
-createFolderButton.addEventListener('click', function (event) {
-    const path = document.getElementById('directory-contents-list').getAttribute('data-path')
-    ipcRenderer.send('create-folder', path)
-});
+const { clearContents } = require('./importData');
 
 let currentFilePath = '';
-let safePath = '';
-ipcRenderer.on('get-current-file-path', (event, path) => {
-    currentFilePath = path;
-    safePath = currentFilePath.replace(/\//g, '\\');
-});
+let currentContextMenu = null;
+let directoryToggleStates = {};
 
-// keep track of the toggling states
-const directoryToggleStates = {};
+main();
+
+function main() {
+    initializeMenuUI();
+    setUpIpcRenderers();
+}
+
+function initializeMenuUI() {
+    document.getElementById('menuButton').addEventListener('click', toggleMenu);
+
+    document.getElementById('createNewFileButton').addEventListener('click', function () {
+        createNewFile(document.getElementById('directory-contents-list').getAttribute('data-path'));
+    });
+
+    document.getElementById('createFolderButton').addEventListener('click', function (event) {
+        createFolder(document.getElementById('directory-contents-list').getAttribute('data-path'));
+    });
+}
+
+function createFolder(path) {
+    ipcRenderer.send('create-folder', path)
+}
+
+function createNewFile(path) {
+    ipcRenderer.send('create-new-file', path);
+}
+
+function storeDirectoryToggleStates() {
+    const directoryNodes = document.querySelectorAll('.directoryNode');
+    directoryNodes.forEach(node => {
+        const path = node.getAttribute('data-path');
+        const isExpanded = !node.querySelector('.directoryChildren').classList.contains('hide-children-node');
+        directoryToggleStates[path] = isExpanded;
+    });
+}
+
 function updateUIWithDirectoryTree(tree, parentElement) {
-
     tree.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
     tree.forEach(node => {
         if (node.isDirectory) {
             // Create a directory node element
-
-            const directoryNodeDiv = document.createElement('div');
-            directoryNodeDiv.className = 'directoryNode';
-            directoryNodeDiv.title = node.path;
-            directoryNodeDiv.setAttribute('data-path', node.path);
-
-            // Create a label for the directory node
-            const directoryLabel = document.createElement('div');
-            directoryLabel.textContent = node.name;
-            directoryLabel.className = 'directoryLabel';
-
-            directoryNodeDiv.appendChild(directoryLabel);
-
+            const directoryNodeDiv = setUpDirectoryNode(node);
             parentElement.appendChild(directoryNodeDiv);
 
-            handleDirectory(node, directoryNodeDiv);
-
             // Recursively update the UI for children
-            if (node.children && node.children.length > 0) {
-                const directoryChildrenDiv = document.createElement('div');
-                directoryChildrenDiv.style.display = directoryToggleStates[node.path] ? 'block' : 'none';
-                directoryChildrenDiv.className = 'directoryChildren';
-                directoryChildrenDiv.setAttribute('data-path', node.path);
-
-                directoryNodeDiv.addEventListener('click', function (event) {
-                    event.stopPropagation();
-                    if (directoryChildrenDiv.style.display === 'none') {
-                        directoryChildrenDiv.style.display = 'block';
-                        directoryToggleStates[node.path] = true;
-                    } else {
-                        directoryChildrenDiv.style.display = 'none';
-                        directoryToggleStates[node.path] = false;
-                    }
-                });
-
-                // Recursively update UI for children
-                updateUIWithDirectoryTree(node.children, directoryChildrenDiv);
-
-                // Append directoryChildrenDiv to directoryNodeDiv
-                directoryNodeDiv.appendChild(directoryChildrenDiv);
-            }
         } else {
-            // Create a file node element
-            const fileNodeDiv = document.createElement('div');
-            fileNodeDiv.className = 'fileNode';
-            fileNodeDiv.title = node.path;
-            fileNodeDiv.setAttribute('data-path', node.path);
-
-            // Create a label for the file node
-            const fileLabel = document.createElement('div');
-            fileLabel.textContent = node.name;
-            fileLabel.className = 'fileLabel';
-
-            if (pathManagement.normalize(node.path) === pathManagement.normalize(currentFilePath)) {
-                fileNodeDiv.classList.add('active');
-            }
-
-            fileNodeDiv.appendChild(fileLabel);
+            const fileNodeDiv = setUpFileNode(node);
             parentElement.appendChild(fileNodeDiv);
-
-            handleFile(node, fileNodeDiv);
         }
     });
-    setUpSortFiles()
+    setUpSortFiles();
+    restoreDirectoryToggleStates();
+}
+
+function setUpDirectoryNode(node) {
+    const directoryNodeDiv = document.createElement('div');
+    directoryNodeDiv.className = 'directoryNode';
+    directoryNodeDiv.title = node.path;
+    directoryNodeDiv.setAttribute('data-path', node.path);
+
+    // Create a label for the directory node
+    const directoryLabel = document.createElement('div');
+    directoryLabel.textContent = node.name;
+    directoryLabel.className = 'directoryLabel';
+    directoryNodeDiv.appendChild(directoryLabel);
+
+    const directoryChildrenDiv = document.createElement('div');
+    directoryNodeDiv.appendChild(directoryChildrenDiv);
+
+    // directory children visibility
+    directoryNodeDiv.addEventListener('click', function (event) {
+        event.stopPropagation();
+        directoryChildrenDiv.classList.toggle('hide-children-node');
+    })
+
+    directoryNodeDiv.addEventListener('contextmenu', function (event) {
+        CreatedirectoryDropDownMenu(node, directoryNodeDiv, event);
+    })
+
+    if (node.children && node.children.length > 0) {
+        setUpDirectoryChildren(directoryChildrenDiv, node)
+    }
+
+    return directoryNodeDiv;
+}
+
+function setUpDirectoryChildren(directoryChildrenDiv, node) {
+    directoryChildrenDiv.className = 'directoryChildren';
+    directoryChildrenDiv.setAttribute('data-path', node.path);
+
+    // Recursively update UI for children
+    updateUIWithDirectoryTree(node.children, directoryChildrenDiv);
+}
+
+
+function setUpFileNode(node) {
+    // Create a file node element
+    const fileNodeDiv = document.createElement('div');
+    fileNodeDiv.className = 'fileNode';
+    fileNodeDiv.title = node.path;
+    fileNodeDiv.setAttribute('data-path', node.path);
+
+    // Create a label for the file node
+    const fileLabel = document.createElement('div');
+    fileLabel.textContent = node.name;
+    fileLabel.className = 'fileLabel';
+
+    if (pathManagement.normalize(node.path) === pathManagement.normalize(currentFilePath)) {
+        fileNodeDiv.classList.add('active');
+    }
+
+    fileNodeDiv.appendChild(fileLabel);
+    handleFile(node, fileNodeDiv);
+
+    return fileNodeDiv;
 }
 
 function setUpSortFiles() {
@@ -119,16 +144,11 @@ function setUpSortFiles() {
 
                 ipcRenderer.send('move-item', { itemPath, toPath });
             },
-            
+
         });
     };
 }
 
-function handleDirectory(node, directoryNodeDiv) {
-    directoryNodeDiv.addEventListener('contextmenu', function (event) {
-        CreatedirectoryDropDownMenu(node, directoryNodeDiv, event);
-    })
-}
 
 function handleFile(node, fileNodeDiv) {
     fileNodeDiv.addEventListener('click', function (event) {
@@ -141,17 +161,12 @@ function handleFile(node, fileNodeDiv) {
     });
 }
 
-// Function to toggle the menu visibility
 function toggleMenu() {
+    const menuDiv = document.getElementById('menu');
     const isMenuVisible = menuDiv.style.display === 'block';
     menuDiv.style.display = isMenuVisible ? 'none' : 'block';
 }
 
-function createNewFile() {
-    ipcRenderer.send('create-new-file', document.getElementById('directory-contents-list').getAttribute('data-path'));
-}
-
-let currentContextMenu = null;
 function createFileDropDownMenu(fileNodeDiv, node, event) {
     // Create the dropdown menu
     const fileDropDownMenu = document.createElement('div');
@@ -162,7 +177,6 @@ function createFileDropDownMenu(fileNodeDiv, node, event) {
     const openButton = document.createElement('button');
     openButton.textContent = 'Open Note';
     openButton.onclick = function () {
-        console.log(`Open clicked: ${node.path}`);
         ipcRenderer.send('load-blocks', node.path);
         fileDropDownMenu.remove(); // Remove menu after action
         currentContextMenu = null; // Reset current context menu reference
@@ -210,12 +224,11 @@ function CreatedirectoryDropDownMenu(node, directoryNodeDiv, event) {
     const directoryDropDownMenu = document.createElement('div');
     createDropDownMenu(event, directoryDropDownMenu, directoryNodeDiv);
 
-    // Add buttons or options to the dropdown menu
-    // open file button
+    // create file
     const createFileButton = document.createElement('button');
     createFileButton.textContent = 'Create Note';
     createFileButton.onclick = function () {
-        ipcRenderer.send('create-new-file', node.path);
+        createNewFile(node.path);
         directoryDropDownMenu.remove(); // Remove menu after action
         currentContextMenu = null; // Reset current context menu reference
     };
@@ -280,7 +293,7 @@ function createDropDownMenu(event, dropDownMenu, nodeDiv) {
 
     dropDownMenu.className = 'dropdown-menu';
     dropDownMenu.style.position = 'absolute';
-    dropDownMenu.style.left = '150px';
+    dropDownMenu.style.left = `${event.pageX}px`;
     dropDownMenu.style.top = `${event.pageY}px`;
 
     document.body.appendChild(dropDownMenu);
@@ -298,36 +311,58 @@ function createDropDownMenu(event, dropDownMenu, nodeDiv) {
     }
 }
 
+function restoreDirectoryToggleStates() {
+    Object.keys(directoryToggleStates).forEach(path => {
+        const directoryNode = document.querySelector(`.directoryNode[data-path="${path}"]`);
+        if (directoryNode) {
+            const directoryChildrenDiv = directoryNode.querySelector('.directoryChildren');
+            if (directoryToggleStates[path]) {
+                directoryChildrenDiv.classList.remove('hide-children-node');
+            } else {
+                directoryChildrenDiv.classList.add('hide-children-node');
+            }
+        }
+    });
+}
 
-ipcRenderer.on('get-directory-contents-response', (event, { error, tree }) => {
-    if (error) {
-        console.error('Error fetching directory contents:', error.message);
-        return;
-    } else {
-        // Clear the existing content
-        const directoryContentsList = document.getElementById('directory-contents-list');
-        directoryContentsList.innerHTML = '';
 
-        // Call a function to update the UI with the tree structure
-        updateUIWithDirectoryTree(tree, directoryContentsList);
-    }
-});
 
-// when there's a change in the directory, update UI
-ipcRenderer.on('directory-changed', (event) => {
-    ipcRenderer.send('get-directory-contents')
-});
+function setUpIpcRenderers() {
+    ipcRenderer.on('get-directory-contents-response', (event, { error, tree }) => {
+        if (error) {
+            console.error('Error fetching directory contents:', error.message);
+            return;
+        } else {
+            // Clear the existing content
+            const directoryContentsList = document.getElementById('directory-contents-list');
+            directoryContentsList.innerHTML = '';
+            
+            // Call a function to update the UI with the tree structure
+            updateUIWithDirectoryTree(tree, directoryContentsList);
+        }
+    });
 
-// empty page
-ipcRenderer.on('empty-page', (event, args) => {
-    clearContents();
-    document.getElementById('title').value = '';
-});
+    // when there's a change in the directory, update UI
+    ipcRenderer.on('directory-changed', (event) => {
+        storeDirectoryToggleStates(); 
+        ipcRenderer.send('get-directory-contents')
+    });
 
-ipcRenderer.on('folder-created', (event, folderPath) => {
-    let newCreatedFolderPath = folderPath;
-});
+    // empty page
+    ipcRenderer.on('empty-page', (event, args) => {
+        clearContents();
+        document.getElementById('title').value = '';
+    });
 
-ipcRenderer.on('get-current-dir', (event, path) => {
-    document.getElementById('directory-contents-list').setAttribute('data-path', path);
-});
+    ipcRenderer.on('folder-created', (event, folderPath) => {
+        let newCreatedFolderPath = folderPath;
+    });
+
+    ipcRenderer.on('get-current-dir', (event, path) => {
+        document.getElementById('directory-contents-list').setAttribute('data-path', path);
+    });
+
+    ipcRenderer.on('get-current-file-path', (event, path) => {
+        currentFilePath = path;
+    });
+}
