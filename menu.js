@@ -15,39 +15,66 @@ function main() {
 function initializeDragAndDrop() {
     // Find all draggable nodes
     const nodes = document.querySelectorAll('.node');
-    // Find the target container
-    const directoryChildren = document.querySelector('.directoryChildren');
+    // Find all target containers
+    const directoryNodes = document.querySelectorAll('.directoryNode');
 
     // Apply drag start event to all nodes
     nodes.forEach(node => {
         node.addEventListener('dragstart', handleDragStart);
     });
 
-    // Enable the directoryChildren to be a drop target
-    directoryChildren.addEventListener('dragover', handleDragOver);
-    directoryChildren.addEventListener('drop', handleDrop);
+    // Enable dragover and drop events on directoryNodes
+    directoryNodes.forEach(dir => {
+        dir.addEventListener('dragover', handleDragOver);
+        dir.addEventListener('drop', handleDrop);
+        dir.addEventListener('dragleave', handleDragLeave)
+    });
 
     let draggedItem = null; // To hold the reference to the currently dragged item
 
     function handleDragStart(e) {
+        e.stopPropagation();
         draggedItem = this; // 'this' refers to the dragged node
+        draggedItem.classList.add('dragged-node');
         e.dataTransfer.effectAllowed = 'move'; // Specifies the allowed drag operation
     }
 
     function handleDragOver(e) {
         e.preventDefault(); // Necessary to allow dropping
         e.dataTransfer.dropEffect = 'move'; // Specifies the visual feedback for the drag operation
+        e.target.closest('.directoryNode').classList.add('target-dir');
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('target-dir'); // Remove the hover style when leaving
     }
 
     function handleDrop(e) {
-        e.preventDefault(); // Prevent default action (opening as link for some elements)
-        if (draggedItem && e.target === directoryChildren) {
-            // Append the dragged node to the directoryChildren container
+        e.preventDefault(); // Prevent default action (e.g., opening as link for some elements)
+
+        // Find the closest .directoryNode from the event target
+        let dropTarget = e.target.closest('.directoryNode');
+        dropTarget.classList.add('target-dir');
+
+        if (draggedItem && dropTarget) {
+            // Find the .directoryChildren container within the dropTarget
+            let directoryChildren = dropTarget.querySelector('.directoryChildren');
+
+            // Append the dragged node to the found .directoryChildren container
             directoryChildren.appendChild(draggedItem);
+            console.log(draggedItem.getAttribute('data-path'))
+            ipcRenderer.send('move-item', {
+                itemPath: draggedItem.getAttribute('data-path'),
+                targetPath: directoryChildren.getAttribute('data-path')
+            });
+            dropTarget.classList.remove('target-dir');
+            draggedItem.classList.remove('dragged-node');
             draggedItem = null; // Reset the draggedItem reference after drop
         }
+        
     }
 }
+
 
 function initializeMenuUI() {
     document.getElementById('menuButton').addEventListener('click', toggleMenu);
@@ -101,11 +128,13 @@ function updateUIWithDirectoryTree(tree, parentElement) {
         if (node.isDirectory) {
             // Create a directory node element
             const directoryNodeDiv = setUpDirectoryNode(node);
+            directoryNodeDiv.draggable = true;
             parentElement.appendChild(directoryNodeDiv);
 
             // Recursively update the UI for children
         } else {
             const fileNodeDiv = setUpFileNode(node);
+            fileNodeDiv.draggable = true;
             parentElement.appendChild(fileNodeDiv);
         }
     });
@@ -122,8 +151,23 @@ function setUpDirectoryNode(node) {
 
     // Create a label for the directory node
     const directoryLabel = document.createElement('div');
-    directoryLabel.textContent = node.name;
-    directoryLabel.className = 'directoryLabel';
+    directoryLabel.className = 'directoryLabel'
+
+    const directoryIcon = document.createElement('i')
+    if (directoryToggleStates[node.path]){
+        directoryIcon.classList.add('fa-solid')
+        directoryIcon.classList.add('fa-chevron-down')
+    } else {
+        directoryIcon.classList.add('fa-solid')
+        directoryIcon.classList.add('fa-chevron-right')
+    }
+    directoryLabel.appendChild(directoryIcon)
+
+    const directoryName = document.createElement('div')
+    directoryName.textContent = node.name;
+    directoryName.className = 'directoryName';
+    directoryLabel.appendChild(directoryName);
+
     directoryNodeDiv.appendChild(directoryLabel);
 
     const directoryChildrenDiv = document.createElement('div');
@@ -141,6 +185,9 @@ function setUpDirectoryNode(node) {
     directoryNodeDiv.addEventListener('click', function (event) {
         event.stopPropagation();
         directoryChildrenDiv.classList.toggle('hide-children-node');
+        directoryIcon.classList.toggle('fa-chevron-down');
+        directoryIcon.classList.toggle('fa-chevron-right');
+
     })
 
     directoryNodeDiv.addEventListener('contextmenu', function (event) {
@@ -164,7 +211,7 @@ function setUpFileNode(node) {
     fileNodeDiv.setAttribute('data-path', node.path);
 
     // Create a label for the file node
-    const fileLabel = document.createElement('div');
+    const fileLabel = document.createElement('span');
     fileLabel.textContent = node.name;
     fileLabel.className = 'fileLabel';
 
@@ -191,8 +238,8 @@ function handleFile(node, fileNodeDiv) {
 
 function toggleMenu() {
     const menuDiv = document.getElementById('menu');
-    const isMenuVisible = menuDiv.style.display === 'block';
-    menuDiv.style.display = isMenuVisible ? 'none' : 'block';
+    menuDiv.classList.toggle('default-width')
+    menuDiv.classList.toggle('zero-width');
 }
 
 function createFileDropDownMenu(fileNodeDiv, node, event) {
@@ -265,16 +312,16 @@ function CreatedirectoryDropDownMenu(node, directoryNodeDiv, event) {
     const renameFolderButton = document.createElement('button');
     renameFolderButton.textContent = 'Rename Folder';
     renameFolderButton.onclick = function () {
-        const directoryLabel = directoryNodeDiv.querySelector('.directoryLabel')
+        const directoryName = directoryNodeDiv.querySelector('.directoryName')
 
-        directoryLabel.contentEditable = 'true';
-        directoryLabel.focus();
+        directoryName.contentEditable = 'true';
+        directoryName.focus();
 
-        directoryLabel.addEventListener("keypress", function (event) {
+        directoryName.addEventListener("keypress", function (event) {
             if (event.key === 'Enter') {
-                directoryLabel.contentEditable = 'false'
+                directoryName.contentEditable = 'false'
                 directoryNodeDiv.focus()
-                ipcRenderer.send('rename-folder', directoryLabel.textContent, node.path);
+                ipcRenderer.send('rename-folder', directoryName.textContent, node.path);
             }
         }
         );
@@ -346,7 +393,7 @@ function setUpIpcRenderers() {
             return;
         } else {
             // Clear the existing content
-            const directoryContentsList = document.getElementById('directory-contents-list');
+            const directoryContentsList = document.getElementById('directory-contents-children');
             directoryContentsList.innerHTML = '';
 
             // Call a function to update the UI with the tree structure

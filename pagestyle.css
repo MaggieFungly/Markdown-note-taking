@@ -33,6 +33,7 @@
         serif;
     --display-line-height: 1.25;
     --link-color: #2796cb;
+    --link-color-transparency:#2797cb30;
 }
 
 body,
@@ -71,9 +72,64 @@ button:hover {
     transition: 0.3s;
 }
 
-#directory-contents-list,
 #search-documents-list {
     padding: 5px;
+}
+
+
+#directory-contents-list {
+    padding: 5px;
+}
+
+.fileLabel,
+.directoryLabel {
+    font-size: var(--item-font-size);
+    padding: var(--item-padding);
+    display: flex;
+}
+
+.node {
+    border-radius: 3px;
+    margin: var(--item-padding);
+}
+
+.fileNode,
+.directoryLabel {
+    border-radius: 3px;
+}
+
+.fileNode:hover,
+.directoryLabel:hover {
+    background-color: var(--item-hover-background-color);
+}
+
+.fileLabel:focus,
+.directoryName:focus {
+    min-width: 80%;
+    background-color: white;
+    border-bottom: 1px solid gray;
+}
+
+.hide-children-node {
+    display: none;
+}
+
+.dragged-node {
+    opacity: 0.5;
+}
+
+.directoryChildren {
+    padding-left: 1.5ch;
+    border-left: 1px solid var(--item-sub-color);
+}
+
+#directory-contents-children {
+    padding-left: 5px;
+    border: none;
+}
+
+.target-dir {
+    background-color: var(--link-color-transparency);
 }
 
 .split {
@@ -81,38 +137,11 @@ button:hover {
     flex-direction: row;
 }
 
-.gutter {
-    background-color: #eee;
-    background-repeat: no-repeat;
-    background-position: 50%;
-    width: 3px;
-}
-
-.gutter .gutter-horizontal {
-    /* background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg=='); */
-    cursor: col-resize;
-    width: 1px;
-}
-
 .fa-folder,
 .fa-file {
     margin-right: 3px;
     margin-left: 3px;
 }
-
-.fileNode,
-.directoryNode {
-    color: var(--item-color);
-    background-color: var(--item-background-color);
-    transition: background-color 0.3s ease-out;
-    font-family: var(--env-font-family);
-    font-size: var(--item-font-size);
-    margin: var(--item-margin);
-    display: block;
-    padding: var(--item-padding);
-    align-items: center;
-}
-
 
 .parent:hover>.child {
     background-color: initial;
@@ -122,36 +151,6 @@ button:hover {
 .active,
 .active-context-menu {
     background-color: var(--item-hover-background-color);
-}
-
-.directoryChildren {
-    border-left: 1.3px solid gray;
-}
-
-.hide-children-node {
-    display: none;
-}
-
-.node{
-    user-select: none;
-}
-
-.directoryLabel:hover,
-.fileNode:hover {
-    background-color: var(--item-hover-background-color);
-}
-
-.fileLabel:focus,
-.directoryLabel:focus {
-    border-bottom: 1px solid gray;
-    background-color: white;
-}
-
-.directoryLabel {
-    padding: var(--item-padding);
-    padding-left: 4px;
-    border-left: 1.5px solid rgb(183, 183, 183);
-    transition: var(--transition);
 }
 
 .dropdown-menu {
@@ -209,13 +208,11 @@ button:hover {
 }
 
 #menu {
-    width: 200px;
     border-right: 1px solid gray;
     background-color: var(--side-column-background-color);
 }
 
 #outline {
-    width: 200px;
     border-left: 1px solid gray;
     background-color: var(--side-column-background-color);
     margin-left: 1px;
@@ -351,12 +348,28 @@ button:hover {
     /* Enables vertical scrolling */
 }
 
-#menu,
-#outline {
-    padding-bottom: 100px;
-    /* Adjust based on your layout needs */
+
+.gutter {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter:hover,
+.on-drag-gutter {
+    background-color: var(--link-color);
+}
+
+.gutter.gutter-horizontal {
+    cursor: col-resize;
+}
+
+.zero-width {
     display: none;
-    /* Already set in your HTML */
+}
+
+.default-width {
+    display: block;
 }
 
 #editorContainer {
@@ -383,15 +396,6 @@ button:hover {
     border-radius: 4px;
 }
 
-/* Optional: Hide scrollbars for Firefox */
-#menu,
-#outline,
-#editorContainer {
-    scrollbar-width: thin;
-    /* 'auto' or 'thin' to show scrollbars only when necessary */
-    scrollbar-color: darkgrey transparent;
-    /* Adjust scrollbar color as needed */
-}
 
 #menuButtonDiv,
 #searchDocuments {

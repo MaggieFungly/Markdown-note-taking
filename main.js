@@ -94,7 +94,7 @@ function setupIpcEventListeners() {
     });
     ipcMain.on('navigate-forward', navigateForward);
     ipcMain.on('navigate-back', navigateBack);
-    ipcMain.on('move-item', (event, args) => moveFile(event, args))
+    ipcMain.on('move-item', (event, args) => moveFile(event, args));
 }
 
 // Event handler to open file dialog
@@ -185,26 +185,35 @@ function renameFile(event, newTitle) {
     });
 }
 
-async function moveFile(event, { itemPath, toPath }) {
-
-    itemPath = path.normalize(itemPath);
-    toPath = path.normalize(toPath);
-
-    if (itemPath && toPath) {
-        const destination = path.join(toPath, path.basename(itemPath));
-        try {
-            await fsPromise.rename(itemPath, destination);
-            event.sender.send('log-message', `Successfully moved ${itemPath} to ${destination}`);
-        } catch (err) {
-            event.sender.send('log-message', `Error moving ${itemPath} to ${destination}: ${err}`);
-        }
-
-        if (itemPath === currentFilePath) {
-            loadBlocks(destination);
-        }
+async function moveFileAcrossDevices(source, destination) {
+    try {
+        await fsPromise.copyFile(source, destination); // Step 1: Copy the file
+        await fsPromise.unlink(source); // Step 2: Delete the original file
+        console.log(`Successfully moved ${source} to ${destination}`);
+    } catch (err) {
+        console.error(`Error moving ${source} to ${destination}: ${err}`);
+        throw err; // Rethrow or handle as needed
     }
 }
 
+async function moveFile(event, { itemPath, targetPath }) {
+    itemPath = path.normalize(itemPath);
+    targetPath = path.join(path.normalize(targetPath), path.basename(itemPath));
+
+    try {
+        await fsPromise.rename(itemPath, targetPath);
+        win.webContents.send('log-message', `Successfully moved ${itemPath} to ${targetPath}`);
+    } catch (error) {
+        if (error.code === 'EXDEV') {
+            // Detected an attempt to move across devices, use the fallback
+            await moveFileAcrossDevices(itemPath, targetPath);
+            win.webContents.send('log-message', `Successfully moved ${itemPath} to ${targetPath} (across devices)`);
+        } else {
+            win.webContents.send('log-message', `Error moving ${itemPath} to ${targetPath}: ${error}`);
+            win.webContents.send('directory-changed')
+        }
+    }
+}
 
 // Event handler to open a JSON file
 function showOpenFileDialog(event) {

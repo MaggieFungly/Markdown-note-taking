@@ -5,8 +5,8 @@ var blocks = document.getElementById('blocks');
 toggleOutlineBtn.addEventListener('click', toggleOutline);
 
 function toggleOutline() {
-    const isOutlineVisible = outline.style.display === 'block';
-    outline.style.display = isOutlineVisible ? 'none' : 'block';
+    outline.classList.toggle('default-width');
+    outline.classList.toggle('zero-width');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
