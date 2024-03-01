@@ -70,10 +70,10 @@ function setupIpcEventListeners() {
         createFolder(path);
     });
     ipcMain.on('rename-folder', (event, name, path) => {
-        renameFolder(event, name, path);
+        renameFolder(name, path);
     })
     ipcMain.on('rename-selected-file', (event, oldPath, Newname) => {
-        renameSelectedFile(event, oldPath, Newname);
+        renameSelectedFile(oldPath, Newname);
     });
     ipcMain.on('delete-folder', (event, path) => {
         deleteDirectory(path);
@@ -141,48 +141,41 @@ function saveBlocksData(filePath, blocksData) {
     updateDocument(filePath, blocksData);
 }
 
-// Event handler to rename a file
-function renameFile(event, newTitle) {
-    if (currentFilePath === '') {
+async function renameFile(event, newTitle) {
+    if (!currentFilePath || currentFilePath === '') {
         console.error('No file is currently open for renaming');
+        event.reply('rename-file-response', 'error', 'No file is currently open for renaming');
         return;
     }
 
     const directory = path.dirname(currentFilePath);
-    let newFileName = `${newTitle}.json`;
+    const fileExtension = path.extname(currentFilePath);
+    let newFileName = `${newTitle}${fileExtension}`;
     let newFilePath = path.join(directory, newFileName);
     let counter = 1;
 
-    // Function to check if file exists and generate a new file name
-    function generateNewFilePath() {
-        while (fs.existsSync(newFilePath)) {
-            newFileName = `${newTitle} ${counter}.json`;
-            newFilePath = path.join(directory, newFileName);
-            counter++;
-        }
+    // Retrieve the current directory contents
+    const files = await fsPromise.readdir(directory);
+
+    // Case-sensitive check if the file exists
+    while (files.some(file => file === path.basename(newFilePath))) {
+        newFileName = `${newTitle} ${counter}${fileExtension}`;
+        newFilePath = path.join(directory, newFileName);
+        counter++;
     }
 
-    // Generate unique file path
-    generateNewFilePath();
+    try {
+        await fsPromise.rename(currentFilePath, newFilePath);
+        currentFilePath = newFilePath; // Update the global current file path
 
-    // Rename the file
-    fs.rename(currentFilePath, newFilePath, (err) => {
-        if (err) {
-            console.error('Error renaming file:', err);
-            dialog.showErrorBox('File Rename Error', `An error occurred renaming the file: ${err.message}`);
-            event.reply('rename-file-response', 'error');
-        } else {
-            // Update the current file path
-            currentFilePath = newFilePath;
-            const newTitleWithoutExtension = path.basename(newFilePath, '.json');
-            // set the new title to the the page
-            win.webContents.send('set-title', newTitleWithoutExtension);
-            win.webContents.send('get-current-file-path', currentFilePath);
-            win.webContents.send('directory-changed');
+        // Notify the renderer process about the change
+        win.webContents.send('get-current-file-path', currentFilePath);
+        win.webContents.send('directory-changed');
+        win.webContents.send('set-title', path.basename(newFileName, fileExtension));
 
-            win.webContents.send(`Note renamed to ${newTitle}.`)
-        }
-    });
+    } catch (err) {
+        win.webContents.send('log-message:', err);
+    }
 }
 
 async function moveFileAcrossDevices(source, destination) {
@@ -198,19 +191,48 @@ async function moveFileAcrossDevices(source, destination) {
 
 async function moveFile(event, { itemPath, targetPath }) {
     itemPath = path.normalize(itemPath);
-    targetPath = path.join(path.normalize(targetPath), path.basename(itemPath));
+    const originalTargetPath = path.normalize(targetPath); // Store original target path
+    targetPath = path.join(originalTargetPath, path.basename(itemPath));
+
+    // Extract the filename without extension and the file extension
+    const fileExtension = path.extname(itemPath);
+    const fileNameWithoutExtension = path.basename(itemPath, fileExtension);
+
+    let counter = 1; // Initialize the counter
+    if (fs.existsSync(targetPath)) {
+        // Modify targetPath by appending a counter before the file extension
+        targetPath = path.join(originalTargetPath, `${fileNameWithoutExtension} ${counter}${fileExtension}`);
+
+        while (fs.existsSync(targetPath)) {
+            counter++;
+            targetPath = path.join(originalTargetPath, `${fileNameWithoutExtension} ${counter}${fileExtension}`);
+        }
+    }
 
     try {
         await fsPromise.rename(itemPath, targetPath);
-        win.webContents.send('log-message', `Successfully moved ${itemPath} to ${targetPath}`);
+        event.sender.send('log-message', `Successfully moved ${itemPath} to ${targetPath}`);
     } catch (error) {
         if (error.code === 'EXDEV') {
-            // Detected an attempt to move across devices, use the fallback
-            await moveFileAcrossDevices(itemPath, targetPath);
-            win.webContents.send('log-message', `Successfully moved ${itemPath} to ${targetPath} (across devices)`);
+            // If moving across devices, use the fallback to copy and then delete
+            try {
+                await moveFileAcrossDevices(itemPath, targetPath); // Ensure this function is defined to handle cross-device move
+                event.sender.send('log-message', `Successfully moved ${itemPath} to ${targetPath} (across devices)`);
+            } catch (crossDeviceError) {
+                event.sender.send('log-message', `Error moving ${itemPath} across devices: ${crossDeviceError}`);
+            }
         } else {
-            win.webContents.send('log-message', `Error moving ${itemPath} to ${targetPath}: ${error}`);
-            win.webContents.send('directory-changed')
+            event.sender.send('log-message', `Error moving ${itemPath} to ${targetPath}: ${error}`);
+        }
+    } finally {
+        if (currentFilePath === itemPath) {
+            loadBlocks(targetPath);
+        } else if (currentFilePath.startsWith(itemPath)) {
+            const relativePath = path.relative(itemPath, currentFilePath);
+            const newPath = path.join(targetPath, relativePath)
+            loadBlocks(newPath);
+        } else {
+            event.sender.send('directory-changed'); // Notify that a directory change occurred, if relevant        
         }
     }
 }
@@ -487,63 +509,78 @@ function createFolder(directoryPath, folderName = 'Untitled') {
         win.webContents.send('folder-created', folderPath);
         win.webContents.send('log-message', `Folder '${folderName}' created successfully in '${directoryPath}'.`)
     } catch (error) {
-        console.error(`Error creating folder '${folderName}' in '${directoryPath}': ${error.message}`);
+        win.webContents.send('log-message', `Error creating folder '${folderName}' in '${directoryPath}': ${error.message}`);
     }
 }
 
-
-function renameFolder(event, newName, folderPath) {
+async function renameFolder(newName, folderPath) {
     const parentDir = path.dirname(folderPath);
-    const newFolderPath = path.join(parentDir, newName);
+    let newFolderPath = path.join(parentDir, newName);
+    let counter = 1;
 
-    // check if currentFilePath is within the renamed folder
-    if (currentFilePath && currentFilePath.startsWith(folderPath)) {
-        // Calculate the new path for the current file
-        const relativePath = path.relative(folderPath, currentFilePath);
-        var newCurrentFilePath = path.join(newFolderPath, relativePath);
+    // Asynchronously check for an existing folder with the same name and increment if necessary
+    while (await fsPromise.stat(newFolderPath).then(() => true).catch(() => false)) {
+        const incrementedName = `${newName} ${counter}`;
+        newFolderPath = path.join(parentDir, incrementedName);
+        counter++;
     }
 
-    // Rename the folder
-    fs.rename(folderPath, newFolderPath, (err) => {
-        if (err) {
-            console.error('Failed to rename folder:', err);
-            win.webContents.send('directory-changed');
-            win.webContents.send('log-message', 'Failed to rename folder');
-            return;
-        } else {
-            console.log('Folder renamed successfully');
-            win.webContents.send('directory-changed');
-            win.webContents.send('log-message', `Folder renamed to '${newName}'.`)
+    try {
+        // Perform the folder rename operation
+        await fsPromise.rename(folderPath, newFolderPath)
+        win.webContents.send('log-message', `Folder renamed to '${path.basename(newFolderPath)}'.`);
 
-            if (newCurrentFilePath) {
-                currentFilePath = newCurrentFilePath;
-                loadBlocks(currentFilePath);
-            }
-
+        // If the currently opened file path is within the renamed folder, update it
+        if (currentFilePath && currentFilePath.startsWith(folderPath)) {
+            const relativePath = path.relative(folderPath, currentFilePath);
+            const newCurrentFilePath = path.join(newFolderPath, relativePath);
+            win.webContents.send('get-current-file-path', newCurrentFilePath);
+            loadBlocks(newCurrentFilePath);
         }
-    });
 
+        // Notify about directory changes after all operations are complete
+        win.webContents.send('directory-changed');
+    } catch (err) {
+        console.error('Failed to rename folder:', err);
+        // Notify the renderer process about the error
+        win.webContents.send('log-message', `Failed to rename folder: ${err.message}`);
+    }
 }
 
-function renameSelectedFile(event, oldPath, newName) {
+async function renameSelectedFile(oldPath, newName) {
     const directory = path.dirname(oldPath);
+    const originalExtension = path.extname(oldPath);
+    const baseNewName = newName.endsWith(originalExtension) ? newName.slice(0, -originalExtension.length) : newName;
+    let counter = 0; // Start with 0 to try the original name first
+    let newFilePath;
 
-    // Ensure newName ends with .json extension
-    const newNameWithExtension = newName.endsWith('.json') ? newName : `${newName}.json`;
+    // Generate a unique new file path
+    do {
+        const append = counter > 0 ? ` ${counter}` : '';
+        let newNameWithExtension = `${baseNewName}${append}${originalExtension}`;
+        newFilePath = path.join(directory, newNameWithExtension);
+        counter++;
+        // Prevent an unlikely but possible infinite loop
+        if (counter > 1000) throw new Error("Too many attempts to rename the file.");
+    } while (await fsPromise.stat(newFilePath).then(() => true).catch(() => false));
 
-    const newFilePath = path.join(directory, newNameWithExtension);
+    try {
+        await fsPromise.rename(oldPath, newFilePath);
+        // Inform the renderer process of success
+        win.webContents.send('log-message', `Successfully renamed file to '${path.basename(newFilePath)}'`);
+        win.webContents.send('rename-file-response', 'success', path.basename(newFilePath, originalExtension));
 
-    fs.rename(oldPath, newFilePath, (err) => {
-        if (err) {
-            console.error('Error renaming file:', err);
-            win.webContents.send('log-message', `Error renaming file: '${err}$'`)
-            win.webContents.send('directory-changed');
-        } else {
-            if (oldPath === currentFilePath) {
-                loadBlocks(newFilePath);
-            }
+        if (oldPath === currentFilePath) {
+            currentFilePath = newFilePath; // Update if the renamed file was the current file
+            win.webContents.send('set-title', path.basename(newFilePath, originalExtension));
         }
-    });
+        win.webContents.send('directory-changed'); // Notify of directory change if needed
+    } catch (err) {
+        console.error('Error renaming file:', err);
+        win.webContents.send('log-message', `Error renaming file: ${err.message}`);
+        // Provide a way to handle errors in the renderer process
+        win.webContents.send('rename-file-response', 'error', err.message);
+    }
 }
 
 function deleteDirectory(directoryPath) {

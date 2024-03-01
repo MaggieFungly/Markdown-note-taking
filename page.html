@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cornell Notes</title>
+    <title>Note</title>
 
     <!-- codemirror -->
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
@@ -111,11 +111,17 @@
                 <button id="return" title="Return to home page">
                     <i class="fa-solid fa-house"></i>
                 </button>
-                <button id="createNewFileButton" title="Create new file">
+                <button id="createNewFileButton" title="Create note">
                     <i class="fa-solid fa-file-pen"></i>
                 </button>
-                <button id="createFolderButton" title="Create Folder">
+                <button id="createFolderButton" title="Create folder">
                     <i class="fa-solid fa-folder-plus"></i>
+                </button>
+                <button id="collapse" title="Collapse all">
+                    <i class="fa-solid fa-angles-right"></i>
+                </button>
+                <button id="expand" title="Expand all">
+                    <i class="fa-solid fa-angles-down"></i>
                 </button>
             </div>
 
@@ -207,12 +213,12 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             Split(['#menu', '#editorContainer', '#outline'], {
-                sizes: [15, 50, 20],
+                sizes: [20, 50, 20],
                 minSize: [200, 300, 200],
                 maxSize: [400, Infinity, 400],
-                snapOffset: 10,
+                snapOffset: 0,
                 expandToMin: true,
-                gutterSize: 5,
+                gutterSize: 3,
                 gutterAlign: 'center',
             });
         })

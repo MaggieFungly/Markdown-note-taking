@@ -12,6 +12,22 @@ function main() {
     setUpIpcRenderers();
 }
 
+function initializeMenuUI() {
+    document.getElementById('menuButton').addEventListener('click', toggleMenu);
+
+    document.getElementById('createNewFileButton').addEventListener('click', function () {
+        createNewFile(document.getElementById('directory-contents-list').getAttribute('data-path'));
+    });
+
+    document.getElementById('createFolderButton').addEventListener('click', function (event) {
+        createFolder(document.getElementById('directory-contents-list').getAttribute('data-path'));
+    });
+
+    document.getElementById('collapse').addEventListener('click', collapseAll);
+
+    document.getElementById('expand').addEventListener('click', expandAll);
+}
+
 function initializeDragAndDrop() {
     // Find all draggable nodes
     const nodes = document.querySelectorAll('.node');
@@ -54,38 +70,49 @@ function initializeDragAndDrop() {
 
         // Find the closest .directoryNode from the event target
         let dropTarget = e.target.closest('.directoryNode');
-        dropTarget.classList.add('target-dir');
 
         if (draggedItem && dropTarget) {
+            dropTarget.classList.add('target-dir');
+
             // Find the .directoryChildren container within the dropTarget
             let directoryChildren = dropTarget.querySelector('.directoryChildren');
 
-            // Append the dragged node to the found .directoryChildren container
-            directoryChildren.appendChild(draggedItem);
-            console.log(draggedItem.getAttribute('data-path'))
-            ipcRenderer.send('move-item', {
-                itemPath: draggedItem.getAttribute('data-path'),
-                targetPath: directoryChildren.getAttribute('data-path')
-            });
+            const itemPath = pathManagement.normalize(draggedItem.getAttribute('data-path'));
+            const targetPath = pathManagement.normalize(directoryChildren.getAttribute('data-path'))
+
+            if ((pathManagement.dirname(itemPath) !== targetPath) || (itemPath !== targetPath)) {
+                ipcRenderer.send('move-item', {
+                    itemPath: itemPath,
+                    targetPath: targetPath,
+                });
+            }
             dropTarget.classList.remove('target-dir');
             draggedItem.classList.remove('dragged-node');
             draggedItem = null; // Reset the draggedItem reference after drop
         }
-        
     }
 }
 
+function collapseAll() {
+    const directories = document.getElementById('directory-contents-list').querySelectorAll('.directoryNode');
+    directories.forEach(directoryNode => {
+        const directoryIcon = directoryNode.querySelector('.directoryIcon')
+        directoryIcon.classList.remove('fa-chevron-down')
+        directoryIcon.classList.add('fa-chevron-right')
 
-function initializeMenuUI() {
-    document.getElementById('menuButton').addEventListener('click', toggleMenu);
+        directoryNode.querySelector('.directoryChildren').classList.add('hide-children-node')
+    })
+}
 
-    document.getElementById('createNewFileButton').addEventListener('click', function () {
-        createNewFile(document.getElementById('directory-contents-list').getAttribute('data-path'));
-    });
+function expandAll() {
+    const directories = document.getElementById('directory-contents-list').querySelectorAll('.directoryNode');
+    directories.forEach(directoryNode => {
+        const directoryIcon = directoryNode.querySelector('.directoryIcon')
+        directoryIcon.classList.add('fa-chevron-down')
+        directoryIcon.classList.remove('fa-chevron-right')
 
-    document.getElementById('createFolderButton').addEventListener('click', function (event) {
-        createFolder(document.getElementById('directory-contents-list').getAttribute('data-path'));
-    });
+        directoryNode.querySelector('.directoryChildren').classList.remove('hide-children-node')
+    })
 }
 
 function createFolder(path) {
@@ -154,11 +181,11 @@ function setUpDirectoryNode(node) {
     directoryLabel.className = 'directoryLabel'
 
     const directoryIcon = document.createElement('i')
-    if (directoryToggleStates[node.path]){
-        directoryIcon.classList.add('fa-solid')
+    directoryIcon.className = 'directoryIcon';
+    directoryIcon.classList.add('fa-solid')
+    if (directoryToggleStates[node.path]) {
         directoryIcon.classList.add('fa-chevron-down')
     } else {
-        directoryIcon.classList.add('fa-solid')
         directoryIcon.classList.add('fa-chevron-right')
     }
     directoryLabel.appendChild(directoryIcon)
