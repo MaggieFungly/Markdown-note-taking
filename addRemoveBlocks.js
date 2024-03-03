@@ -3,7 +3,6 @@ const { marked } = require("marked");
 const shortid = require("shortid");
 const { viewer } = require('./imageViewer');
 
-
 // Renders markdown to HTML with custom processing for highlights and internal links.
 function renderText(textValue) {
     const highlightRegex = /==([^=]+)==/g;
@@ -17,7 +16,7 @@ function renderText(textValue) {
             return `<a class="internal-block" data-id="${id}">${title}</a>`;
         });
 
-    // Customize the renderer for marked to handle specific languages, like mermaid diagrams.
+    // handle mermaid diagrams
     const renderer = new marked.Renderer();
     renderer.code = (code, language) => {
         if (language === "mermaid") {
@@ -42,11 +41,7 @@ function renderText(textValue) {
     return html;
 }
 
-
-function showDisplay(textValue, displayDiv, codeMirrorEditor) {
-
-    displayDiv.innerHTML = renderText(textValue);
-
+function handleDisplayDiv(displayDiv) {
     if (window.mermaid) {
         window.mermaid.init(undefined, displayDiv.querySelectorAll('.mermaid'));
     } else {
@@ -57,8 +52,13 @@ function showDisplay(textValue, displayDiv, codeMirrorEditor) {
     MathJax.typesetPromise([displayDiv]).then(() => {
         // Additional actions after typesetting, if necessary
     });
-
     viewer(displayDiv)
+}
+
+
+function showDisplay(textValue, displayDiv, codeMirrorEditor) {
+    displayDiv.innerHTML = renderText(textValue);
+    handleDisplayDiv(displayDiv)
 
     displayDiv.style.display = "block"; // Show the display div
     codeMirrorEditor.getWrapperElement().style.display = "none"; // Hide the editor
@@ -133,7 +133,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
 
     // Editor behavior
     codeMirrorEditor.on("blur", function () {
-        textValue = codeMirrorEditor.getValue();
+        const textValue = codeMirrorEditor.getValue();
         // when editor is not focused, display the div
         showDisplay(textValue, displayDiv, codeMirrorEditor);
     });
@@ -334,4 +334,12 @@ function scrollToBlock(outlineItem, blockContainer) {
     })
 }
 
+function setUpBlockInsertion() {
+    const start = document.getElementById('startButton');
+    start.addEventListener('click', function () {
+        insertBlock(0);
+    })
+}
+
 module.exports.renderText = renderText;
+module.exports.handleDisplayDiv = handleDisplayDiv;

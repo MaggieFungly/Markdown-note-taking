@@ -276,7 +276,7 @@ function loadBlocks(filePath, isNavigate = false) {
                 win.webContents.send('log-message', err)
             } else {
 
-                if (!isNavigate) {
+                if (!isNavigate && currentFilePath !== '') {
                     previousStack.push(currentFilePath);
                     forwardStack = [];
                 }
@@ -286,8 +286,7 @@ function loadBlocks(filePath, isNavigate = false) {
                 win.webContents.send('directory-changed');
                 win.webContents.send('get-current-file-path', currentFilePath);
 
-                win.webContents.send('previous-stack-length', previousStack.length);
-                win.webContents.send('forward-stack-length', forwardStack.length)
+                win.webContents.send('navigate-state', { previousStackLength: previousStack.length, forwardStackLength: forwardStack.length });
 
                 const fileNameWithoutExtension = path.basename(filePath, '.json');
                 win.webContents.send('set-title', fileNameWithoutExtension);
@@ -823,28 +822,36 @@ let previousStack = [];
 let forwardStack = [];
 
 function navigateBack() {
-    if (previousStack.length > 0) {
-        const previousPath = previousStack.pop();
-        forwardStack.push(currentFilePath);
-        loadBlocks(previousPath, true); // Pass true to indicate this is a navigation action
-        win.webContents.send('previous-stack-length', previousStack.length)
+    let previousPath = previousStack.pop(); // Attempt to pop the next path
+    while (previousPath !== undefined && !fs.existsSync(previousPath)) {
+        // If nextPath doesn't exist, try the next one
+        previousPath = previousStack.pop();
+    }
 
+    if (previousPath !== undefined) {
+        // If we found a valid nextPath
+        forwardStack.push(currentFilePath); // Push the current path to forwardStack
+        loadBlocks(previousPath, true); // Load the blocks for previousPath, indicating this is a navigation action
     } else {
-        win.webContents.send('log-message', "No more previous pages to navigate to.");
+        // If no valid nextPath was found
+        win.webContents.send('log-message', "No more pages to navigate back.");
     }
 }
 
 function navigateForward() {
-    if (forwardStack.length > 0) {
-        const nextPath = forwardStack.pop();
-        previousStack.push(currentFilePath);
-        loadBlocks(nextPath, true); // Pass true to indicate this is a navigation action
-    } else {
-        win.webContents.send('log-message', "No more forward pages to navigate to.");
+    let nextPath = forwardStack.pop();
+    while (nextPath !== undefined && !fs.existsSync(nextPath)) {
+        nextPath = forwardStack.pop();
+    }
 
+    if (nextPath !== undefined) {
+        // If we found a valid nextPath
+        previousStack.push(currentFilePath);
+        loadBlocks(nextPath, true);
+    } else {
+        win.webContents.send('log-message', "No more pages to navigate forward.");
     }
 }
-
 
 // Start the application when ready
 app.whenReady().then(createWindow);

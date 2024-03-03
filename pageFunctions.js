@@ -1,76 +1,50 @@
 // Sortable
 const Sortable = require("sortablejs");
 
-document.addEventListener('DOMContentLoaded', function () {
-    var outlineList = document.getElementById('outlineList')
-    var blocks = document.getElementById('blocks');
+function syncSortable() {
+    const outlineList = document.getElementById('outlineList')
+    const blocks = document.getElementById('blocks');
 
     // Function to synchronize the other list based on the sorted list
-    var synchronizeLists = function (sortedEl, otherEl) {
-        var sortedItems = Array.from(sortedEl.children).map(function (el) {
+    const synchronizeLists = function (sortedEl, otherEl) {
+        const sortedItems = Array.from(sortedEl.children).map(function (el) {
             return el.getAttribute('data-id');
         });
 
         sortedItems.forEach(function (id, index) {
-            var itemToMove = otherEl.querySelector('[data-id="' + id + '"]');
+            const itemToMove = otherEl.querySelector('[data-id="' + id + '"]');
             if (otherEl.children[index] !== itemToMove) {
                 otherEl.insertBefore(itemToMove, otherEl.children[index]);
             }
         });
     };
 
-    var outlineSortable = new Sortable(outlineList, {
+    const outlineSortable = new Sortable(outlineList, {
         animation: 300,
         onSort: function () {
             synchronizeLists(outlineList, blocks);
         }
     });
 
-    var blocksSortable = new Sortable(blocks, {
+    const blocksSortable = new Sortable(blocks, {
         animation: 300,
         handle: '.dragButton',
         onSort: function () {
             synchronizeLists(blocks, outlineList);
         }
     });
-});
-
-
-// synchronize focus
-// Function to handle click event for an item
-function handleClickEvent(item, otherEl) {
-    item.addEventListener('click', function () {
-        var id = item.getAttribute('data-id');
-        var correspondingItem = otherEl.querySelector('[data-id="' + id + '"]');
-
-        // Reset styles for all items in otherEl
-        Array.from(otherEl.children).forEach(function (el) {
-            el.style.outline = 'none';
-        });
-
-        // Apply blue outline to the corresponding item
-        if (correspondingItem) {
-            correspondingItem.style.border = '2px solid blue';
-        }
-    });
 }
 
-// Function to add click event to list items
-function addClickEvent(items, otherEl) {
-    items.forEach(function (item) {
-        handleClickEvent(item, otherEl);
-    });
+
+function setUpReaderEditMode() {
+    const toggleReader = document.getElementById("toggleReader");
+    toggleReader.addEventListener('click', toggleReaderMode);
+
+    // toggle edit mode
+    const toggleEdit = document.getElementById('toggleEdit')
+    toggleEdit.addEventListener('click', toggleEditMode);
 }
 
-const outlineList = document.getElementById('outlineList')
-addClickEvent(Array.from(outlineList.children), blocks);
-addClickEvent(Array.from(blocks.children), outlineList);
-
-
-
-// toggle reader mode
-const toggleReader = document.getElementById("toggleReader");
-toggleReader.addEventListener('click', toggleReaderMode);
 
 function toggleReaderMode() {
     const cueContainers = document.querySelectorAll('.cueContainer');
@@ -97,11 +71,6 @@ function toggleReaderMode() {
         }
     });
 }
-module.exports.toggleReaderMode = toggleReaderMode;
-
-// toggle edit mode
-const toggleEdit = document.getElementById('toggleEdit')
-toggleEdit.addEventListener('click', toggleEditMode);
 
 function toggleEditMode() {
     const cueContainers = document.querySelectorAll('.cueContainer');
@@ -125,9 +94,11 @@ function toggleEditMode() {
     });
 }
 
-document.getElementById('exportMarkdown').addEventListener('click', function () {
-    ipcRenderer.send('export-to-markdown');
-})
+function exportToMarkdown() {
+    document.getElementById('exportMarkdown').addEventListener('click', function () {
+        ipcRenderer.send('export-to-markdown');
+    })
+}
 
 function updateVisibility() {
     let cueCheckbox = document.getElementById('cueCheckbox');
@@ -169,45 +140,54 @@ function updateVisibility() {
     }
 }
 
-// Add event listeners
-document.getElementById('cueCheckbox').addEventListener('change', updateVisibility);
-document.getElementById('noteCheckbox').addEventListener('change', updateVisibility);
+function setUpNoteCueVisibility() {
+    document.getElementById('cueCheckbox').addEventListener('change', updateVisibility);
+    document.getElementById('noteCheckbox').addEventListener('change', updateVisibility);
 
-// Initial update
-updateVisibility();
+    // Initial update
+    updateVisibility();
+}
 
+function setUpNavigation() {
 
-// go to previous page
-document.getElementById('navigate-back').addEventListener('click', function () {
-    ipcRenderer.send('navigate-back')
-});
+    ipcRenderer.on('navigate-state', (event, { previousStackLength, forwardStackLength }) => {
 
-document.getElementById('navigate-forward').addEventListener('click', function () {
-    ipcRenderer.send('navigate-forward')
-})
+        console.log(previousStackLength)
+        manageNavigationButtonColor(navigateBackButton, previousStackLength);
+        manageNavigationButtonColor(navigateForwardButton, forwardStackLength);
+    });
+
+    const navigateBackButton = document.getElementById('navigate-back')
+    navigateBackButton.addEventListener('click', function () {
+        ipcRenderer.send('navigate-back')
+    });
+
+    const navigateForwardButton = document.getElementById('navigate-forward')
+    navigateForwardButton.addEventListener('click', function () {
+        ipcRenderer.send('navigate-forward')
+    })
+
+    document.getElementById('return').addEventListener('click', function () {
+        ipcRenderer.send('load-index')
+    })
+}
 
 function manageNavigationButtonColor(button, stackLength) {
-    // Access the <i> element only once for efficiency
     const icon = button.querySelector('i');
 
     if (stackLength > 0) {
         icon.classList.remove('no-navigate');
-    }
-    if (stackLength === 0) {
+    } else {
         icon.classList.add('no-navigate');
     }
 }
 
+function setUpToolBarFunctions() {
+    setUpReaderEditMode();
+    setUpNoteCueVisibility();
+    exportToMarkdown();
+}
 
-ipcRenderer.on('previous-stack-length', (event, stackLength) => {
-    manageNavigationButtonColor(document.getElementById('navigate-back'), stackLength)
-})
-ipcRenderer.on('forward-stack-length', (event, stackLength) => {
-    manageNavigationButtonColor(document.getElementById('navigate-forward'), stackLength)
-})
-
-// return home
-var returnBtn = document.getElementById('return')
-returnBtn.addEventListener('click', function () {
-    ipcRenderer.send('load-index')
-})
+syncSortable();
+setUpNavigation();
+setUpToolBarFunctions();

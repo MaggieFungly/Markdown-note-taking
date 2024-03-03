@@ -1,7 +1,7 @@
-const blockFunctions = require('./addRemoveBlocks');
-const { ipcRenderer } = require('electron');
-const { marked } = require("marked");
 const { default: hljs } = require("highlight.js");
+const { ipcRenderer } = require("electron/renderer");
+const { renderText, handleDisplayDiv } = require("./addRemoveBlocks");
+const { viewer } = require('./imageViewer');
 
 const cueDisplay = document.getElementsByClassName('cueDisplay')[0];
 const noteDisplay = document.getElementsByClassName('noteDisplay')[0];
@@ -17,13 +17,12 @@ ipcRenderer.on('block-data', (event, block) => {
         noteDisplay.innerHTML = '';
 
         if (cueDisplay && noteDisplay) {
-            cueDisplay.innerHTML = blockFunctions.renderText(block.cue);
-            noteDisplay.innerHTML = blockFunctions.renderText(block.note);
+            cueDisplay.innerHTML = renderText(block.cue);
+            noteDisplay.innerHTML = renderText(block.note);
             id = block.id;
 
-            MathJax.typesetPromise([noteDisplay, cueDisplay]).then(() => {
-                // Additional actions after typesetting, if necessary
-            });
+            handleDisplayDiv(noteDisplay);
+            handleDisplayDiv(cueDisplay);
 
         } else {
             console.error('Elements with class cueDisplay or noteDisplay were not found.');

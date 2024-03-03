@@ -2,11 +2,39 @@ const suggestionInput = document.getElementById('suggestion-input');
 const suggestionOptions = document.getElementById('suggestion-options');
 const suggestions = document.getElementById('suggestions')
 
-suggestionInput.addEventListener('input', function (event) {
-    searchContent = suggestionInput.value.trim();
-    getSearchResults(searchContent);
-    updateSuggestions();
-});
+BlockLinkEventListeners();
+
+function BlockLinkEventListeners() {
+    suggestionInput.addEventListener('input', function (event) {
+        searchContent = suggestionInput.value.trim();
+        getSearchResults(searchContent);
+        updateSuggestions();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeSuggestion();
+        }
+    })
+
+    document.addEventListener('click', function (event) {
+        // Check if the click happened outside the suggestions div
+        if (!suggestions.contains(event.target)) {
+            closeSuggestion();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.body.addEventListener('click', (event) => {
+            const link = event.target
+            // Check if the clicked element is an internal link
+            if (link.classList.contains('internal-block')) {
+                event.preventDefault();
+                ipcRenderer.send('open-internal-link', link.dataset.id, link.textContent.trim());
+            }
+        });
+    });
+}
 
 function updateSuggestions() {
     suggestionOptions.innerHTML = '';
@@ -73,31 +101,7 @@ function insertBlockLink(codeMirrorEditor, blockLink) {
     setTimeout(() => {
         codeMirrorEditor.refresh();
     }, 100);
-    
+
     showDisplay(codeMirrorEditor.getValue(), codeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), codeMirrorEditor)
 }
 
-document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') {
-        closeSuggestion();
-    }
-})
-
-document.addEventListener('click', function (event) {
-    // Check if the click happened outside the suggestions div
-    if (!suggestions.contains(event.target)) {
-        closeSuggestion();
-    }
-});
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.body.addEventListener('click', (event) => {
-        const link = event.target
-        // Check if the clicked element is an internal link
-        if (link.classList.contains('internal-block')) {
-            event.preventDefault();
-            ipcRenderer.send('open-internal-link', link.dataset.id, link.textContent.trim());
-        }
-    });
-});

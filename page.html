@@ -18,7 +18,8 @@
     <script src="cmMode.js"></script>
     <link rel="stylesheet" href="cm.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js">
+    <script src="node_modules/mermaid/dist/mermaid.min.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             mermaid.initialize({ startOnLoad: false });
         });
@@ -141,8 +142,7 @@
             <input type="text" id="title">
             <div id="init" class="no-drag">
                 <div class="buttons">
-                    <button onclick="insertBlock(0)" id="startButton" title="Insert block on top"><i
-                            class="fas fa-plus"></i></button>
+                    <button id="startButton" title="Insert block on top"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
             <div id="blocks">
@@ -163,12 +163,14 @@
 
     <!-- data management -->
     <script src="saveData.js"></script>
-
     <!-- page management -->
-    <script src="addRemoveBlocks.js"></script>
-    <script type="module" src="pageFunctions.js"></script>
 
-    <script type="module" src="importData.js"></script>
+    <script src="addRemoveBlocks.js"></script>
+    <script>
+        setUpBlockInsertion();
+    </script>
+    <script src="pageFunctions.js"></script>
+    <script src="importData.js"></script>
 
     <script>
         document.addEventListener('click', function (event) {
@@ -208,8 +210,8 @@
         });
     </script>
 
-    <script type="module">
-        var Split = require('split.js')
+    <script>
+        const Split = require('split.js')
 
         document.addEventListener('DOMContentLoaded', function () {
             Split(['#menu', '#editorContainer', '#outline'], {

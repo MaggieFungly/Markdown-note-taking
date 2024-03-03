@@ -1,5 +1,4 @@
 const pathManagement = require('path')
-const { clearContents } = require('./importData');
 
 let currentFilePath = '';
 let currentContextMenu = null;
