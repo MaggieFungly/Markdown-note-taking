@@ -18,18 +18,8 @@ let searchResults = [];
 const searchDocumentInput = document.getElementById('search-documents-input');
 const searchDocumentsList = document.getElementById('search-documents-list');
 
-ipcRenderer.on('get-merged-contents', (event, mergedContents) => {
-    allDocumentContents = mergedContents;
-    tempFlattenedDocuments = allDocumentContents.flatMap(doc =>
-        doc.contents.map(content => ({
-            id: content.id,
-            note: content.note || '',
-            cue: content.cue || '',
-            fileName: doc.fileName,
-            path: doc.path,
-            relativePath: doc.relativePath,
-        }))
-    );
+ipcRenderer.on('get-note-blocks', (event, noteBlocks) => {
+    tempFlattenedDocuments = noteBlocks;
 });
 
 searchDocumentInput.addEventListener('keydown', function (event) {

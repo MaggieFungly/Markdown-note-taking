@@ -78,7 +78,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     var editTextArea = document.createElement('textarea');
     editTextArea.className = textAreaClassName;
     editTextArea.style.display = 'block';
-    editTextArea.style.whiteSpace = 'pre-wrap';
+    editTextArea.style.whiteSpace = 'pre-wrap'; //important!
     editTextArea.textContent = text;
     editorDiv.appendChild(editTextArea);
 
@@ -144,6 +144,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
         // Show the editor when right clicked
         showEdit(displayDiv, codeMirrorEditor)
     });
+
     return codeMirrorEditor;
 }
 
@@ -199,6 +200,15 @@ function highlightButtonConfig(highlightButton, blockContainer) {
     });
 }
 
+function linkGraphButtonConfig(button, id) {
+    const linkedGraphIcon = document.createElement('i')
+    linkedGraphIcon.className = "fa-solid fa-diagram-project"
+    button.appendChild(linkedGraphIcon)
+    button.addEventListener('click', function () {
+        ipcRenderer.send('get-linked-graph', id);
+    })
+}
+
 function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     const blocksContainer = document.getElementById('blocks');
     const outlineList = document.getElementById('outlineList');
@@ -243,10 +253,14 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var highlightButton = document.createElement('button');
     highlightButtonConfig(highlightButton, blockContainer);
 
+    var linkedGraphButton = document.createElement('button');
+    linkGraphButtonConfig(linkedGraphButton, id);
+
     buttonContainer.appendChild(dragButton);
     buttonContainer.appendChild(highlightButton);
     buttonContainer.appendChild(insertButton);
     buttonContainer.appendChild(removeButton);
+    buttonContainer.appendChild(linkedGraphButton);
 
     blockContainer.appendChild(buttonContainer);
 

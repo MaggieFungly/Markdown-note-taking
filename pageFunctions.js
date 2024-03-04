@@ -151,8 +151,6 @@ function setUpNoteCueVisibility() {
 function setUpNavigation() {
 
     ipcRenderer.on('navigate-state', (event, { previousStackLength, forwardStackLength }) => {
-
-        console.log(previousStackLength)
         manageNavigationButtonColor(navigateBackButton, previousStackLength);
         manageNavigationButtonColor(navigateForwardButton, forwardStackLength);
     });

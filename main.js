@@ -5,12 +5,13 @@ const chokidar = require('chokidar');
 const fse = require('fs-extra');
 const glob = require('glob');
 const fsPromise = require('fs/promises');
-const shortid = require('shortid')
+const shortid = require('shortid');
 
 let win;
 let currentFilePath = '';
 let currentDir = '';
 let documents = '';
+let noteBlocks;
 
 // Create the main window
 function createWindow() {
@@ -95,6 +96,9 @@ function setupIpcEventListeners() {
     ipcMain.on('navigate-forward', navigateForward);
     ipcMain.on('navigate-back', navigateBack);
     ipcMain.on('move-item', (event, args) => moveFile(event, args));
+    ipcMain.on('get-linked-graph', (event, id) => {
+        openNetwork(id);
+    })
 }
 
 // Event handler to open file dialog
@@ -256,6 +260,7 @@ function loadNotePage(filePath) {
     currentDir = path.normalize(filePath);
     updateMergedDocuments();
 
+    currentFilePath = '';
     forwardStack = [];
     previousStack = [];
 
@@ -745,13 +750,30 @@ function updateMergedDocuments() {
             checkAndRegenerateIds(documents) // Pass the correct parameter
                 .then()
                 .catch((error) => console.error(error));
+
+            noteBlocks = flattenDocuments(documents);
         })
         .catch((error) => console.error('Failed to load documents:', error));
 }
 
+function flattenDocuments(docs) {
+    let blocks;
+    blocks = docs.flatMap(doc =>
+        doc.contents.map(content => ({
+            id: content.id,
+            note: content.note || '',
+            cue: content.cue || '',
+            fileName: doc.fileName,
+            path: doc.path,
+            relativePath: doc.relativePath,
+        }))
+    );
+    return blocks
+}
+
 function getDocumentContents() {
     updateMergedDocuments()
-    win.webContents.send('get-merged-contents', documents);
+    win.webContents.send('get-note-blocks', noteBlocks);
     win.webContents.send('log-message', 'Documents fetched.');
 }
 
@@ -851,6 +873,30 @@ function navigateForward() {
     } else {
         win.webContents.send('log-message', "No more pages to navigate forward.");
     }
+}
+
+let networkWin = null;
+function openNetwork(id) {
+
+    const { findAllLinkedBlocks } = require('./connectedBlocks');
+    let { connectedBlocks, relevantConnections } = findAllLinkedBlocks(noteBlocks, id);
+
+    if (networkWin === null || networkWin.isDestroyed()) {
+        networkWin = new BrowserWindow({
+            width: 600,
+            height: 300,
+            webPreferences: {
+                nodeIntegration: true,
+                // Consider using contextIsolation and a preload script for better security
+                contextIsolation: false,
+            },
+        });
+    }
+
+    networkWin.loadFile('./network.html');
+    ipcMain.on('graph-window-ready', (event) => {
+        networkWin.webContents.send('linked-graph', { blocks: connectedBlocks, connections: relevantConnections });
+    })
 }
 
 // Start the application when ready
