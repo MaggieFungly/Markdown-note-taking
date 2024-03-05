@@ -12,6 +12,7 @@ let currentFilePath = '';
 let currentDir = '';
 let documents = '';
 let noteBlocks;
+let networkWin = null;
 
 // Create the main window
 function createWindow() {
@@ -122,27 +123,23 @@ function updateDocument(targetPath, newContents) {
 
     if (documentIndex !== -1) {
         documents[documentIndex].contents = newContents;
-        return true;
     }
-    return false;
 }
 
 // Event handler to save blocks data
-function saveBlocksData(filePath, blocksData) {
+async function saveBlocksData(filePath, blocksData) {
     if (filePath === '') {
         console.error('No file path specified for saving data');
         return;
     }
 
-    fs.writeFile(filePath, JSON.stringify(blocksData, null, 4), (err) => {
-        if (err) {
-            console.error('Error writing file:', err);
-            dialog.showErrorBox('File Write Error', `An error occurred writing the file: ${err.message}`);
-        }
-        else {
-        }
-    });
-    updateDocument(filePath, blocksData);
+    try {
+        await fsPromise.writeFile(filePath, JSON.stringify(blocksData, null, 4));
+        updateDocument(filePath, blocksData);
+    } catch (err) {
+        console.error('Error writing file:', err);
+        dialog.showErrorBox('File Write Error', `An error occurred writing the file: ${err.message}`);
+    }
 }
 
 async function renameFile(event, newTitle) {
@@ -773,6 +770,7 @@ function flattenDocuments(docs) {
 
 function getDocumentContents() {
     updateMergedDocuments()
+    noteBlocks = flattenDocuments(documents)
     win.webContents.send('get-note-blocks', noteBlocks);
     win.webContents.send('log-message', 'Documents fetched.');
 }
@@ -837,7 +835,6 @@ function findBlockById(targetId) {
 function openLinkedNote(id) {
     const result = findBlockById(id);
     loadBlocks(result.path);
-
 }
 
 let previousStack = [];
@@ -875,8 +872,9 @@ function navigateForward() {
     }
 }
 
-let networkWin = null;
 function openNetwork(id) {
+
+    noteBlocks = flattenDocuments(documents)
 
     const { findAllLinkedBlocks } = require('./connectedBlocks');
     let { connectedBlocks, relevantConnections } = findAllLinkedBlocks(noteBlocks, id);
@@ -887,7 +885,6 @@ function openNetwork(id) {
             height: 300,
             webPreferences: {
                 nodeIntegration: true,
-                // Consider using contextIsolation and a preload script for better security
                 contextIsolation: false,
             },
         });

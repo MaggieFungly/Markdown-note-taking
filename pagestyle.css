@@ -33,7 +33,7 @@
         serif;
     --display-line-height: 1.25;
     --link-color: #2796cb;
-    --link-color-transparency:#2797cb30;
+    --link-color-transparency: #2797cb30;
 }
 
 body,
@@ -669,6 +669,10 @@ button:hover {
     border-left-color: black;
 }
 
+.noteDisplay {
+    text-align: justify;
+}
+
 .highlighted-block {
     background-color: rgba(245, 236, 171, 0.3);
 }
@@ -692,14 +696,19 @@ button:hover {
 .cueDisplay blockquote,
 .noteDisplay blockquote {
     border-left: 1.5px solid #7D93B0;
-    background-color: #f6f6f642;
-    padding-left: 2px;
+    background-color: rgba(162, 162, 162, 0.2);
     margin: 5px;
+    padding: 5px;
 }
 
 .cueDisplay li::marker,
 .noteDisplay li::marker {
     color: gray;
+}
+
+.cueDisplay ul,
+.noteDisplay ul {
+    padding-inline-start: 4ch;
 }
 
 .CodeMirror .cm-comment,

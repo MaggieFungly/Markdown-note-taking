@@ -14,7 +14,7 @@ function createNetworkGraph() {
         .force("link", d3.forceLink(blockConnections).id(function (d) { return d.id; }).distance(100))
         .force("charge", d3.forceManyBody().strength(-300))
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force('collide', d3.forceCollide().radius(200));
+        .force('collide', d3.forceCollide().radius(300));
 
     // Container for zoomable elements
     const container = svg.append("g");
@@ -57,8 +57,8 @@ function createNetworkGraph() {
 
     node.append("foreignObject")
         .attr('class', "node-object")
-        .attr("width", 400)
-        .attr("height", 400)
+        .attr("width", 600)
+        .attr("height", 600)
         .attr("x", 0)
         .attr("y", 20)
         .append("xhtml:div")
