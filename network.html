@@ -61,7 +61,8 @@
             background-color: var(--item-hover-background-color);
         }
 
-        .note {
+        .note, 
+        .temp-div {
             display: none;
             overflow: auto;
             padding: 12px;
@@ -75,6 +76,10 @@
             font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
             z-index: 100;
             text-align: justify;
+        }
+
+        .active-block {
+            z-index: 10000;
         }
 
         .is-related {
