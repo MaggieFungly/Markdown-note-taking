@@ -172,18 +172,7 @@
     <script src="pageFunctions.js"></script>
     <script src="importData.js"></script>
 
-    <script>
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('blockLink')) {
-                event.preventDefault();
-                ipcRenderer.send('open-new-window');
-            }
-            else if (event.target.tagName === 'A' && event.target.href.startsWith('http') && !event.target.classList.contains('blockLink')) {
-                event.preventDefault();
-                ipcRenderer.send('open-link-externally', event.target.href);
-            }
-        });
-    </script>
+    <script src="clickLinks.js"></script>
 
     <!-- search function -->
     <script src="findInPage.js"></script>

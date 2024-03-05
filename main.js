@@ -126,7 +126,6 @@ function updateDocument(targetPath, newContents) {
     }
 }
 
-// Event handler to save blocks data
 async function saveBlocksData(filePath, blocksData) {
     if (filePath === '') {
         console.error('No file path specified for saving data');
@@ -144,26 +143,13 @@ async function saveBlocksData(filePath, blocksData) {
 
 async function renameFile(event, newTitle) {
     if (!currentFilePath || currentFilePath === '') {
-        console.error('No file is currently open for renaming');
-        event.reply('rename-file-response', 'error', 'No file is currently open for renaming');
+        win.webContents.send('log-message', 'No file is currently open for renaming');
         return;
     }
 
     const directory = path.dirname(currentFilePath);
     const fileExtension = path.extname(currentFilePath);
-    let newFileName = `${newTitle}${fileExtension}`;
-    let newFilePath = path.join(directory, newFileName);
-    let counter = 1;
-
-    // Retrieve the current directory contents
-    const files = await fsPromise.readdir(directory);
-
-    // Case-sensitive check if the file exists
-    while (files.some(file => file === path.basename(newFilePath))) {
-        newFileName = `${newTitle} ${counter}${fileExtension}`;
-        newFilePath = path.join(directory, newFileName);
-        counter++;
-    }
+    let newFilePath = generatePath(path.join(directory, newTitle + fileExtension));
 
     try {
         await fsPromise.rename(currentFilePath, newFilePath);
@@ -194,25 +180,11 @@ async function moveFile(event, { itemPath, targetPath }) {
     itemPath = path.normalize(itemPath);
     const originalTargetPath = path.normalize(targetPath); // Store original target path
     targetPath = path.join(originalTargetPath, path.basename(itemPath));
-
-    // Extract the filename without extension and the file extension
-    const fileExtension = path.extname(itemPath);
-    const fileNameWithoutExtension = path.basename(itemPath, fileExtension);
-
-    let counter = 1; // Initialize the counter
-    if (fs.existsSync(targetPath)) {
-        // Modify targetPath by appending a counter before the file extension
-        targetPath = path.join(originalTargetPath, `${fileNameWithoutExtension} ${counter}${fileExtension}`);
-
-        while (fs.existsSync(targetPath)) {
-            counter++;
-            targetPath = path.join(originalTargetPath, `${fileNameWithoutExtension} ${counter}${fileExtension}`);
-        }
-    }
+    targetPath = generatePath(targetPath);
 
     try {
         await fsPromise.rename(itemPath, targetPath);
-        event.sender.send('log-message', `Successfully moved ${itemPath} to ${targetPath}`);
+        win.webContents.send('log-message', `Successfully moved ${itemPath} to ${targetPath}`);
     } catch (error) {
         if (error.code === 'EXDEV') {
             // If moving across devices, use the fallback to copy and then delete
@@ -324,13 +296,7 @@ function createNewFile(folderPath) {
 
     let fileName = 'Untitled.json';
     let filePath = path.join(folderPath, fileName);
-    let fileNumber = 1;
-
-    while (fs.existsSync(filePath)) {
-        fileName = `Untitled ${fileNumber}.json`;
-        filePath = path.join(folderPath, fileName);
-        fileNumber++;
-    }
+    filePath = generatePath(filePath);
 
     // Create a new empty file
     // In createNewFile function
@@ -488,21 +454,34 @@ function deleteFile(filePath) {
     moveToTrash(filePath);
 }
 
+
+function generatePath(filePath) {
+    try {
+        let baseName = path.basename(filePath, path.extname(filePath));
+        let extension = path.extname(filePath);
+        let directory = path.dirname(filePath);
+        let finalPath = filePath;
+        let counter = 1;
+
+        // Use finalPath in the condition to correctly increment the counter if the path exists
+        while (fs.existsSync(finalPath)) {
+            // This constructs a new path with an incremented counter if finalPath exists
+            finalPath = path.join(directory, `${baseName} ${counter}${extension}`);
+            counter++;
+        }
+
+        return finalPath;
+    }
+    catch (error) {
+        win.webContents.send('log-message', `An error occurred: ${error}`);
+        return null; // Return null or similar to indicate failure
+    }
+}
+
 function createFolder(directoryPath, folderName = 'Untitled') {
     // Create the full path for the new folder
     let folderPath = path.join(directoryPath, folderName);
-
-    // Check if the folder already exists
-    let folderExists = fs.existsSync(folderPath);
-
-    // If the folder exists, add a number to the folder name
-    let count = 1;
-    while (folderExists) {
-        folderName = `Untitled ${count}`;
-        folderPath = path.join(directoryPath, folderName);
-        folderExists = fs.existsSync(folderPath);
-        count++;
-    }
+    folderPath = generatePath(folderPath);
 
     try {
         // Create the folder
@@ -516,15 +495,7 @@ function createFolder(directoryPath, folderName = 'Untitled') {
 
 async function renameFolder(newName, folderPath) {
     const parentDir = path.dirname(folderPath);
-    let newFolderPath = path.join(parentDir, newName);
-    let counter = 1;
-
-    // Asynchronously check for an existing folder with the same name and increment if necessary
-    while (await fsPromise.stat(newFolderPath).then(() => true).catch(() => false)) {
-        const incrementedName = `${newName} ${counter}`;
-        newFolderPath = path.join(parentDir, incrementedName);
-        counter++;
-    }
+    let newFolderPath = generatePath(path.join(parentDir, newName));
 
     try {
         // Perform the folder rename operation
@@ -551,19 +522,7 @@ async function renameFolder(newName, folderPath) {
 async function renameSelectedFile(oldPath, newName) {
     const directory = path.dirname(oldPath);
     const originalExtension = path.extname(oldPath);
-    const baseNewName = newName.endsWith(originalExtension) ? newName.slice(0, -originalExtension.length) : newName;
-    let counter = 0; // Start with 0 to try the original name first
-    let newFilePath;
-
-    // Generate a unique new file path
-    do {
-        const append = counter > 0 ? ` ${counter}` : '';
-        let newNameWithExtension = `${baseNewName}${append}${originalExtension}`;
-        newFilePath = path.join(directory, newNameWithExtension);
-        counter++;
-        // Prevent an unlikely but possible infinite loop
-        if (counter > 1000) throw new Error("Too many attempts to rename the file.");
-    } while (await fsPromise.stat(newFilePath).then(() => true).catch(() => false));
+    let newFilePath = path.join(directory, newName + originalExtension)
 
     try {
         await fsPromise.rename(oldPath, newFilePath);

@@ -75,7 +75,7 @@ function createNetworkGraph() {
     node.append("foreignObject")
         .attr('class', "node-object")
         .attr("width", 600)
-        .attr("height", 600)
+        .attr("height", 700)
         .attr("x", 0)
         .attr("y", 20)
         .append("xhtml:div")

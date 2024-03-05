@@ -23,17 +23,6 @@ function BlockLinkEventListeners() {
             closeSuggestion();
         }
     });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.body.addEventListener('click', (event) => {
-            const link = event.target
-            // Check if the clicked element is an internal link
-            if (link.classList.contains('internal-block')) {
-                event.preventDefault();
-                ipcRenderer.send('open-internal-link', link.dataset.id, link.textContent.trim());
-            }
-        });
-    });
 }
 
 function updateSuggestions() {

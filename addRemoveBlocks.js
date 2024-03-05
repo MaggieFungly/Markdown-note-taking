@@ -340,10 +340,16 @@ function scrollToBlock(outlineItem, blockContainer) {
     outlineItem.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
-        blockContainer.scrollIntoView({
+        // blockContainer.scrollIntoView({
+            // behavior: 'smooth',
+            // block: 'nearest',
+            // inline: 'start',
+        // })
+        console.log(blockContainer?.offsetTop)
+        document.getElementById('editorContainer').scroll({
+            top: blockContainer?.offsetTop - 5,
             behavior: 'smooth',
-            block: 'nearest',
-            inline: 'start',
+            block: 'start',
         })
     })
 }

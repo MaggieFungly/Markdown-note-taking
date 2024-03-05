@@ -44,6 +44,7 @@ html {
     overflow: clip;
     font-family: var(--env-font-family);
     color: var(--item-color);
+    display: block;
 }
 
 :focus {
@@ -506,11 +507,11 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* position: fixed; */
     top: 0;
     width: 100%;
     padding: 2px;
-    /* height: 15px; */
+    position: fixed;
+    height: 15px;
 }
 
 .no-navigate {
@@ -521,7 +522,8 @@ button:hover {
     display: flex;
     height: 100vh;
     overflow: hidden;
-    /* position: relative; */
+    top: 20px;
+    position: relative;
 }
 
 #rightContainer {
@@ -694,10 +696,9 @@ button:hover {
     outline: none;
 }
 
-.cueDisplay blockquote,
-.noteDisplay blockquote {
-    border-left: 1.5px solid #7D93B0;
-    background-color: rgba(162, 162, 162, 0.2);
+blockquote {
+    border-left: 1.5px solid var(--link-color);
+    background-color: rgba(180, 180, 180, 0.2);
     margin: 5px;
     padding: 5px;
 }
@@ -717,7 +718,6 @@ button:hover {
 .noteDisplay code {
     font-family: 'Consolas';
     padding: 1px;
-    background-color: #e1e8e985;
     font-size: var(--display-font-size);
     color: var(--item-color);
 }
@@ -741,8 +741,7 @@ button:hover {
 }
 
 .CodeMirror .cm-link,
-.cueDisplay a,
-.noteDisplay a {
+a {
     color: var(--link-color);
 }
 
