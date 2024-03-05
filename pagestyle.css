@@ -30,7 +30,8 @@
         Georgia,
         Times,
         'Times New Roman',
-        serif;
+        serif,
+        system-ui;
     --display-line-height: 1.25;
     --link-color: #2796cb;
     --link-color-transparency: #2797cb30;

@@ -65,14 +65,16 @@ function createNetworkGraph() {
         .attr('class', 'toggle')
         .on("click", function (event, d) {
             const noteContent = d3.select(this.parentNode).select(".node-object").select(".note");
-            const isRelated = noteContent.classed("is-related");
+            const isVisible = noteContent.classed("is-visible");
             noteContent
-                .classed("is-related", !isRelated)
+                .classed("is-visible", !isVisible)
         });
 
     const relatedConnections = findConnectionsById(blockConnections, id);
     node.append("foreignObject")
         .attr('class', "node-object")
+        .attr("x", 0)
+        .attr("y", 20)
         .each(function (d) {
             const contentHtml = renderText(d.note); // Assuming renderText returns an HTML string
             const size = measureContentSize(contentHtml);
@@ -87,14 +89,13 @@ function createNetworkGraph() {
                 .classed("note", true)
                 .html(contentHtml)
                 .classed("is-related", d => relatedConnections.includes(d.id))
+                .classed("is-visible", d => relatedConnections.includes(d.id))
                 .classed("is-current-block", d => d.id === id)
 
             // Update d properties to use in collision force calculation
             d.width = width;
             d.height = height;
         })
-        .attr("x", 0)
-        .attr("y", 20)
         .on('mouseenter', function () { svg.on('.zoom', null); })
         .on('mouseleave', function () { svg.call(zoom); })
         .on('click', function (event, d) {
@@ -183,7 +184,7 @@ function measureContentSize(contentHtml) {
     tempDiv.style.maxWidth = "600px"; // Set a max width if needed
 
     document.body.appendChild(tempDiv); // Append to the body to measure
-    const size = { width: tempDiv.offsetWidth, height: tempDiv.offsetHeight };
+    const size = { width: tempDiv.scrollWidth, height: tempDiv.scrollHeight };
     document.body.removeChild(tempDiv); // Clean up
 
     return size;
