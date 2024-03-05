@@ -3,11 +3,42 @@
 
 <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <!-- viewer -->
+    <link href="https://unpkg.com/viewerjs/dist/viewer.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/viewerjs/dist/viewer.min.js"></script>
+
+    <!-- math equations -->
+    <script>
+        const mathJax = require('mathjax')
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    MathJax.startup.promise.then(() => { });
+                }
+            }
+        };
+    </script>
+    <script src="node_modules/mathjax/es5/tex-chtml.js"></script>
+
+    <script src="node_modules/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            mermaid.initialize({ startOnLoad: false });
+        });
+    </script>
+
+    <link rel="stylesheet" href="pagestyle.css">
     <style>
         body,
         html {
             overflow: hidden;
-            height: 90vh;
+            height: 100vh;
         }
 
         #graph {
@@ -22,7 +53,16 @@
             padding: 5;
         }
 
+        .file-name {
+            cursor: pointer;
+        }
+
+        .file-name:hover {
+            background-color: var(--item-hover-background-color);
+        }
+
         .note {
+            display: none;
             overflow: auto;
             padding: 12px;
             border: 1px solid black;
@@ -37,8 +77,20 @@
             text-align: justify;
         }
 
+        .is-related {
+            display: block;
+        }
+
+        .is-current-block {
+            border: 5px solid var(--link-color);
+        }
+
         circle {
             cursor: move;
+        }
+
+        .toggle {
+            fill: var(--link-color);
         }
 
         .link {
@@ -50,15 +102,19 @@
             z-index: 10;
         }
 
-        svg{
+        svg {
             width: 100%;
             height: 100%;
         }
     </style>
-    <link rel="stylesheet" href="pagestyle.css">
 </head>
 
 <body>
+
+    <div id="tool-bar" style="padding: 5px;">
+        <button id="display-blocks" style="width: auto;">Display all blocks</button>
+        <button id="hide-blocks" style="width: auto;">Hide all blocks</button>
+    </div>
 
     <div id="graph">
         <svg></svg>
@@ -72,12 +128,31 @@
         });
 
 
-        let connectedBlocks, blockConnections;
-        ipcRenderer.on('linked-graph', (event, { blocks, connections }) => {
+        let id, connectedBlocks, blockConnections;
+        ipcRenderer.on('linked-graph', (event, { blockId, blocks, connections }) => {
+            id = blockId;
             connectedBlocks = blocks;
             blockConnections = connections;
             createNetworkGraph();
         });
+    </script>
+
+    <script>
+        const displayBlockButton = document.getElementById('display-blocks')
+        displayBlockButton.addEventListener('click', function (event) {
+            const notes = document.querySelectorAll('.note')
+            notes.forEach(note => {
+                note.classList.add('is-related');
+            })
+        })
+
+        const hideBlocksButton = document.getElementById('hide-blocks')
+        hideBlocksButton.addEventListener('click', function (event) {
+            const notes = document.querySelectorAll('.note')
+            notes.forEach(note => {
+                note.classList.remove('is-related');
+            })
+        })
     </script>
 
     <script src="createNetworkGraph.js"></script>

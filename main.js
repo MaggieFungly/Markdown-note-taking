@@ -892,7 +892,7 @@ function openNetwork(id) {
 
     networkWin.loadFile('./network.html');
     ipcMain.on('graph-window-ready', (event) => {
-        networkWin.webContents.send('linked-graph', { blocks: connectedBlocks, connections: relevantConnections });
+        networkWin.webContents.send('linked-graph', { blockId: id, blocks: connectedBlocks, connections: relevantConnections });
     })
 }
 

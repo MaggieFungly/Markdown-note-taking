@@ -50,11 +50,28 @@ function createNetworkGraph() {
 
     // Create labels for each node
     node.append("text")
+        .attr('class', 'file-name')
         .text(function (d) { return d.fileName; })
         .attr("x", 10)
         .attr("y", 0)
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .on("click", function (event, d) {
+            ipcRenderer.send('load-blocks', d.path)
+        });
 
+    const triangleSymbol = d3.symbol().type(d3.symbolTriangle).size(80);
+    node.append("path")
+        .attr("d", triangleSymbol())
+        .attr("transform", "translate(0,15)")
+        .attr('class', 'toggle')
+        .on("click", function (event, d) {
+            const noteContent = d3.select(this.parentNode).select(".node-object").select(".note");
+            const isRelated = noteContent.classed("is-related");
+            noteContent
+                .classed("is-related", !isRelated)
+        });
+
+    const relatedConnections = findConnectionsById(blockConnections, id);
     node.append("foreignObject")
         .attr('class', "node-object")
         .attr("width", 600)
@@ -63,10 +80,16 @@ function createNetworkGraph() {
         .attr("y", 20)
         .append("xhtml:div")
         .classed("note", true)
+        .classed("is-related", d => relatedConnections.includes(d.id))
+        .classed("is-current-block", d => d.id === id)
         .html(d => renderText(d.note))
         .on('mouseenter', function () { svg.on('.zoom', null); })
         .on('mouseleave', function () { svg.call(zoom); })
 
+    const notes = d3.selectAll('.note')
+    notes.each(function (d) {
+        handleDisplayDiv(this)
+    })
 
     simulation
         .on("tick", function () {
@@ -106,4 +129,20 @@ function createNetworkGraph() {
             .on("drag", dragged)
             .on("end", dragended);
     }
+}
+
+function findConnectionsById(connections, id) {
+    let relatedConnections = [];
+
+    connections.forEach(connection => {
+        if (connection.source.id === id) {
+            relatedConnections.push(connection.target.id);
+        } else if (connection.target.id === id) {
+            relatedConnections.push(connection.source.id);
+        }
+    });
+
+    relatedConnections.push(id);
+
+    return relatedConnections;
 }

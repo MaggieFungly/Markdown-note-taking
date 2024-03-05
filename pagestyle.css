@@ -669,7 +669,8 @@ button:hover {
     border-left-color: black;
 }
 
-.noteDisplay {
+.noteDisplay,
+.noteContainer .CodeMirror {
     text-align: justify;
 }
 
