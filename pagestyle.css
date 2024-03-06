@@ -33,6 +33,7 @@
         serif,
         system-ui;
     --display-line-height: 1.25;
+    --display-widget-background-color: rgba(200, 200, 200, 0.2);
     --link-color: #2796cb;
     --link-color-transparency: #2797cb30;
 }
@@ -77,7 +78,6 @@ button:hover {
 #search-documents-list {
     padding: 5px;
 }
-
 
 #directory-contents-list {
     padding: 5px;
@@ -180,12 +180,14 @@ button:hover {
 #dropdown-content {
     display: none;
     position: absolute;
-    background-color: #f9f9f9;
+    background-color: white;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 100;
     font-size: var(--item-font-size);
     width: 80px;
     right: 0;
+    border-radius: 5px;
+    padding: 4px;
 }
 
 /* Style the checkboxes within the dropdown */
@@ -197,11 +199,13 @@ button:hover {
 #dropdown-content label {
     display: block;
     text-decoration: none;
+    transition: var(--transition);
+    align-items: center;
 }
 
 /* Change background color of labels on hover for visual feedback */
 #dropdown-content label:hover {
-    background-color: #f1f1f1;
+    background-color: var(--item-hover-background-color);
 }
 
 /* Show the dropdown menu on hover over the container */
@@ -563,10 +567,6 @@ button:hover {
     width: 100%;
 }
 
-#title:focus {
-    outline: none;
-}
-
 .buttons {
     display: flex;
 }
@@ -577,41 +577,54 @@ button:hover {
 
 .block {
     width: 100%;
-    display: block;
     margin-bottom: 2px;
+    display: flex;
 }
 
 .block i {
     color: rgb(204, 204, 204);
+    font-size: 9pt;
+    cursor: pointer;
+    text-align: center;
+    width: 10pt;
+    margin-bottom: 5px;
 }
 
 .block i:hover {
     color: gray;
 }
 
-.block button:hover {
-    background-color: transparent;
-}
-
-.block button {
-    cursor: pointer;
-}
-
 .buttonContainer {
-    width: 3%;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
+    width: 23pt;
+    position: relative;
+}
+
+.dragButton {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+
+/* Hide the dropdown initially */
+.following-button-div {
     display: none;
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    right: 0;
 }
 
-.buttonContainer .fa {
-    font-size: 10px;
+/* Style the dropdown items */
+.following-button-div i {
+    display: block;
 }
 
-.dragButton:hover .cueContainer,
-.dragButton:hover .noteContainer {
-    background-color: var(--display-hover-background-color);
+/* Show the dropdown when hovering over the drag button */
+.dragButton:hover~.following-button-div,
+.buttonContainer:hover .following-button-div {
+    /* Keep the dropdown open when hovering over it */
+    display: block;
 }
 
 .cueContainer,
@@ -646,11 +659,11 @@ button:hover {
 }
 
 .highlight-text {
-    background-color: #F9E065;
+    background-color: #f9e065c8;
 }
 
 .CodeMirror {
-    border-left-color: #7f8080;
+    border-left-color: rgb(204, 204, 204);
 }
 
 ::selection,
@@ -693,16 +706,14 @@ button:hover {
     background-color: var(--display-hover-background-color);
 }
 
-.cueEdit:focus,
-.noteEdit:focus {
-    outline: none;
-}
-
 blockquote {
     border-left: 1.5px solid var(--link-color);
-    background-color: rgba(180, 180, 180, 0.2);
+    background-color: var(--display-widget-background-color);
     margin: 5px;
-    padding: 5px;
+    padding-left: 2ch;
+    padding-right: 2ch;
+    padding-top: 1ch;
+    padding-bottom: 1ch;
 }
 
 .cueDisplay li::marker,
@@ -728,8 +739,7 @@ blockquote {
 .noteDisplay pre>code {
     font-family: 'Consolas';
     padding: 5px;
-    background-color: #000000;
-    color: white;
+    background-color: var(--display-widget-background-color);
     display: block;
     border: none;
     border-radius: 3px;

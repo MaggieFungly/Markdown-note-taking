@@ -151,9 +151,8 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
 function removeButtonConfig(removeButton, blocksContainer) {
     removeButton.className = 'removeButton';
     removeButton.title = 'Remove block';
-    var removeIcon = document.createElement('i');
-    removeIcon.className = 'fa fa-trash';
-    removeButton.appendChild(removeIcon);
+    removeButton.classList.add('fa', 'fa-trash');
+
     removeButton.addEventListener('click', function () {
         var parentBlock = this.closest('.block');
         var index = Array.from(blocksContainer.children).indexOf(parentBlock);
@@ -163,12 +162,8 @@ function removeButtonConfig(removeButton, blocksContainer) {
 
 function insertButtonConfig(insertButton, blocksContainer) {
     insertButton.className = 'insertButton';
+    insertButton.classList.add('fas', 'fa-plus');
     insertButton.title = 'Insert block below';
-
-    // insert icon
-    var insertIcon = document.createElement('i');
-    insertIcon.className = 'fas fa-plus';
-    insertButton.appendChild(insertIcon);
 
     insertButton.onclick = function () {
         var parentBlock = this.closest('.block');
@@ -180,17 +175,14 @@ function insertButtonConfig(insertButton, blocksContainer) {
 function dragButtonConfig(dragButton) {
     dragButton.className = 'dragButton';
     dragButton.title = 'Move block';
-    var dragIcon = document.createElement('i');
-    dragIcon.className = 'fas fa-arrows-alt';
-    dragButton.appendChild(dragIcon);
+    dragButton.classList.add('fa-solid', 'fa-ellipsis');
 }
 
 function highlightButtonConfig(highlightButton, blockContainer) {
     highlightButton.className = 'highlightButton';
     highlightButton.title = 'Highlight block';
-    var highlightIcon = document.createElement('i');
-    highlightIcon.className = 'fas fa-highlighter';
-    highlightButton.appendChild(highlightIcon);
+    highlightButton.classList.add('fas', 'fa-highlighter');
+
     highlightButton.addEventListener('click', function () {
         if (blockContainer.classList.contains('highlighted-block')) {
             blockContainer.classList.remove('highlighted-block');
@@ -201,9 +193,10 @@ function highlightButtonConfig(highlightButton, blockContainer) {
 }
 
 function linkGraphButtonConfig(button, id) {
-    const linkedGraphIcon = document.createElement('i')
-    linkedGraphIcon.className = "fa-solid fa-diagram-project"
-    button.appendChild(linkedGraphIcon)
+    button.className = "linkGraphButton";
+    button.classList.add('fa-solid', 'fa-diagram-project')
+    button.title = 'Show linked graph'
+    
     button.addEventListener('click', function () {
         ipcRenderer.send('get-linked-graph', id);
     })
@@ -215,7 +208,6 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
 
     // Create a new container for the block
     var blockContainer = document.createElement('div');
-    blockContainer.style.display = 'flex';
     blockContainer.className = 'block';
 
     if (highlighted) {
@@ -235,32 +227,36 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
     buttonContainer.className = 'buttonContainer';
-    buttonContainer.style.display = 'block';
 
     // Insert button
-    var insertButton = document.createElement('button');
+    var insertButton = document.createElement('i');
     insertButtonConfig(insertButton, blocksContainer);
 
     // Remove button
-    var removeButton = document.createElement('button');
+    var removeButton = document.createElement('i');
     removeButtonConfig(removeButton, blocksContainer);
 
     // Drag button
-    var dragButton = document.createElement('button');
+    var dragButton = document.createElement('i');
     dragButtonConfig(dragButton);
 
     // Highlight button
-    var highlightButton = document.createElement('button');
+    var highlightButton = document.createElement('i');
     highlightButtonConfig(highlightButton, blockContainer);
 
-    var linkedGraphButton = document.createElement('button');
+    var linkedGraphButton = document.createElement('i');
     linkGraphButtonConfig(linkedGraphButton, id);
 
+    var followingButtonDiv = document.createElement('div');
+    followingButtonDiv.className = 'following-button-div';
+
+    followingButtonDiv.appendChild(linkedGraphButton);
+    followingButtonDiv.appendChild(highlightButton);
+    followingButtonDiv.appendChild(insertButton);
+    followingButtonDiv.appendChild(removeButton);
+
     buttonContainer.appendChild(dragButton);
-    buttonContainer.appendChild(highlightButton);
-    buttonContainer.appendChild(insertButton);
-    buttonContainer.appendChild(removeButton);
-    buttonContainer.appendChild(linkedGraphButton);
+    buttonContainer.appendChild(followingButtonDiv)
 
     blockContainer.appendChild(buttonContainer);
 
@@ -340,11 +336,6 @@ function scrollToBlock(outlineItem, blockContainer) {
     outlineItem.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
-        // blockContainer.scrollIntoView({
-            // behavior: 'smooth',
-            // block: 'nearest',
-            // inline: 'start',
-        // })
         console.log(blockContainer?.offsetTop)
         document.getElementById('editorContainer').scroll({
             top: blockContainer?.offsetTop - 5,

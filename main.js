@@ -841,7 +841,7 @@ function openNetwork(id) {
     if (networkWin === null || networkWin.isDestroyed()) {
         networkWin = new BrowserWindow({
             width: 600,
-            height: 300,
+            height: 600,
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
