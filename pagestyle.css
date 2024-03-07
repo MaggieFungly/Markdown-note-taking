@@ -427,13 +427,13 @@ button:hover {
     font-size: var(--item-font-size);
     height: 18px;
     align-items: center;
-    /* justify-content: center; */
     display: flex;
     overflow-x: hidden;
     outline: 1px solid gray;
     border-radius: 5px;
     padding: 2px;
     margin: 5px;
+    color: var(--item-color);   
 }
 
 .searched-item {

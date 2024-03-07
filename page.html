@@ -26,8 +26,8 @@
     </script>
 
     <!-- viewer -->
-    <link href="https://unpkg.com/viewerjs/dist/viewer.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/viewerjs/dist/viewer.min.js"></script>
+    <link rel="stylesheet" href="node_modules/viewerjs/dist/viewer.css">
+    <script src="node_modules/viewerjs/dist/viewer.common.js"></script>
 
     <!-- styles -->
     <link rel="stylesheet" href="node_modules/@fortawesome/fontawesome-free/css/all.min.css">
@@ -128,7 +128,7 @@
 
             <div id="searchDocuments">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <div id="search-documents-input" contenteditable="true" aria-placeholder="Search"></div>
+                <div id="search-documents-input" contenteditable="plaintext-only" aria-placeholder="Search"></div>
             </div>
 
             <div id="directory-contents-list" class="directoryNode" data-path="">

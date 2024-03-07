@@ -2,11 +2,13 @@
 <html lang="en">
 
 <head>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <!-- <script src="https://d3js.org/d3.v6.min.js"></script> -->
+    <script src="node_modules/d3/dist/d3.js"></script>
 
     <!-- viewer -->
-    <link href="https://unpkg.com/viewerjs/dist/viewer.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/viewerjs/dist/viewer.min.js"></script>
+    <link rel="stylesheet" href="node_modules/viewerjs/dist/viewer.css">
+    <script src="node_modules/viewerjs/dist/viewer.min.js"></script>
+
 
     <!-- math equations -->
     <script>
@@ -148,6 +150,17 @@
             id = blockId;
             connectedBlocks = blocks;
             blockConnections = connections;
+
+                connectedBlocks = blocks.filter(block => block !== null && block !== undefined);
+
+            // Create a set of valid IDs for quick access
+            const validIds = new Set(connectedBlocks.map(block => block.id));
+
+            // Filter out any connections with a source or target that is not in the valid IDs
+            blockConnections = connections.filter(connection =>
+                validIds.has(connection.source) && validIds.has(connection.target)
+            );
+
             createNetworkGraph();
         });
     </script>
