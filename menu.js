@@ -449,5 +449,7 @@ function setUpIpcRenderers() {
 
     ipcRenderer.on('get-current-file-path', (event, path) => {
         currentFilePath = path;
+
+        document.getElementById('file-name').textContent = pathManagement.basename(currentFilePath, '.json')
     });
 }

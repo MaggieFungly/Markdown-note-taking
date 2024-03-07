@@ -433,7 +433,7 @@ button:hover {
     border-radius: 5px;
     padding: 2px;
     margin: 5px;
-    color: var(--item-color);   
+    color: var(--item-color);
 }
 
 .searched-item {
@@ -522,6 +522,13 @@ button:hover {
 
 .no-navigate {
     color: rgb(200, 200, 200);
+}
+
+#file-name {
+    font-size: var(--item-font-size);
+    color: var(--item-color);
+    flex-grow: 1;
+    text-align: center;
 }
 
 #mainContainer {
