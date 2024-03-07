@@ -402,6 +402,10 @@ button:hover {
     border-radius: 4px;
 }
 
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--item-sub-color);
+}
+
 
 #menuButtonDiv,
 #searchDocuments {
@@ -603,6 +607,7 @@ button:hover {
 
 .buttonContainer {
     width: 23pt;
+    flex: 0 0 23pt;
     position: relative;
 }
 
@@ -641,12 +646,13 @@ button:hover {
 
 .cueContainer {
     width: 25%;
-    resize: horizontal;
+    flex: 0 0 25%;
+    overflow: hidden;
 }
 
 .noteContainer {
-    width: 72%;
-    resize: horizontal;
+    flex-grow: 1;
+    overflow: hidden;
 }
 
 .CodeMirror,
@@ -743,7 +749,8 @@ blockquote {
 }
 
 .cueDisplay pre>code,
-.noteDisplay pre>code {
+.noteDisplay pre>code,
+.note pre>code {
     font-family: 'Consolas';
     padding: 5px;
     background-color: var(--display-widget-background-color);

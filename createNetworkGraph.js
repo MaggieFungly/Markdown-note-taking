@@ -79,7 +79,7 @@ function createNetworkGraph() {
             const contentHtml = renderText(d.note); // Assuming renderText returns an HTML string
             const size = measureContentSize(contentHtml);
 
-            const width = Math.max(size.width, 500);
+            const width = Math.max(size.width, 550);
             const height = Math.max(size.height + 40, 300);
 
             d3.select(this)

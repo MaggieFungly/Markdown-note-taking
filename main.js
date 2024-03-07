@@ -532,7 +532,8 @@ async function renameSelectedFile(oldPath, newName) {
 
         if (oldPath === currentFilePath) {
             currentFilePath = newFilePath; // Update if the renamed file was the current file
-            win.webContents.send('set-title', path.basename(newFilePath, originalExtension));
+            win.webContents.send('set-title', path.basename(currentFilePath, originalExtension));
+            win.webContents.send('get-current-file-path', currentFilePath);
         }
         win.webContents.send('directory-changed'); // Notify of directory change if needed
     } catch (err) {

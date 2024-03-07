@@ -12,7 +12,12 @@ function syncSortable() {
         });
 
         sortedItems.forEach(function (id, index) {
-            const itemToMove = otherEl.querySelector('[data-id="' + id + '"]');
+            // limit the item's class to either block or outlineItem
+            let itemToMove = otherEl.querySelector('[data-id="' + id + '"].block');
+            if (!itemToMove) {
+                itemToMove = otherEl.querySelector('[data-id="' + id + '"].outlineItem');
+            }
+
             if (otherEl.children[index] !== itemToMove) {
                 otherEl.insertBefore(itemToMove, otherEl.children[index]);
             }
