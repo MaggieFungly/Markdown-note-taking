@@ -190,15 +190,19 @@
 
     <!-- log -->
     <script>
-        ipcRenderer.on('log-message', (event, message) => {
+
+        function logMessage(message) {
             const logElement = document.getElementById('log');
             logElement.innerHTML = '';
             logElement.innerHTML = message;
 
-            // Set a timeout to clear the message after 10 seconds (10000 milliseconds)
             setTimeout(() => {
                 logElement.innerHTML = ''; // Clear the message
             }, 5000); // 10000 milliseconds = 10 seconds
+        }
+
+        ipcRenderer.on('log-message', (event, message) => {
+            logMessage(message)
         });
     </script>
 
