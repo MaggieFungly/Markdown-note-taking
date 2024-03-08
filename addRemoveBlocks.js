@@ -189,6 +189,7 @@ function highlightButtonConfig(highlightButton, blockContainer) {
             blockContainer.classList.add('highlighted-block');
         }
 
+        // save data when highlighted
         saveBlocksData();
     });
 }
@@ -203,7 +204,7 @@ function linkGraphButtonConfig(button, id) {
     })
 }
 
-function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
+function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: '' }, isLoad = false) {
     const blocksContainer = document.getElementById('blocks');
     const outlineList = document.getElementById('outlineList');
 
@@ -211,19 +212,19 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     var blockContainer = document.createElement('div');
     blockContainer.className = 'block';
 
-    if (highlighted) {
+    if (block.highlighted) {
         blockContainer.classList.add('highlighted-block');
     }
 
     // generate a uuid
-    if (!id || id === '') {
-        id = shortid.generate();
+    if (!block.id || block.id === '') {
+        block.id = shortid.generate();
     }
-    blockContainer.dataset.id = id;
+    blockContainer.dataset.id = block.id;
 
     // create codemirror editors
-    var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", cue)
-    var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", note)
+    var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", block.cue)
+    var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", block.note)
 
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
@@ -246,7 +247,7 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     highlightButtonConfig(highlightButton, blockContainer);
 
     var linkedGraphButton = document.createElement('i');
-    linkGraphButtonConfig(linkedGraphButton, id);
+    linkGraphButtonConfig(linkedGraphButton, block.id);
 
     var followingButtonDiv = document.createElement('div');
     followingButtonDiv.className = 'following-button-div';
@@ -261,19 +262,6 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
 
     blockContainer.appendChild(buttonContainer);
 
-    // create corresponding outline items
-    var outlineItem = document.createElement('div');
-    outlineItem.dataset.id = id;
-    outlineItem.className = 'outlineItem';
-    outlineItem.innerHTML = getOutlineContents(note);
-
-    noteCodeMirrorEditor.on('change', function (instance) {
-        var currentValue = instance.getValue();
-        outlineItem.innerHTML = getOutlineContents(currentValue);
-    });
-
-
-    scrollToBlock(outlineItem, blockContainer)
 
     // ctrl + enter to insert new block below
     noteCodeMirrorEditor.on('keydown', function (instance, event) {
@@ -286,10 +274,12 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
     cueCodeMirrorEditor.on('keydown', function (instance, event) {
         // Check if Ctrl+Enter or Cmd+Enter is pressed
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-            event.preventDefault(); // Prevent default action of Enter key
-            insertButton.click(); // Programmatically click the insertButton
+            event.preventDefault();
+            insertButton.click();
         }
     });
+
+    var outlineItem = outlineConfig(noteCodeMirrorEditor, block.id, block.note, blockContainer);
 
 
     // Determine where to insert the new block
@@ -301,7 +291,9 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
         outlineList.appendChild(outlineItem);
     }
 
-    saveBlocksData();
+    if (!isLoad) {
+        saveBlocksData();
+    }
 }
 
 
@@ -315,6 +307,23 @@ function removeBlock(index) {
 
         saveBlocksData();
     }
+}
+
+function outlineConfig(noteCodeMirrorEditor, id, note, blockContainer) {
+    // create corresponding outline items
+    var outlineItem = document.createElement('div');
+    outlineItem.dataset.id = id;
+    outlineItem.className = 'outlineItem';
+    outlineItem.innerHTML = getOutlineContents(note);
+
+    noteCodeMirrorEditor.on('change', function (instance) {
+        var currentValue = instance.getValue();
+        outlineItem.innerHTML = getOutlineContents(currentValue);
+    });
+
+    scrollToBlock(outlineItem, blockContainer)
+
+    return outlineItem;
 }
 
 function getOutlineContents(markdownText) {
