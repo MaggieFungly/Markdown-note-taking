@@ -155,7 +155,8 @@ function removeButtonConfig(removeButton, blocksContainer) {
     removeButton.addEventListener('click', function () {
         var parentBlock = this.closest('.block');
         var index = Array.from(blocksContainer.children).indexOf(parentBlock);
-        removeBlock(index);
+
+        executeRemoveBlock(index);
     });
 }
 
@@ -167,7 +168,8 @@ function insertButtonConfig(insertButton, blocksContainer) {
     insertButton.onclick = function () {
         var parentBlock = this.closest('.block');
         var newIndex = Array.from(blocksContainer.children).indexOf(parentBlock) + 1;
-        insertBlock(newIndex);
+
+        executeInsertBlock(newIndex, { cue: '', note: '', highlighted: false, id: '' });
     };
 }
 
@@ -188,7 +190,6 @@ function highlightButtonConfig(highlightButton, blockContainer) {
         } else {
             blockContainer.classList.add('highlighted-block');
         }
-
         // save data when highlighted
         saveBlocksData();
     });
@@ -204,7 +205,7 @@ function linkGraphButtonConfig(button, id) {
     })
 }
 
-function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: '' }, isLoad = false) {
+function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: '' }) {
     const blocksContainer = document.getElementById('blocks');
     const outlineList = document.getElementById('outlineList');
 
@@ -290,10 +291,6 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
         blocksContainer.appendChild(blockContainer);
         outlineList.appendChild(outlineItem);
     }
-
-    if (!isLoad) {
-        saveBlocksData();
-    }
 }
 
 
@@ -304,10 +301,9 @@ function removeBlock(index) {
     if (index >= 0 && index < blocksContainer.children.length) {
         blocksContainer.removeChild(blocksContainer.children[index]);
         outlineList.removeChild(outlineList.children[index]);
-
-        saveBlocksData();
     }
 }
+
 
 function outlineConfig(noteCodeMirrorEditor, id, note, blockContainer) {
     // create corresponding outline items
@@ -359,10 +355,22 @@ function scrollToBlock(outlineItem, blockContainer) {
     })
 }
 
+function executeInsertBlock(index, block) {
+    // Perform the insertion
+    insertBlock(index, block);
+    saveBlocksData();
+}
+
+function executeRemoveBlock(index) {
+    // Perform the removal
+    removeBlock(index);
+    saveBlocksData();
+}
+
 function setUpBlockInsertion() {
     const start = document.getElementById('startButton');
     start.addEventListener('click', function () {
-        insertBlock(0);
+        executeInsertBlock(0, { cue: '', note: '', highlighted: '', id: '' })
     })
 }
 

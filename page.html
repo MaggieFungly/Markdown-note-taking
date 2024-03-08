@@ -69,13 +69,13 @@
 
     <div id="toolbar">
         <div id="leftContainer" style="display: flex;">
-            <button id="menuButton" style="width: 20px;" title="Menu">
+            <button id="menuButton" style="width: 20px;" title="Toggle menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <button id="navigate-back" title="Previous Page">
+            <button id="navigate-back" title="Navigate back">
                 <i class="fa-solid fa-arrow-left no-navigate"></i>
             </button>
-            <button id="navigate-forward" title="Next Page">
+            <button id="navigate-forward" title="Navigate forward">
                 <i class="fa-solid fa-arrow-right no-navigate"></i>
             </button>
         </div>
@@ -167,7 +167,9 @@
     <script src="saveData.js"></script>
     <!-- page management -->
 
-    <script src="redoUndo.js"></script>
+    <script>
+        setUpUndoRedo();
+    </script>
     <script src="addRemoveBlocks.js"></script>
     <script>
         setUpBlockInsertion();
