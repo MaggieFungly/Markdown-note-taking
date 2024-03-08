@@ -28,6 +28,7 @@ function syncSortable() {
         animation: 300,
         onSort: function () {
             synchronizeLists(outlineList, blocks);
+            saveBlocksData();
         }
     });
 
@@ -36,6 +37,7 @@ function syncSortable() {
         handle: '.dragButton',
         onSort: function () {
             synchronizeLists(blocks, outlineList);
+            saveBlocksData();
         }
     });
 }

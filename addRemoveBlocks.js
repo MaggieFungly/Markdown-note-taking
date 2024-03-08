@@ -127,7 +127,6 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
 
     // save data when there's a change
     codeMirrorEditor.on("change", function () {
-        updateBlocksData();
         saveBlocksData();
     });
 
@@ -189,6 +188,8 @@ function highlightButtonConfig(highlightButton, blockContainer) {
         } else {
             blockContainer.classList.add('highlighted-block');
         }
+
+        saveBlocksData();
     });
 }
 
@@ -196,7 +197,7 @@ function linkGraphButtonConfig(button, id) {
     button.className = "linkGraphButton";
     button.classList.add('fa-solid', 'fa-diagram-project')
     button.title = 'Show linked graph'
-    
+
     button.addEventListener('click', function () {
         ipcRenderer.send('get-linked-graph', id);
     })
@@ -299,6 +300,8 @@ function insertBlock(index, cue = '', note = '', highlighted = false, id = '') {
         blocksContainer.appendChild(blockContainer);
         outlineList.appendChild(outlineItem);
     }
+
+    saveBlocksData();
 }
 
 
@@ -309,6 +312,8 @@ function removeBlock(index) {
     if (index >= 0 && index < blocksContainer.children.length) {
         blocksContainer.removeChild(blocksContainer.children[index]);
         outlineList.removeChild(outlineList.children[index]);
+
+        saveBlocksData();
     }
 }
 

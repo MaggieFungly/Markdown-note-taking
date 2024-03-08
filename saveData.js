@@ -23,28 +23,6 @@ function updateBlocksData() {
 // Function to save the current state of blocksData
 function saveBlocksData() {
     const { ipcRenderer } = require('electron');
+    updateBlocksData();
     ipcRenderer.send('save-blocks-data', blocksData);
 }
-
-// MutationObserver callback to be executed when mutations are observed
-const observerCallback = (mutationsList, observer) => {
-    for (let mutation of mutationsList) {
-        if (mutation.type === 'childList' || mutation.type === 'attributes' || mutation.type === 'characterData') {
-            // On any mutation, update and save blocksData
-            updateBlocksData();
-            saveBlocksData();
-        }
-    }
-};
-
-// Create an instance of MutationObserver with the callback
-const observer = new MutationObserver(observerCallback);
-
-// Start observing the #blocks div for child list changes, attribute changes, and character data changes
-document.addEventListener('DOMContentLoaded', () => {
-    const targetNode = document.getElementById('blocks');
-    observer.observe(targetNode, { childList: true, attributes: true, characterData: true, subtree: true });
-
-    // Initialize the blocksData for the first time
-    updateBlocksData();
-});

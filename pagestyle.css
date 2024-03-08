@@ -81,6 +81,7 @@ button:hover {
 
 #directory-contents-list {
     padding: 5px;
+    padding-bottom: 150px;
 }
 
 .fileLabel,
@@ -400,6 +401,7 @@ button:hover {
 ::-webkit-scrollbar-thumb {
     background-color: var(--item-hover-background-color);
     border-radius: 4px;
+    transition: rgba(170, 170, 170, 0.3);
 }
 
 ::-webkit-scrollbar-thumb:hover {
