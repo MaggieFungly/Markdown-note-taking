@@ -4,27 +4,53 @@ require('codemirror/mode/markdown/markdown');
 require('codemirror/addon/edit/closebrackets');
 require('codemirror/addon/edit/continuelist');
 
-CodeMirror.defineMode("highlightCustomSyntax", function (config, parserConfig) {
+CodeMirror.defineMode("enhancedMarkdown", function (config, parserConfig) {
     var customSyntaxOverlay = {
+        startState: function () {
+            return {
+                inLaTeX: false,
+                latexDelimiter: ""
+            };
+        },
         token: function (stream, state) {
+            // If not currently in a LaTeX block, check for the start of one
+            if (!state.inLaTeX) {
+                if (stream.match("$$") || stream.match("$")) {
+                    state.inLaTeX = true; // Enter LaTeX mode
+                    state.latexDelimiter = stream.current(); // Remember the delimiter used to start LaTeX mode
+                    return "comment"; // Apply initial LaTeX styling
+                }
+            } else {
+                // Already in LaTeX mode, look for the closing delimiter
+                while (!stream.eol()) {
+                    stream.next(); // Move through the text
+                    if (stream.match(state.latexDelimiter, false)) {
+                        // Found the closing delimiter, consume it and exit LaTeX mode
+                        stream.match(state.latexDelimiter);
+                        state.inLaTeX = false; // Exit LaTeX mode
+                        break; // Stop looking for the closing delimiter in this token
+                    }
+                }
+                return "comment"; // Continue applying LaTeX styling
+            }
+
+            // Existing custom syntax highlighting logic for ==
             if (stream.match("==")) {
                 while ((ch = stream.next()) != null) {
                     if (ch == "=" && stream.peek() == "=") {
                         stream.next(); // Consume the second =
-                        // After highlighting, return to look for more pairs in the same line
-                        break; // Exit the current highlighting loop to allow looking for the next ==
+                        break; // Exit the current highlighting loop
                     }
                 }
-                return "highlight-text"; // Return the CSS class to apply for highlighted text
+                return "highlight-text"; // CSS class for highlighted text
             }
-            // If no == is found at the current stream position, skip to the next space or end of line
+
             while (stream.next() != null && !stream.eol()) {
-                if (stream.match("==", false)) {
-                    // Found another ==, break to allow the token function to handle it
+                if (stream.match("==", false) || stream.match("$", false)) {
                     break;
                 }
             }
-            return null; // Return null if no highlighting is to be applied
+            return null; // No specific highlighting for this token
         }
     };
     return CodeMirror.overlayMode(CodeMirror.getMode(config, parserConfig.backdrop || "markdown"), customSyntaxOverlay);
@@ -51,6 +77,32 @@ function autoCloseEquals(cm) {
         }
     });
 }
+
+function autoCloseDollars(codeMirrorEditor){
+    codeMirrorEditor.on("keypress", function (cm, event) {
+        // Check if the pressed key is '$'
+        if (event.key === "$") {
+            event.preventDefault(); // Prevent the default action to manually handle the insertion
+
+            const selectedText = cm.getSelection();
+            const from = cm.getCursor("start"); // Get the start position of the selection
+            const to = cm.getCursor("end"); // Get the end position of the selection
+
+            if (selectedText.length === 0) {
+                // If no text is selected, just insert $$
+                cm.replaceSelection("$$");
+                cm.setCursor(from.line, from.ch + 1); // Move the cursor back one position, between the $$
+            } else {
+                // If there is selected text, wrap it with $$
+                cm.replaceSelection(`$${selectedText}$`);
+                // Adjust 'to' position to account for the added $ at the start and end
+                var newTo = { line: to.line, ch: to.ch + 2 }; // Assuming selection does not span multiple lines
+                cm.setSelection(from, newTo); // Reselect the text including the new $$
+            }
+        }
+    });
+}
+
 
 let activeCodeMirrorEditor = null;
 
@@ -102,11 +154,11 @@ function setUpCodeMirrorFromTextarea(editTextArea) {
     const codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
         lineNumbers: false,
         theme: "default",
-        mode: "highlightCustomSyntax",
+        mode: "enhancedMarkdown",
         backdrop: "markdown",
         // mode:"markdown",
         autoCloseBrackets: {
-            pairs: "()[]{}''\"\"<>**$$``",
+            pairs: "()[]{}''\"\"<>**``",
             closeBefore: ")]}'\":;>",
             triples: "``",
             explode: "[]{}",
@@ -125,6 +177,7 @@ function setUpCodeMirrorFromTextarea(editTextArea) {
         },
     });
     autoCloseEquals(codeMirrorEditor);
+    autoCloseDollars(codeMirrorEditor);
     setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor);
     setUpLinkBlocks(codeMirrorEditor);
 

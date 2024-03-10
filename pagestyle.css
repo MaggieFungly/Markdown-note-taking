@@ -33,7 +33,7 @@
         'Times New Roman',
         serif,
         system-ui;
-    --display-line-height: 1.25;
+    --display-line-height: 1.5;
     --display-widget-background-color: rgba(200, 200, 200, 0.2);
     --link-color: #2796cb;
     --link-color-transparency: #2797cb30;
@@ -679,7 +679,7 @@ button:hover {
 }
 
 .CodeMirror-lines {
-    line-height: 1.25;
+    line-height: var(--display-line-height);
 }
 
 .cueDisplay,
