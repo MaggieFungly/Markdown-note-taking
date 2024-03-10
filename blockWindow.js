@@ -2,6 +2,7 @@ const { default: hljs } = require("highlight.js");
 const { ipcRenderer } = require("electron/renderer");
 const { renderText, handleDisplayDiv } = require("./addRemoveBlocks");
 const { viewer } = require('./imageViewer');
+const path = require('path');
 
 const cueDisplay = document.getElementsByClassName('cueDisplay')[0];
 const noteDisplay = document.getElementsByClassName('noteDisplay')[0];

@@ -7,16 +7,7 @@
     <title>Note</title>
 
     <!-- codemirror -->
-    <script src="node_modules/codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
-    <script src="node_modules/codemirror/mode/markdown/markdown.js"></script>
-    <script src="node_modules/codemirror/addon/edit/continuelist.js"></script>
-    <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
-    <script src="node_modules/codemirror/addon/mode/overlay.js"></script>
-    <script src="node_modules/codemirror/addon/search/search.js"></script>
-    <script src="node_modules/codemirror/addon/fold/markdown-fold.js"></script>
-    <script src="cmMode.js"></script>
-    <link rel="stylesheet" href="cm.css">
 
     <script src="node_modules/mermaid/dist/mermaid.min.js"></script>
     <script>
@@ -77,6 +68,13 @@
             </button>
             <button id="navigate-forward" title="Navigate forward">
                 <i class="fa-solid fa-arrow-right no-navigate"></i>
+            </button>
+
+            <button id="undo" title="Undo">
+                <i class="fa-solid fa-rotate-left no-navigate"></i>
+            </button>
+            <button id="redo" title="Redo">
+                <i class="fa-solid fa-rotate-right no-navigate"></i>
             </button>
         </div>
 
@@ -163,13 +161,16 @@
         <div id="log"></div>
     </div>
 
+    <script>
+        const { ipcRenderer } = require("electron");
+    </script>
+
     <!-- data management -->
     <script src="saveData.js"></script>
     <!-- page management -->
 
-    <script>
-        setUpUndoRedo();
-    </script>
+    <script src="cmMode.js"></script>
+    <script src="undoRedo.js"></script>
     <script src="addRemoveBlocks.js"></script>
     <script>
         setUpBlockInsertion();

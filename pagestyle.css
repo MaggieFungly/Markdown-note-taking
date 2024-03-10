@@ -5,6 +5,7 @@
     --icon-color: rgba(102, 99, 94, 0.7);
     --icon-size: 18px;
     --item-sub-color: gray;
+    --item-sub-sub-color: rgb(160, 160, 160);
     --item-margin: 3px;
     --item-padding: 3px;
     --item-font-size: 12px;
@@ -404,11 +405,6 @@ button:hover {
     transition: rgba(170, 170, 170, 0.3);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background-color: var(--item-sub-color);
-}
-
-
 #menuButtonDiv,
 #searchDocuments {
     padding: 5px;
@@ -673,10 +669,6 @@ button:hover {
     color: black;
 }
 
-.highlight-text {
-    background-color: #f9e065c8;
-}
-
 .CodeMirror {
     border-left-color: rgb(204, 204, 204);
 }
@@ -684,6 +676,10 @@ button:hover {
 ::selection,
 .CodeMirror .CodeMirror-selected {
     background-color: rgba(186, 186, 186, 0.3);
+}
+
+.CodeMirror-lines {
+    line-height: 1.25;
 }
 
 .cueDisplay,
@@ -768,8 +764,45 @@ blockquote {
     /* In case the content overflows */
 }
 
-.CodeMirror .cm-link,
 a {
+    color: var(--link-color);
+}
+
+
+/* codemirror overwrite styles */
+
+.cm-s-default .cm-header {
+    color: black;
+}
+
+.cm-s-default .cm-link {
+    color: var(--link-color);
+}
+
+.cm-s-default .cm-variable-1,
+.cm-s-default .cm-variable-2,
+.cm-s-default .cm-variable-3,
+.cm-s-default .cm-variable-4,
+.cm-s-default .cm-variable-5,
+.cm-s-default .cm-keyword {
+    color: black;
+}
+
+.cm-s-default .cm-formatting,
+.cm-s-default .cm-string {
+    color: var(--item-sub-sub-color);
+}
+
+.cm-s-default .cm-quote {
+    color: var(--item-color);
+}
+
+.highlight-text,
+.cm-highlight-text {
+    background-color: #f9e065c8;
+}
+
+.cm-s-default .cm-link {
     color: var(--link-color);
 }
 

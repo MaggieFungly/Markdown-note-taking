@@ -1,4 +1,8 @@
-const { ipcRenderer } = require("electron");
+const CodeMirror = require('codemirror/lib/codemirror');
+require('codemirror/addon/mode/overlay');
+require('codemirror/mode/markdown/markdown');
+require('codemirror/addon/edit/closebrackets');
+require('codemirror/addon/edit/continuelist');
 
 CodeMirror.defineMode("highlightCustomSyntax", function (config, parserConfig) {
     var customSyntaxOverlay = {
@@ -94,3 +98,35 @@ function insertImagePathIntoEditor(codeMirrorEditor, imagePath) {
     doc.setCursor({ line: endCursor.line, ch: endCursor.ch });
 }
 
+function setUpCodeMirrorFromTextarea(editTextArea) {
+    const codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
+        lineNumbers: false,
+        theme: "default",
+        mode: "highlightCustomSyntax",
+        backdrop: "markdown",
+        // mode:"markdown",
+        autoCloseBrackets: {
+            pairs: "()[]{}''\"\"<>**$$``",
+            closeBefore: ")]}'\":;>",
+            triples: "``",
+            explode: "[]{}",
+            override: true,
+        },
+        autoCloseTags: true,
+        smartIndent: true,
+        indentUnit: 4,
+        lineWrapping: true,
+        indentWithTabs: true,
+        showCursorWhenSelecting: true,
+        continuedList: true,
+        highlightFormatting: true,
+        extraKeys: {
+            "Enter": "newlineAndIndentContinueMarkdownList",
+        },
+    });
+    autoCloseEquals(codeMirrorEditor);
+    setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor);
+    setUpLinkBlocks(codeMirrorEditor);
+
+    return codeMirrorEditor;
+}

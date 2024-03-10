@@ -64,10 +64,12 @@ function showDisplay(textValue, displayDiv, codeMirrorEditor) {
     codeMirrorEditor.getWrapperElement().style.display = "none"; // Hide the editor
 }
 
+
 function showEdit(displayDiv, codeMirrorEditor) {
     codeMirrorEditor.getWrapperElement().style.display = "block";
     displayDiv.style.display = "none"; // Hide the display div
 }
+
 
 function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirrorClassName, displayDivClassName, text) {
     var editorDiv = document.createElement('div');
@@ -83,33 +85,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     editorDiv.appendChild(editTextArea);
 
     // codemirror config
-    var codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
-        lineNumbers: false,
-        theme: "default",
-        mode: "highlightCustomSyntax",
-        backdrop: "markdown",
-        autoCloseBrackets: {
-            pairs: "()[]{}''\"\"<>**$$",
-            closeBefore: ")]}'\":;>",
-            triples: "",
-            explode: "[]{}"
-        },
-        autoCloseTags: true,
-        smartIndent: true,
-        indentUnit: 4,
-        lineWrapping: true,
-        indentWithTabs: true,
-        showCursorWhenSelecting: true,
-        continuedList: true,
-        highlightFormatting: true,
-        extraKeys: {
-            "Enter": "newlineAndIndentContinueMarkdownList",
-        },
-        override: true,
-    });
-    autoCloseEquals(codeMirrorEditor);
-    setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor);
-    setUpLinkBlocks(codeMirrorEditor);
+    var codeMirrorEditor = setUpCodeMirrorFromTextarea(editTextArea);
 
     setTimeout(() => {
         codeMirrorEditor.refresh();
@@ -147,6 +123,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
     return codeMirrorEditor;
 }
 
+
 function removeButtonConfig(removeButton, blocksContainer) {
     removeButton.className = 'removeButton';
     removeButton.title = 'Remove block';
@@ -159,6 +136,7 @@ function removeButtonConfig(removeButton, blocksContainer) {
         executeRemoveBlock(index);
     });
 }
+
 
 function insertButtonConfig(insertButton, blocksContainer) {
     insertButton.className = 'insertButton';
@@ -173,11 +151,13 @@ function insertButtonConfig(insertButton, blocksContainer) {
     };
 }
 
+
 function dragButtonConfig(dragButton) {
     dragButton.className = 'dragButton';
     dragButton.title = 'Move block';
     dragButton.classList.add('fa-solid', 'fa-ellipsis');
 }
+
 
 function highlightButtonConfig(highlightButton, blockContainer) {
     highlightButton.className = 'highlightButton';
@@ -195,6 +175,7 @@ function highlightButtonConfig(highlightButton, blockContainer) {
     });
 }
 
+
 function linkGraphButtonConfig(button, id) {
     button.className = "linkGraphButton";
     button.classList.add('fa-solid', 'fa-diagram-project')
@@ -204,6 +185,7 @@ function linkGraphButtonConfig(button, id) {
         ipcRenderer.send('get-linked-graph', id);
     })
 }
+
 
 function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: '' }) {
     const blocksContainer = document.getElementById('blocks');
@@ -270,6 +252,7 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault(); // Prevent default action of Enter key
             insertButton.click(); // Programmatically click the insertButton
+            goToNextBlock(noteCodeMirrorEditor);
         }
     });
     cueCodeMirrorEditor.on('keydown', function (instance, event) {
@@ -277,6 +260,7 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault();
             insertButton.click();
+            goToNextBlock(cueCodeMirrorEditor);
         }
     });
 
@@ -299,8 +283,13 @@ function removeBlock(index) {
     const outlineList = document.getElementById('outlineList');
 
     if (index >= 0 && index < blocksContainer.children.length) {
+
+        const removedBlockData = getBlockData(blocksContainer.children[index]);
+
         blocksContainer.removeChild(blocksContainer.children[index]);
         outlineList.removeChild(outlineList.children[index]);
+
+        return removedBlockData;
     }
 }
 
@@ -346,7 +335,7 @@ function scrollToBlock(outlineItem, blockContainer) {
     outlineItem.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
-        console.log(blockContainer?.offsetTop)
+
         document.getElementById('editorContainer').scroll({
             top: blockContainer?.offsetTop - 5,
             behavior: 'smooth',
@@ -363,8 +352,12 @@ function executeInsertBlock(index, block) {
 
 function executeRemoveBlock(index) {
     // Perform the removal
-    removeBlock(index);
+    const block = removeBlock(index);
     saveBlocksData();
+
+    history.push({ type: 'remove', index: index, block: block });
+    redoStack = []; // Clear redo stack on new action
+    updateUndoRedoStates();
 }
 
 function setUpBlockInsertion() {
@@ -372,6 +365,21 @@ function setUpBlockInsertion() {
     start.addEventListener('click', function () {
         executeInsertBlock(0, { cue: '', note: '', highlighted: '', id: '' })
     })
+}
+
+function goToNextBlock(codeMirrorEditor) {
+    var nextBlock = codeMirrorEditor.getWrapperElement().closest('.block').nextElementSibling;
+    if (nextBlock) {
+        var nextNoteContainer = nextBlock.querySelector('.noteContainer');
+        if (nextNoteContainer) {
+            var nextCodeMirror = nextNoteContainer.querySelector('.CodeMirror');
+            if (nextCodeMirror) {
+                var cmInstance = nextCodeMirror.CodeMirror;
+                cmInstance.focus(); // Focus on the next CodeMirror instance
+                cmInstance.setCursor({ line: 0, ch: 0 }); // Set cursor at the beginning
+            }
+        }
+    }
 }
 
 module.exports.renderText = renderText;
