@@ -89,7 +89,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
 
     setTimeout(() => {
         codeMirrorEditor.refresh();
-    }, 0);
+    }, 10);
 
     // default display
     codeMirrorEditor.getWrapperElement().style.display = "block";

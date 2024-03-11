@@ -26,7 +26,10 @@ function BlockLinkEventListeners() {
 }
 
 function updateSuggestions() {
-    suggestionOptions.innerHTML = '';
+    suggestionOptions.innerHTML = ''; // Clear existing options
+
+    const fragment = document.createDocumentFragment(); // Create a document fragment
+
     searchResults.forEach(result => {
         const item = document.createElement('div');
         item.className = 'suggestion-item';
@@ -36,7 +39,7 @@ function updateSuggestions() {
         const relativePath = document.createElement('div');
         relativePath.textContent = result.relativePath;
         relativePath.className = 'suggestion-item-file-path';
-        item.appendChild(relativePath)
+        item.appendChild(relativePath);
 
         const id = document.createElement('div');
         id.textContent = result.id;
@@ -47,17 +50,26 @@ function updateSuggestions() {
         note.innerHTML = renderText(result.note);
         note.className = 'suggestion-item-note';
         item.appendChild(note);
-        MathJax.typesetPromise([note]).then(() => {
-        });
 
-        suggestionOptions.appendChild(item);
+        fragment.appendChild(item); // Add to the fragment
+    });
 
-        item.addEventListener('click', function (event) {
-            insertBlockLink(activeCodeMirrorEditor, result.id);
+    suggestionOptions.appendChild(fragment); // Append the fragment to the DOM
+
+    // Batch typeset for performance
+    MathJax.typesetPromise().then(() => { });
+
+    // Event delegation for item clicks
+    suggestionOptions.addEventListener('click', function (event) {
+        const item = event.target.closest('.suggestion-item');
+        if (item) {
+            insertBlockLink(activeCodeMirrorEditor, item.dataset.id);
             closeSuggestion();
-        })
-    })
+        }
+    });
 }
+
+
 
 function setUpLinkBlocks(codeMirrorEditor) {
     codeMirrorEditor.on("inputRead", function (instance, event) {
