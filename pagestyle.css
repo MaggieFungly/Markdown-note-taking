@@ -310,14 +310,23 @@ button:hover {
     /* Fixed height */
     box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
     z-index: 1000;
-    overflow-y: auto;
+    overflow-y: hidden;
     /* Scrollbar as needed */
+    justify-content: center;
 }
 
 #suggestion-input {
-    margin: 10px;
-    height: 20px;
-    width: 80%;
+    width: 100%;
+    /* Make the input take up the full width of its parent */
+    box-sizing: border-box;
+    /* Include padding and border in the element's width */
+    height: 30px;
+}
+
+#suggestion-options {
+    height: 90%;
+    overflow-y: auto;
+    margin-top: 10px;
 }
 
 .suggestion-item {

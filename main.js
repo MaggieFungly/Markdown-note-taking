@@ -228,7 +228,7 @@ function showOpenFileDialog(event) {
 function loadNotePage(filePath) {
     currentDir = path.normalize(filePath);
     updateMergedDocuments();
-
+    
     currentFilePath = '';
     forwardStack = [];
     previousStack = [];
@@ -729,7 +729,6 @@ function flattenDocuments(docs) {
 }
 
 function getDocumentContents() {
-    updateMergedDocuments()
     noteBlocks = flattenDocuments(documents)
     win.webContents.send('get-note-blocks', noteBlocks);
     win.webContents.send('log-message', 'Documents fetched.');
@@ -855,6 +854,8 @@ function openNetwork(id) {
         networkWin.webContents.send('linked-graph', { blockId: id, blocks: connectedBlocks, connections: relevantConnections });
     })
 }
+
+
 
 // Start the application when ready
 app.whenReady().then(createWindow);
