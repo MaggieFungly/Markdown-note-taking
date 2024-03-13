@@ -27,6 +27,22 @@ function updateBlocksData() {
     });
 }
 
+function updateBlockData(blockContainer) {
+    const data = getBlockData(blockContainer); // Assume this gets the updated data for a block
+    const idToFind = data.id;
+
+    // Find the index of the block with the matching id
+    const index = blocksData.findIndex(block => block.id === idToFind);
+
+    // Check if the block was found
+    if (index !== -1) {
+        blocksData[index] = data; // Update the block in the array
+        ipcRenderer.send('save-blocks-data', blocksData); // Send the updated array for saving
+    } else {
+        console.log('Block with id', idToFind, 'not found.');
+    }
+}
+
 // Function to save the current state of blocksData
 function saveBlocksData() {
     const { ipcRenderer } = require('electron');

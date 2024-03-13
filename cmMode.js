@@ -3,6 +3,8 @@ require('codemirror/addon/mode/overlay');
 require('codemirror/mode/markdown/markdown');
 require('codemirror/addon/edit/closebrackets');
 require('codemirror/addon/edit/continuelist');
+require('codemirror/addon/search/search')
+require('codemirror/addon/dialog/dialog')
 
 CodeMirror.defineMode("enhancedMarkdown", function (config, parserConfig) {
     var customSyntaxOverlay = {
@@ -78,7 +80,7 @@ function autoCloseEquals(cm) {
     });
 }
 
-function autoCloseDollars(codeMirrorEditor){
+function autoCloseDollars(codeMirrorEditor) {
     codeMirrorEditor.on("keypress", function (cm, event) {
         // Check if the pressed key is '$'
         if (event.key === "$") {
@@ -112,6 +114,8 @@ function setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor) {
     });
 
     codeMirrorEditor.on('paste', handlePasteEvent);
+
+    codeMirrorEditor.on('drop', handleDropEvent);
 }
 
 // Adjust the ipcRenderer listener to respond within the context of this setup function
@@ -139,6 +143,26 @@ function handlePasteEvent(codeMirrorInstance, event) {
     }
 }
 
+function handleDropEvent(editor, event) {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    for (const file of files) {
+        if (file.type.indexOf('image') !== -1) {
+            processImageFile(file);
+            break;
+        }
+    }
+}
+
+function processImageFile(file) {
+    const reader = new FileReader();
+    reader.onload = function (loadEvent) {
+        const base64Image = loadEvent.target.result;
+        ipcRenderer.send('save-image', base64Image);
+    };
+    reader.readAsDataURL(file);
+}
+
 function insertImagePathIntoEditor(codeMirrorEditor, imagePath) {
     // Replace backslashes with forward slashes in the imagePath
     const normalizedImagePath = imagePath.replace(/\\/g, '/');
@@ -148,7 +172,114 @@ function insertImagePathIntoEditor(codeMirrorEditor, imagePath) {
 
     const endCursor = doc.getCursor(); // Get the new cursor position after insertion
     doc.setCursor({ line: endCursor.line, ch: endCursor.ch });
+
+    setTimeout(() => {
+        codeMirrorEditor.refresh();
+    }, 100);
 }
+
+// Function to toggle bold formatting in Markdown
+function toggleBold(editor) {
+    var anchor = editor.getCursor('anchor'); // Start of the selection
+    var head = editor.getCursor('head'); // End of the selection
+    var doc = editor.getDoc();
+
+    // Determine if the selection is backwards
+    var isBackwards = (anchor.line > head.line) || (anchor.line === head.line && anchor.ch > head.ch);
+
+    // Normalize start and end positions based on selection direction
+    var startPos = isBackwards ? head : anchor;
+    var endPos = isBackwards ? anchor : head;
+
+    // Check for bold markers before and after the selection
+    var startCheckPos = { line: startPos.line, ch: Math.max(0, startPos.ch - 2) };
+    var endCheckPos = { line: endPos.line, ch: endPos.ch + 2 };
+    var preText = doc.getRange(startCheckPos, startPos);
+    var postText = doc.getRange(endPos, endCheckPos);
+
+    var isBold = preText === '**' && postText === '**';
+
+    if (isBold) {
+        // Remove the bold syntax
+        doc.replaceRange('', endPos, endCheckPos); // Remove ending **
+        doc.replaceRange('', startCheckPos, startPos); // Remove starting **
+        // Adjust cursor to select the text without the **, correctly handling backward selection
+        doc.setSelection(
+            isBackwards ? { line: endPos.line, ch: endPos.ch - 2 } : startCheckPos,
+            isBackwards ? startCheckPos : { line: endPos.line, ch: endPos.ch - 2 }
+        );
+    } else {
+        // Add the bold syntax
+        doc.replaceRange('**', endPos); // Add ending **
+        doc.replaceRange('**', startPos); // Add starting **
+        // Adjust cursor to re-select the text without including the **, correctly handling backward selection
+        if (isBackwards) {
+            doc.setSelection(
+                { line: endPos.line, ch: endPos.ch + 2 }, // New end cursor
+                { line: startPos.line, ch: startPos.ch + 2 } // New start cursor, adjusted for added **
+            );
+        } else {
+            doc.setSelection(
+                { line: startPos.line, ch: startPos.ch + 2 }, // New start cursor
+                { line: endPos.line, ch: endPos.ch + 2 } // New end cursor, adjusted for added **
+            );
+        }
+    }
+
+    editor.focus();
+}
+
+
+function toggleItalics(editor) {
+    var anchor = editor.getCursor('anchor'); // Start of the selection
+    var head = editor.getCursor('head'); // End of the selection
+    var doc = editor.getDoc();
+
+    // Determine if the selection is backwards
+    var isBackwards = (anchor.line > head.line) || (anchor.line === head.line && anchor.ch > head.ch);
+
+    // Normalize start and end positions based on selection direction
+    var startPos = isBackwards ? head : anchor;
+    var endPos = isBackwards ? anchor : head;
+
+    // Check for bold markers before and after the selection
+    var startCheckPos = { line: startPos.line, ch: Math.max(0, startPos.ch - 1) };
+    var endCheckPos = { line: endPos.line, ch: endPos.ch + 1 };
+    var preText = doc.getRange(startCheckPos, startPos);
+    var postText = doc.getRange(endPos, endCheckPos);
+
+    var isBold = preText === '*' && postText === '*';
+
+    if (isBold) {
+        // Remove the bold syntax
+        doc.replaceRange('', endPos, endCheckPos); // Remove ending **
+        doc.replaceRange('', startCheckPos, startPos); // Remove starting **
+        // Adjust cursor to select the text without the **, correctly handling backward selection
+        doc.setSelection(
+            isBackwards ? { line: endPos.line, ch: endPos.ch - 1 } : startCheckPos,
+            isBackwards ? startCheckPos : { line: endPos.line, ch: endPos.ch - 1 }
+        );
+    } else {
+        // Add the bold syntax
+        doc.replaceRange('*', endPos); // Add ending **
+        doc.replaceRange('*', startPos); // Add starting **
+        // Adjust cursor to re-select the text without including the **, correctly handling backward selection
+        if (isBackwards) {
+            doc.setSelection(
+                { line: endPos.line, ch: endPos.ch + 1 }, // New end cursor
+                { line: startPos.line, ch: startPos.ch + 1 } // New start cursor, adjusted for added **
+            );
+        } else {
+            doc.setSelection(
+                { line: startPos.line, ch: startPos.ch + 1 }, // New start cursor
+                { line: endPos.line, ch: endPos.ch + 1 } // New end cursor, adjusted for added **
+            );
+        }
+    }
+
+    editor.focus();
+}
+
 
 function setUpCodeMirrorFromTextarea(editTextArea) {
     const codeMirrorEditor = CodeMirror.fromTextArea(editTextArea, {
@@ -174,6 +305,8 @@ function setUpCodeMirrorFromTextarea(editTextArea) {
         highlightFormatting: true,
         extraKeys: {
             "Enter": "newlineAndIndentContinueMarkdownList",
+            "Ctrl-B": toggleBold,
+            "Ctrl-I": toggleItalics,
         },
     });
     autoCloseEquals(codeMirrorEditor);

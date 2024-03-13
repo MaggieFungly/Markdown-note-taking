@@ -71,7 +71,7 @@ function showEdit(displayDiv, codeMirrorEditor) {
 }
 
 
-function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirrorClassName, displayDivClassName, text) {
+function addEditor(blockContainer, editorClassName, textAreaClassName, displayDivClassName, text) {
     var editorDiv = document.createElement('div');
     // classnames: cueContainer, noteContainer
     editorDiv.className = editorClassName;
@@ -103,7 +103,7 @@ function addEditor(blockContainer, editorClassName, textAreaClassName, codeMirro
 
     // save data when there's a change
     codeMirrorEditor.on("change", function () {
-        saveBlocksData();
+        updateBlockData(blockContainer);
     });
 
     // Editor behavior
@@ -171,7 +171,7 @@ function highlightButtonConfig(highlightButton, blockContainer) {
             blockContainer.classList.add('highlighted-block');
         }
         // save data when highlighted
-        saveBlocksData();
+        updateBlockData(blockContainer);
     });
 }
 
@@ -206,8 +206,8 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     blockContainer.dataset.id = block.id;
 
     // create codemirror editors
-    var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueCodeMirror", "cueDisplay", block.cue)
-    var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteCodeMirror", "noteDisplay", block.note)
+    var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueDisplay", block.cue)
+    var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteDisplay", block.note)
 
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
