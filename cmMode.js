@@ -3,8 +3,6 @@ require('codemirror/addon/mode/overlay');
 require('codemirror/mode/markdown/markdown');
 require('codemirror/addon/edit/closebrackets');
 require('codemirror/addon/edit/continuelist');
-require('codemirror/addon/search/search')
-require('codemirror/addon/dialog/dialog')
 
 CodeMirror.defineMode("enhancedMarkdown", function (config, parserConfig) {
     var customSyntaxOverlay = {
@@ -108,7 +106,7 @@ function autoCloseDollars(codeMirrorEditor) {
 
 let activeCodeMirrorEditor = null;
 
-function setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor) {
+function setUpImageInsertion(codeMirrorEditor) {
     codeMirrorEditor.on('focus', () => {
         activeCodeMirrorEditor = codeMirrorEditor;
     });
@@ -311,7 +309,7 @@ function setUpCodeMirrorFromTextarea(editTextArea) {
     });
     autoCloseEquals(codeMirrorEditor);
     autoCloseDollars(codeMirrorEditor);
-    setupCodeMirrorEditorWithImagePasteHandling(codeMirrorEditor);
+    setUpImageInsertion(codeMirrorEditor);
     setUpLinkBlocks(codeMirrorEditor);
 
     return codeMirrorEditor;
