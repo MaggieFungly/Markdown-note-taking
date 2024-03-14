@@ -371,6 +371,11 @@ button:hover {
     background-color: var(--link-color);
 }
 
+.block .gutter:hover,
+.block .on-drag-gutter {
+    background-color: skyblue;
+}
+
 .gutter.gutter-horizontal {
     cursor: col-resize;
 }
@@ -646,13 +651,10 @@ button:hover {
 }
 
 .cueContainer {
-    width: 25%;
-    flex: 0 0 25%;
     overflow: hidden;
 }
 
 .noteContainer {
-    flex-grow: 1;
     overflow: hidden;
 }
 
@@ -778,6 +780,11 @@ a {
     color: black;
 }
 
+.highlight-text,
+.cm-highlight-text {
+    background-color: #f9e065c8;
+}
+
 .cm-s-default .cm-link {
     color: var(--link-color);
 }
@@ -798,11 +805,6 @@ a {
 
 .cm-s-default .cm-quote {
     color: var(--item-color);
-}
-
-.highlight-text,
-.cm-highlight-text {
-    background-color: #f9e065c8;
 }
 
 .cm-s-default .cm-link {

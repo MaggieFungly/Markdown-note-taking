@@ -71,11 +71,7 @@ function showEdit(displayDiv, codeMirrorEditor) {
 }
 
 
-function addEditor(blockContainer, editorClassName, textAreaClassName, displayDivClassName, text) {
-    var editorDiv = document.createElement('div');
-    // classnames: cueContainer, noteContainer
-    editorDiv.className = editorClassName;
-    blockContainer.appendChild(editorDiv);
+function addEditor(blockContainer, editorDiv, textAreaClassName, displayDivClassName, text) {
 
     var editTextArea = document.createElement('textarea');
     editTextArea.className = textAreaClassName;
@@ -186,6 +182,32 @@ function linkGraphButtonConfig(button, id) {
     })
 }
 
+function resizeHandleConfig(cueContainer, noteContainer) {
+    const Split = require('split.js');
+
+    let cues;
+    let notes;
+
+    Split([cueContainer, noteContainer], {
+        sizes: [20, 80], // Initial size ratios (in percentages) of the two containers
+        minSize: [0, 0], // Minimum size in pixels for each container
+        gutterSize: 3, // Size of the gutter (handle) in pixels
+        cursor: 'ew-resize', // Cursor type on hover over the gutter
+        onDragStart: function () {
+            cues = document.querySelectorAll('.cueContainer');
+            notes = document.querySelectorAll('.noteContainer');
+        },
+        onDrag: function () {
+            cues.forEach(cue => {
+                cue.style.width = cueContainer.style.width;
+            })
+            notes.forEach(note => {
+                note.style.width = noteContainer.style.width;
+            })
+        }
+    });
+}
+
 
 function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: '' }) {
     const blocksContainer = document.getElementById('blocks');
@@ -205,9 +227,17 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     }
     blockContainer.dataset.id = block.id;
 
+    var columnsDiv = document.createElement('div');
+
+    var cueContainer = document.createElement('cueContainer');
+    cueContainer.classList.add('cueContainer');
+
+    var noteContainer = document.createElement('noteContainer');
+    noteContainer.classList.add('noteContainer');
+
     // create codemirror editors
-    var cueCodeMirrorEditor = addEditor(blockContainer, "cueContainer", "cueEdit", "cueDisplay", block.cue)
-    var noteCodeMirrorEditor = addEditor(blockContainer, "noteContainer", "noteEdit", "noteDisplay", block.note)
+    var cueCodeMirrorEditor = addEditor(blockContainer, cueContainer, "cueEdit", "cueDisplay", block.cue)
+    var noteCodeMirrorEditor = addEditor(blockContainer, noteContainer, "noteEdit", "noteDisplay", block.note)
 
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
@@ -243,8 +273,11 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     buttonContainer.appendChild(dragButton);
     buttonContainer.appendChild(followingButtonDiv)
 
+    blockContainer.appendChild(cueContainer);
+    blockContainer.appendChild(noteContainer);
     blockContainer.appendChild(buttonContainer);
 
+    resizeHandleConfig(cueContainer, noteContainer);
 
     // ctrl + enter to insert new block below
     noteCodeMirrorEditor.on('keydown', function (instance, event) {
