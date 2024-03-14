@@ -243,12 +243,18 @@ function toggleItalics(editor) {
     // Check for bold markers before and after the selection
     var startCheckPos = { line: startPos.line, ch: Math.max(0, startPos.ch - 1) };
     var endCheckPos = { line: endPos.line, ch: endPos.ch + 1 };
-    var preText = doc.getRange(startCheckPos, startPos);
-    var postText = doc.getRange(endPos, endCheckPos);
+    var preText = doc.getRange(
+        { line: startPos.line, ch: Math.max(0, startPos.ch - 3) },
+        startPos
+    );
+    var postText = doc.getRange(
+        endPos, 
+        { line: endPos.line, ch: endPos.ch + 3 },
+    );
 
-    var isBold = preText === '*' && postText === '*';
+    var isItalics = ((preText.endsWith('*') && postText.startsWith('*')) && !(((preText.endsWith('**') && postText.startsWith('**'))))) || (preText.endsWith('***') && postText.startsWith('***'));
 
-    if (isBold) {
+    if (isItalics) {
         // Remove the bold syntax
         doc.replaceRange('', endPos, endCheckPos); // Remove ending **
         doc.replaceRange('', startCheckPos, startPos); // Remove starting **
