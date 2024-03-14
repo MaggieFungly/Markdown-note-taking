@@ -2,6 +2,7 @@ const { default: hljs } = require("highlight.js");
 const { marked } = require("marked");
 const shortid = require("shortid");
 const { viewer } = require('./imageViewer');
+const Split = require('split.js');
 
 // Renders markdown to HTML with custom processing for highlights and internal links.
 function renderText(textValue) {
@@ -183,13 +184,12 @@ function linkGraphButtonConfig(button, id) {
 }
 
 function resizeHandleConfig(cueContainer, noteContainer) {
-    const Split = require('split.js');
 
     let cues;
     let notes;
 
-    Split([cueContainer, noteContainer], {
-        sizes: [20, 80], // Initial size ratios (in percentages) of the two containers
+    const colSplit = Split([cueContainer, noteContainer], {
+        // sizes: [cueRatio, noteRatio], // Initial size ratios (in percentages) of the two containers
         minSize: [0, 0], // Minimum size in pixels for each container
         gutterSize: 3, // Size of the gutter (handle) in pixels
         cursor: 'ew-resize', // Cursor type on hover over the gutter
@@ -206,6 +206,25 @@ function resizeHandleConfig(cueContainer, noteContainer) {
             })
         }
     });
+
+    const cueDiv = document.querySelector('.cueContainer');
+    const noteDiv = document.querySelector('noteContainer');
+
+    if (cueDiv && noteDiv) {
+        cueContainer.style.width = cueDiv.style.width;
+        noteContainer.style.width = noteDiv.style.width;
+    } else {
+        colSplit.setSizes([20, 80])
+    }
+}
+
+function buttonContainerHover(buttonContainer, blockContainer){
+    buttonContainer.addEventListener('mouseover', function(){
+        blockContainer.classList.add('selected-block');
+    })
+    buttonContainer.addEventListener('mouseout', function () {
+        blockContainer.classList.remove('selected-block');
+    })
 }
 
 
@@ -227,8 +246,6 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     }
     blockContainer.dataset.id = block.id;
 
-    var columnsDiv = document.createElement('div');
-
     var cueContainer = document.createElement('cueContainer');
     cueContainer.classList.add('cueContainer');
 
@@ -242,6 +259,7 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
     buttonContainer.className = 'buttonContainer';
+    buttonContainerHover(buttonContainer, blockContainer);
 
     // Insert button
     var insertButton = document.createElement('i');

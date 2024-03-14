@@ -645,6 +645,11 @@ button:hover {
     display: block;
 }
 
+.selected-block {
+    background-color: var(--display-hover-background-color);
+    transition: var(--transition);
+}
+
 .cueContainer,
 .noteContainer {
     position: relative;
