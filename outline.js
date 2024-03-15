@@ -1,13 +1,5 @@
-const toggleOutlineBtn = document.getElementById("toggleOutline");
 var outline = document.getElementById("outline");
 var blocks = document.getElementById('blocks');
-
-toggleOutlineBtn.addEventListener('click', toggleOutline);
-
-function toggleOutline() {
-    outline.classList.toggle('default-width');
-    outline.classList.toggle('zero-width');
-}
 
 document.addEventListener('DOMContentLoaded', function () {
     // Select all elements with the class '.outlineItem'

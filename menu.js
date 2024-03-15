@@ -12,7 +12,6 @@ function main() {
 }
 
 function initializeMenuUI() {
-    document.getElementById('menuButton').addEventListener('click', toggleMenu);
 
     document.getElementById('createNewFileButton').addEventListener('click', function () {
         createNewFile(document.getElementById('directory-contents-list').getAttribute('data-path'));
@@ -260,12 +259,6 @@ function handleFile(node, fileNodeDiv) {
     fileNodeDiv.addEventListener('contextmenu', function (event) {
         createFileDropDownMenu(fileNodeDiv, node, event);
     });
-}
-
-function toggleMenu() {
-    const menuDiv = document.getElementById('menu');
-    menuDiv.classList.toggle('default-width')
-    menuDiv.classList.toggle('zero-width');
 }
 
 function createFileDropDownMenu(fileNodeDiv, node, event) {

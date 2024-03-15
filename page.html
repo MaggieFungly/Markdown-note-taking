@@ -108,7 +108,7 @@
 
     <div id="mainContainer" style="display: flex;" class="split">
 
-        <div id="menu" class="default-width">
+        <div id="menu">
             <div id="menuButtonDiv">
                 <button id="return" title="Return to home page">
                     <i class="fa-solid fa-house"></i>
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <div id="outline" class="zero-width">
+        <div id="outline">
             <div id="outlineList">
                 <!-- outline items here -->
             </div>
@@ -212,17 +212,38 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const Split = require('split.js');
-            
-            Split(['#menu', '#editorContainer', '#outline'], {
-                sizes: [20, 50, 20],
-                minSize: [200, 300, 200],
+
+            const menu = document.getElementById('menu');
+            const outline = document.getElementById('outline');
+            const editorContainer = document.getElementById('editorContainer');
+
+            Split([menu, editorContainer, outline], {
+                sizes: [20, 60, 20],
+                minSize: [150, 100, 150],
                 maxSize: [400, Infinity, 400],
-                snapOffset: 0,
-                expandToMin: true,
-                gutterSize: 3,
-                gutterAlign: 'center',
-            });
+            })
+
+            menu.style.width = getComputedStyle(menu).width;
+            editorContainer.style.widows = getComputedStyle(editorContainer).width;
+
+            outline.classList.add('hide-div')
+            outline.style.display = 'none'
+
+            document.getElementById('menuButton').addEventListener('click', function () {
+                toggleVisible(menu)
+            })
+            document.getElementById('toggleOutline').addEventListener('click', function () {
+                toggleVisible(outline)
+            })
+
+            function toggleVisible(div) {
+                div.classList.toggle('hide-div');
+                if (div.classList.contains('hide-div')) {
+                    div.style.display = 'none'
+                } else {
+                    div.style.display = 'block'
+                }
+            }
         })
     </script>
 

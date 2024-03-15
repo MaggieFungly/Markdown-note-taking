@@ -212,6 +212,7 @@ button:hover {
 #menu {
     border-right: 1px solid gray;
     background-color: var(--side-column-background-color);
+    display: block;
 }
 
 #outline {
@@ -219,6 +220,7 @@ button:hover {
     background-color: var(--side-column-background-color);
     margin-left: 1px;
     padding-top: 10px;
+    display: block;
 }
 
 #outlineHeader {
@@ -380,20 +382,13 @@ button:hover {
     cursor: col-resize;
 }
 
-.zero-width {
-    display: none;
-}
-
-.default-width {
-    display: block;
-}
 
 #editorContainer {
     flex-grow: 1;
     /* Allows the editor container to fill remaining space */
     max-height: 100vh;
     /* Adjust based on your layout needs */
-    width: 100%;
+    /* width: 100%; */
     box-sizing: border-box;
     overflow-x: hidden;
     padding: 5px;
