@@ -72,11 +72,15 @@ button:hover {
 
 #search-documents-list {
     padding: 5px;
+    height: 80%;
+    overflow-y: auto;
 }
 
 #directory-contents-list {
     padding: 5px;
-    padding-bottom: 150px;
+    padding-bottom: 300px;
+    height: 300px;
+    overflow-y: auto;
 }
 
 .fileLabel,
@@ -213,6 +217,7 @@ button:hover {
     border-right: 1px solid gray;
     background-color: var(--side-column-background-color);
     display: block;
+    overflow-y: hidden;
 }
 
 #outline {
@@ -354,7 +359,6 @@ button:hover {
     padding: 10px;
 }
 
-#menu,
 #outline,
 #editorContainer {
     overflow-y: auto;
