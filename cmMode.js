@@ -248,7 +248,7 @@ function toggleItalics(editor) {
         startPos
     );
     var postText = doc.getRange(
-        endPos, 
+        endPos,
         { line: endPos.line, ch: endPos.ch + 3 },
     );
 
@@ -280,9 +280,31 @@ function toggleItalics(editor) {
             );
         }
     }
-
     editor.focus();
 }
+
+function toggleBulletList(editor) {
+    const from = editor.getCursor("start");
+    const to = editor.getCursor("end");
+
+    for (let i = from.line; i <= to.line; i++) {
+        const lineContent = editor.getLine(i);
+
+        // Check if the line is not empty (ignoring whitespace)
+        if (lineContent.trim().length > 0) {
+            if (lineContent.startsWith("- ")) {
+                // Line is a bullet list item, remove the bullet
+                const newText = lineContent.slice(2);
+                editor.replaceRange(newText, { line: i, ch: 0 }, { line: i, ch: lineContent.length });
+            } else {
+                // Line is not a bullet list item, add the bullet
+                const newText = "- " + lineContent;
+                editor.replaceRange(newText, { line: i, ch: 0 }, { line: i, ch: lineContent.length });
+            }
+        }
+    }
+}
+
 
 
 function setUpCodeMirrorFromTextarea(editTextArea) {
@@ -311,6 +333,7 @@ function setUpCodeMirrorFromTextarea(editTextArea) {
             "Enter": "newlineAndIndentContinueMarkdownList",
             "Ctrl-B": toggleBold,
             "Ctrl-I": toggleItalics,
+            "Ctrl-L": toggleBulletList,
         },
     });
     autoCloseEquals(codeMirrorEditor);

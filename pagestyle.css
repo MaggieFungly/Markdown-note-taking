@@ -252,6 +252,7 @@ button:hover {
     align-items: center;
     cursor: pointer;
     border-left: 1px solid gray;
+    padding: var(--item-padding);
 }
 
 .outlineItem:hover {
