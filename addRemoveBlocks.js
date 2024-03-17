@@ -69,6 +69,8 @@ function showDisplay(textValue, displayDiv, codeMirrorEditor) {
 function showEdit(displayDiv, codeMirrorEditor) {
     codeMirrorEditor.getWrapperElement().style.display = "block";
     displayDiv.style.display = "none"; // Hide the display div
+
+    codeMirrorEditor.focus();
 }
 
 
@@ -114,7 +116,7 @@ function addEditor(blockContainer, editorDiv, textAreaClassName, displayDivClass
     displayDiv.addEventListener("contextmenu", function (event) {
         event.preventDefault();
         // Show the editor when right clicked
-        showEdit(displayDiv, codeMirrorEditor)
+        showEdit(displayDiv, codeMirrorEditor);
     });
 
     return codeMirrorEditor;
@@ -183,6 +185,20 @@ function linkGraphButtonConfig(button, id) {
     })
 }
 
+function checkboxConfig(blockContainer, checkbox) {
+
+    checkbox.className = 'to-do';
+
+    checkbox.addEventListener('change', function () {
+        if (checkbox.checked) {
+            blockContainer.dataset.checked = true;
+        } else {
+            blockContainer.dataset.checked = false;
+        }
+        updateBlockData(blockContainer)
+    })
+}
+
 function resizeHandleConfig(cueContainer, noteContainer) {
 
     let cues;
@@ -218,8 +234,8 @@ function resizeHandleConfig(cueContainer, noteContainer) {
     }
 }
 
-function buttonContainerHover(buttonContainer, blockContainer){
-    buttonContainer.addEventListener('mouseover', function(){
+function buttonContainerHover(buttonContainer, blockContainer) {
+    buttonContainer.addEventListener('mouseover', function () {
         blockContainer.classList.add('selected-block');
     })
     buttonContainer.addEventListener('mouseout', function () {
@@ -228,7 +244,7 @@ function buttonContainerHover(buttonContainer, blockContainer){
 }
 
 
-function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: '' }) {
+function insertBlock(index, block = { type: '', cue: '', note: '', highlighted: '', id: '' }) {
     const blocksContainer = document.getElementById('blocks');
     const outlineList = document.getElementById('outlineList');
 
@@ -236,6 +252,7 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     var blockContainer = document.createElement('div');
     blockContainer.className = 'block';
 
+    // hightlight block
     if (block.highlighted) {
         blockContainer.classList.add('highlighted-block');
     }
@@ -246,8 +263,16 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     }
     blockContainer.dataset.id = block.id;
 
+    // block type
+    if (!block.type || block.type === '') {
+        block.type = 'note';
+    }
+    blockContainer.dataset.type = block.type;
+
+    // create editors
     var cueContainer = document.createElement('cueContainer');
     cueContainer.classList.add('cueContainer');
+
 
     var noteContainer = document.createElement('noteContainer');
     noteContainer.classList.add('noteContainer');
@@ -255,6 +280,8 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     // create codemirror editors
     var cueCodeMirrorEditor = addEditor(blockContainer, cueContainer, "cueEdit", "cueDisplay", block.cue)
     var noteCodeMirrorEditor = addEditor(blockContainer, noteContainer, "noteEdit", "noteDisplay", block.note)
+
+    
 
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
@@ -295,6 +322,19 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
     blockContainer.appendChild(noteContainer);
     blockContainer.appendChild(buttonContainer);
 
+
+    if (block.type === 'todo') {
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        blockContainer.dataset.checked = block.checked;
+
+        if (block.checked === 'true') {
+            checkbox.checked = true;
+        }
+        blockContainer.appendChild(checkbox);
+        checkboxConfig(blockContainer, checkbox);
+    }
+
     resizeHandleConfig(cueContainer, noteContainer);
 
     // ctrl + enter to insert new block below
@@ -326,6 +366,8 @@ function insertBlock(index, block = { cue: '', note: '', highlighted: '', id: ''
         blocksContainer.appendChild(blockContainer);
         outlineList.appendChild(outlineItem);
     }
+
+    return blockContainer;
 }
 
 

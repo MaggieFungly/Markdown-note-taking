@@ -5,14 +5,6 @@ const suggestions = document.getElementById('suggestions')
 BlockLinkEventListeners();
 
 function BlockLinkEventListeners() {
-    // suggestionInput.addEventListener('keypress', function (event) {
-        // if (event.key === "Enter") {
-            // searchContent = suggestionInput.value.trim();
-            // getSearchResults(searchContent);
-            // updateSuggestions();
-        // }
-    // });
-
     let debounceTimer;
     suggestionInput.addEventListener('keydown', function (event) {
         clearTimeout(debounceTimer);
@@ -77,7 +69,9 @@ function setUpLinkBlocks(codeMirrorEditor) {
     codeMirrorEditor.on("inputRead", function (instance, event) {
         // Check if the '@' key was pressed
         if (event.text[0] === '@') {
-            suggestions.style.display = 'block';
+            
+            openFloatingWindow(suggestions);
+
             suggestionInput.value = '';
             suggestionInput.focus();
             suggestionOptions.innerHTML = '';
@@ -88,9 +82,15 @@ function setUpLinkBlocks(codeMirrorEditor) {
     });
 }
 
+function openFloatingWindow(div){
+    div.style.display = 'block';
+    setTimeout(() => div.style.opacity = 1, 10);
+}
+
 function closeFloatingWindow(div) {
     if ((div.style.display === 'block')) {
-        div.style.display = 'none'
+        div.style.display = 'none';
+        setTimeout(() => div.style.opacity = 0, 10);
     }
 }
 
@@ -103,8 +103,9 @@ function insertBlockLink(codeMirrorEditor, blockLink) {
 
     setTimeout(() => {
         codeMirrorEditor.refresh();
-    }, 100);
+    }, 80);
 
-    showDisplay(codeMirrorEditor.getValue(), codeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), codeMirrorEditor)
+    // showDisplay(codeMirrorEditor.getValue(), codeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), codeMirrorEditor)
+    showEdit(codeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), codeMirrorEditor);
 }
 

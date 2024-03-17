@@ -54,9 +54,75 @@
                 class="fas fa-times"></i></button>
     </div>
 
-    <div id="suggestions">
-        <input type="text" id="suggestion-input">
-        <div id="suggestion-options"></div>
+    <div id="suggestions" class="pop-up-window">
+        <input type="text" id="suggestion-input" class="pop-up-input">
+        <div id="suggestion-options" class="pop-up-options"></div>
+    </div>
+
+    <div id="actions" class="pop-up-window">
+        <input type="text" id="action-input" class="pop-up-input">
+        <div id="action-options">
+            <div class="action-type">
+                <span>Block type</span>
+            </div>
+            <div class="action" id="note" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-regular fa-note-sticky"></i>
+                    Note
+                </span>
+            </div>
+            <div class="action" id="todo" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-solid fa-square-check"></i>
+                    To do
+                </span>
+            </div>
+            <hr>
+            <div class="action-type">
+                <span>Editor</span>
+            </div>
+            <div class="action" id="bullet-list" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-solid fa-list-ul"></i>
+                    Toggle bullet list
+                </span>
+                <span class="action-shortcut">Ctrl + L</span>
+            </div>
+            <div class="action" id="insert-block-quote" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-solid fa-angle-right"></i>
+                    Insert block quotes
+                </span>
+            </div>
+            <div class="action" id="remove-block-quote" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-solid fa-angle-right"></i>
+                    Remove block quotes
+                </span>
+            </div>
+            <hr>
+            <div class="action-type">
+                <span>Display</span>
+            </div>
+            <div class="action" id="display-highlight" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-solid fa-highlighter"></i>
+                    Display highlight
+                </span>
+            </div>
+            <div class="action" id="display-to-do" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-regular fa-square-check"></i>
+                    Display to-do items
+                </span>
+            </div>
+            <div class="action" id="display-all-blocks" class="pop-up-options">
+                <span class="action-name">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                    Display all blocks
+                </span>
+            </div>
+        </div>
     </div>
 
     <div id="toolbar">
@@ -171,6 +237,10 @@
     <!-- page management -->
 
     <script src="cmMode.js"></script>
+    <script src="blockActions.js"></script>
+    <script>
+        setUpCommandPalette();
+    </script>
     <script src="undoRedo.js"></script>
     <script src="addRemoveBlocks.js"></script>
     <script>

@@ -12,10 +12,15 @@ function getBlockData(block) {
 
     let isHighlighted = block.classList.contains('highlighted-block');
     let id = block.dataset.id;
+    let type = block.dataset.type;
 
-    const data = { note: noteText, cue: cueText, highlighted: isHighlighted, id: id }
-
-    return data
+    if (type === 'note') {
+        return { note: noteText, cue: cueText, highlighted: isHighlighted, id: id, type: type }
+    }
+    else if (type === 'todo') {
+        let checked = block.dataset.checked;
+        return { note: noteText, cue: cueText, highlighted: isHighlighted, id: id, type: type, checked: checked }
+    }
 }
 
 // Function to update blocksData based on the current state of #blocks
