@@ -26,7 +26,8 @@
     --item-hover-background-color: rgba(162, 162, 162, 0.2);
     --display-hover-background-color: #e1e0e03c;
     --display-font-size: 11.5pt;
-    --display-font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    /* --display-font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif; */
+    --display-font-family: 'Cambria';
     --display-line-height: 1.5;
     --display-widget-background-color: rgba(200, 200, 200, 0.2);
     --link-color: #2796cb;
@@ -440,8 +441,6 @@ button:hover {
     padding: 5px;
 }
 
-/* Custom scrollbar styles for Webkit browsers to ensure visibility when active */
-
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -452,6 +451,30 @@ button:hover {
     background-color: var(--item-hover-background-color);
     border-radius: 4px;
     transition: rgba(170, 170, 170, 0.3);
+}
+
+#navigator {
+    padding: 20px;
+    padding-top: 100px;
+}
+
+.nav-title {
+    font-weight: bold;
+}
+
+.recently-opened-file {
+    padding-top: 5px;
+}
+
+.recently-opened-file-name {
+    font-family: var(--env-font-family);
+    font-size: var(--display-font-size);
+    color: var(--link-color);
+    cursor: pointer;
+}
+
+.recently-opened-file-name:hover {
+    color: color(var(--link-color) alpha(0.8));
 }
 
 #menuButtonDiv,
@@ -731,6 +754,30 @@ button:hover {
     background-color: transparent;
     color: black;
 }
+
+
+h1 {
+    font-size: xx-large;
+}
+
+h2 {
+    font-size: x-large;
+}
+
+h3 {
+    font-size: larger;
+}
+
+h4 {
+    font-size: large;
+}
+
+h5,
+h6 {
+    font-size: var(--display-font-size);
+    font-weight: bold;
+}
+
 
 .CodeMirror {
     border-left-color: rgb(204, 204, 204);

@@ -13,6 +13,10 @@ let currentDir = '';
 let documents = '';
 let noteBlocks;
 let networkWin = null;
+let history = {
+    dir: '',
+    files: [],
+};
 
 // Create the main window
 function createWindow() {
@@ -26,7 +30,15 @@ function createWindow() {
         }
     });
 
-    win.loadFile('index.html');
+    readHistory().then(() => {
+        if ((history.dir) && (fs.existsSync(history.dir))) {
+            loadNotePage(history.dir)
+        } else {
+            win.loadFile('index.html')
+        }
+    }).catch(error => {
+        win.loadFile('index.html');
+    })
 
     // Setup IPC event listeners
     setupIpcEventListeners();
@@ -99,7 +111,8 @@ function setupIpcEventListeners() {
     ipcMain.on('move-item', (event, args) => moveFile(event, args));
     ipcMain.on('get-linked-graph', (event, id) => {
         openNetwork(id);
-    })
+    });
+    ipcMain.on('get-recent-files', getRecentFiles);
 }
 
 // Event handler to open file dialog
@@ -225,13 +238,73 @@ function showOpenFileDialog(event) {
     });
 }
 
+async function readHistory() {
+    const filePath = path.join(__dirname, '.marine.json');
+
+    try {
+        // Try reading the file
+        const fileContent = await fsPromise.readFile(filePath, 'utf8');
+        const filehistory = JSON.parse(fileContent);
+
+        history.dir = filehistory.dir;
+        history.files = filehistory.files;
+
+    } catch (error) {
+        // If the file does not exist, handle the error
+        if (error.code === 'ENOENT') {
+            // File doesn't exist, so create a new one
+            const newContent = JSON.stringify({}); // Use an empty object as default content
+            await fsPromise.writeFile(filePath, newContent, 'utf8', 4);
+            console.log('New file created: .marine.json');
+        } else {
+            // Other errors
+            console.error('An error occurred:', error);
+        }
+    }
+}
+
+async function writeHistory(historyData) {
+    const filePath = path.join(__dirname, '.marine.json');
+
+    try {
+        // Directly stringify the object or array
+        const dataString = JSON.stringify(historyData, null, 4);
+        await fsPromise.writeFile(filePath, dataString, 'utf8');
+    } catch (error) {
+        console.error('Failed to save history:', error);
+    }
+}
+
+function getRecentFiles() {
+    const recentFiles = history.files; // Assuming this is an array
+    let filesToSend = [];
+
+    // Loop through each file in recentFiles
+    recentFiles.forEach(file => {
+        if (fs.existsSync(file)) {
+            filesToSend.push(file);
+        }
+    });
+
+    // Ensure only the last 5 files are sent
+    // If there are more than 5 files, this slices the array to contain only the last 5 items
+    filesToSend = filesToSend.slice(-5);
+
+    win.webContents.send('recent-files', filesToSend);
+}
+
+
 function loadNotePage(filePath) {
     currentDir = path.normalize(filePath);
     updateMergedDocuments();
-    
+
     currentFilePath = '';
     forwardStack = [];
     previousStack = [];
+
+    history.dir = currentDir;
+    writeHistory(history);
+
 
     win.loadFile('page.html').then(() => {
         console.log(currentDir);
@@ -239,8 +312,10 @@ function loadNotePage(filePath) {
         win.webContents.send('directory-changed');
         win.webContents.send('forward-stack-length', forwardStack.length);
         win.webContents.send('previous-stack-length', previousStack.length);
+        getRecentFiles();
     });
 }
+
 
 function loadBlocks(filePath, isNavigate = false) {
 
@@ -253,6 +328,14 @@ function loadBlocks(filePath, isNavigate = false) {
                 if (!isNavigate && currentFilePath !== '') {
                     previousStack.push(currentFilePath);
                     forwardStack = [];
+
+                    if (!history.files) {
+                        history.files = [];
+                    }
+
+                    history.files.push(filePath);
+                    history.files = [...new Set(history.files)];
+                    writeHistory(history);
                 }
 
                 // change current file path
@@ -275,23 +358,20 @@ function loadBlocks(filePath, isNavigate = false) {
     }
 }
 
-// Event handler to load the index page
 function loadIndex(event) {
     win.loadFile('index.html');
 }
 
-// Event handler to open a link externally
 function openLinkExternally(event, url) {
     shell.openExternal(url);
 }
 
-// Event handler to open a new window
 function openNewWindow(event) {
     let newWin = new BrowserWindow({ width: 400, height: 300 });
     newWin.loadFile("page.html");
 }
 
-// Function to create a new file
+// create new note page
 function createNewFile(folderPath) {
 
     let fileName = 'Untitled.json';
@@ -854,7 +934,6 @@ function openNetwork(id) {
         networkWin.webContents.send('linked-graph', { blockId: id, blocks: connectedBlocks, connections: relevantConnections });
     })
 }
-
 
 
 // Start the application when ready

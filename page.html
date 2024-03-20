@@ -205,23 +205,47 @@
             <div id="search-documents-list"></div>
         </div>
 
-        <div id="editorContainer">
-            <input type="text" id="title">
-            <div id="init" class="no-drag">
-                <div class="buttons">
-                    <button id="startButton" title="Insert block on top"><i class="fas fa-plus"></i></button>
+
+        <div id="right-main-container" style="display: block; flex-grow: 1;">
+
+            <div id="editor-outline" style="display: none; ">
+                <div id="editorContainer">
+                    <input type="text" id="title">
+                    <div id="init" class="no-drag">
+                        <div class="buttons">
+                            <button id="startButton" title="Insert block on top"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div id="blocks">
+                        <!-- blocks go here -->
+                    </div>
+                </div>
+
+                <div id="outline">
+                    <div id="outlineList">
+                        <!-- outline items here -->
+                    </div>
                 </div>
             </div>
-            <div id="blocks">
-                <!-- blocks go here -->
+
+            <div id="navigator" style="display: block; padding-left: 30px;">
+                <div id="recent-notes-div">
+                    <span class="nav-title">Recent notes</span>
+                    <div id="recent-file-list">
+                        <div class="recently-opened-file">
+                            <span class="recently-opened-file-name">Marine</span>
+                        </div>
+                    </div>
+                    <div id="recent-file-list">
+                        <div class="recently-opened-file">
+                            <span class="recently-opened-file-name">navigator</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="outline">
-            <div id="outlineList">
-                <!-- outline items here -->
-            </div>
-        </div>
+
     </div>
 
     <div id="bottomBar">
@@ -281,24 +305,46 @@
     </script>
 
     <script>
+
         document.addEventListener('DOMContentLoaded', function () {
 
             const menu = document.getElementById('menu');
             const outline = document.getElementById('outline');
+            const rightMainContainer = document.getElementById('right-main-container');
             const editorContainer = document.getElementById('editorContainer');
 
-            Split([menu, editorContainer, outline], {
-                sizes: [20, 60, 20],
-                minSize: [150, 100, 150],
-                maxSize: [400, Infinity, 400],
+            let outlineWidth;
+
+            const menuSplit = Split([menu, rightMainContainer], {
+                sizes: [20, 80],
+                minSize: [150, 150],
+                maxSize: [400, Infinity],
                 gutterSize: 3,
+                onDragStart: function () {
+                    outlineWidth = getComputedStyle(outline).width;
+                },
+                onDrag: function () {
+                    outline.style.width = outlineWidth;
+                },
+                onDragEnd: function () {
+                    outline.style.width = outlineWidth;
+                },
             })
 
-            menu.style.width = getComputedStyle(menu).width;
-            editorContainer.style.widows = getComputedStyle(editorContainer).width;
+            const editorSplit = Split([editorContainer, outline], {
+                sizes: [80, 20],
+                minSize: [150, 150],
+                maxSize: [Infinity, 400],
+                gutterSize: 3,
+                onDragEnd: function () {
+                    outlineWidth = getComputedStyle(outline).width;
+                    outline.style.width = outlineWidth;
+                }
+            })
 
-            outline.classList.add('hide-div')
-            outline.style.display = 'none'
+            outline.classList.add('hide-div');
+            outline.style.display = 'none';
+            outlineWidth = getComputedStyle(outline).width;
 
             document.getElementById('menuButton').addEventListener('click', function () {
                 toggleVisible(menu)
