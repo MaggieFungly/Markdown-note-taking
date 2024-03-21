@@ -45,86 +45,6 @@
 </head>
 
 <body>
-    <div id="searchDiv" style="display: none;">
-        <input type="search" id="searchBox" placeholder="Enter search term"></input>
-        <button id="findNextButton" title="Find next (Ctrl + G)"><i class="fa-solid fa-chevron-down"></i></button>
-        <button id="findPreviousButton" title="Find previous (Ctrl + Shift + G)"><i
-                class="fa-solid fa-chevron-up"></i></button>
-        <button id="stopSearchButton" style="width: 20px;" title="Stop searching (Esc)"><i
-                class="fas fa-times"></i></button>
-    </div>
-
-    <div id="suggestions" class="pop-up-window">
-        <input type="text" id="suggestion-input" class="pop-up-input">
-        <div id="suggestion-options" class="pop-up-options"></div>
-    </div>
-
-    <div id="actions" class="pop-up-window">
-        <input type="text" id="action-input" class="pop-up-input">
-        <div id="action-options">
-            <div class="action-type">
-                <span>Block type</span>
-            </div>
-            <div class="action" id="note" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-regular fa-note-sticky"></i>
-                    Note
-                </span>
-            </div>
-            <div class="action" id="todo" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-solid fa-square-check"></i>
-                    To do
-                </span>
-            </div>
-            <hr>
-            <div class="action-type">
-                <span>Editor</span>
-            </div>
-            <div class="action" id="bullet-list" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-solid fa-list-ul"></i>
-                    Toggle bullet list
-                </span>
-                <span class="action-shortcut">Ctrl + L</span>
-            </div>
-            <div class="action" id="insert-block-quote" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-solid fa-angle-right"></i>
-                    Insert block quotes
-                </span>
-            </div>
-            <div class="action" id="remove-block-quote" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-solid fa-angle-right"></i>
-                    Remove block quotes
-                </span>
-            </div>
-            <hr>
-            <div class="action-type">
-                <span>Display</span>
-            </div>
-            <div class="action" id="display-highlight" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-solid fa-highlighter"></i>
-                    Display highlight
-                </span>
-            </div>
-            <div class="action" id="display-to-do" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-regular fa-square-check"></i>
-                    Display to-do items
-                </span>
-            </div>
-            <div class="action" id="display-all-blocks" class="pop-up-options">
-                <span class="action-name">
-                    <i class="fa-solid fa-grip-vertical"></i>
-                    Display all blocks
-                </span>
-            </div>
-        </div>
-    </div>
-
     <div id="toolbar">
         <div id="leftContainer" style="display: flex;">
             <button id="menuButton" style="width: 20px;" title="Toggle menu">
@@ -209,6 +129,88 @@
         <div id="right-main-container" style="display: block; flex-grow: 1;">
 
             <div id="editor-outline" style="display: none; ">
+
+                <div id="searchDiv" style="display: none;">
+                    <input type="search" id="searchBox" placeholder="Enter search term"></input>
+                    <button id="findNextButton" title="Find next (Ctrl + G)"><i
+                            class="fa-solid fa-chevron-down"></i></button>
+                    <button id="findPreviousButton" title="Find previous (Ctrl + Shift + G)"><i
+                            class="fa-solid fa-chevron-up"></i></button>
+                    <button id="stopSearchButton" style="width: 20px;" title="Stop searching (Esc)"><i
+                            class="fas fa-times"></i></button>
+                </div>
+
+                <div id="suggestions" class="pop-up-window">
+                    <input type="text" id="suggestion-input" class="pop-up-input">
+                    <div id="suggestion-options" class="pop-up-options"></div>
+                </div>
+
+                <div id="actions" class="pop-up-window">
+                    <input type="text" id="action-input" class="pop-up-input">
+                    <div id="action-options">
+                        <div class="action-type">
+                            <span>Block type</span>
+                        </div>
+                        <div class="action" id="note" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-regular fa-note-sticky"></i>
+                                Note
+                            </span>
+                        </div>
+                        <div class="action" id="todo" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-solid fa-square-check"></i>
+                                To do
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="action-type">
+                            <span>Editor</span>
+                        </div>
+                        <div class="action" id="bullet-list" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-solid fa-list-ul"></i>
+                                Toggle bullet list
+                            </span>
+                            <span class="action-shortcut">Ctrl + L</span>
+                        </div>
+                        <div class="action" id="insert-block-quote" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-solid fa-angle-right"></i>
+                                Insert block quotes
+                            </span>
+                        </div>
+                        <div class="action" id="remove-block-quote" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-solid fa-angle-right"></i>
+                                Remove block quotes
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="action-type">
+                            <span>Display</span>
+                        </div>
+                        <div class="action" id="display-highlight" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-solid fa-highlighter"></i>
+                                Display highlight
+                            </span>
+                        </div>
+                        <div class="action" id="display-to-do" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-regular fa-square-check"></i>
+                                Display to-do items
+                            </span>
+                        </div>
+                        <div class="action" id="display-all-blocks" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-solid fa-grip-vertical"></i>
+                                Display all blocks
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="editorContainer">
                     <input type="text" id="title">
                     <div id="init" class="no-drag">
@@ -233,7 +235,7 @@
                     <span class="nav-title">Recent notes</span>
                     <div id="recent-file-list">
                         <!-- <div class="recently-opened-file"> -->
-                            <!-- <span class="recently-opened-file-name">Marine</span> -->
+                        <!-- <span class="recently-opened-file-name">Marine</span> -->
                         <!-- </div> -->
                     </div>
                 </div>

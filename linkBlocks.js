@@ -18,6 +18,13 @@ function BlockLinkEventListeners() {
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             closeFloatingWindow(suggestions);
+
+            setTimeout(() => {
+                activeCodeMirrorEditor.refresh();
+            }, 20);
+            showEdit(activeCodeMirrorEditor.getWrapperElement().parentNode.querySelector('.displayDiv'), activeCodeMirrorEditor);
+
+            activeCodeMirrorEditor.focus();
         }
     })
 
@@ -69,7 +76,7 @@ function setUpLinkBlocks(codeMirrorEditor) {
     codeMirrorEditor.on("inputRead", function (instance, event) {
         // Check if the '@' key was pressed
         if (event.text[0] === '@') {
-            
+
             openFloatingWindow(suggestions);
 
             suggestionInput.value = '';
@@ -82,7 +89,7 @@ function setUpLinkBlocks(codeMirrorEditor) {
     });
 }
 
-function openFloatingWindow(div){
+function openFloatingWindow(div) {
     div.style.display = 'block';
     setTimeout(() => div.style.opacity = 1, 10);
 }

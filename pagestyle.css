@@ -367,8 +367,10 @@ button:hover {
 #actions {
     height: auto;
     max-height: 400px;
-    top: 30%;
+    position: absolute;
     background-color: whitesmoke;
+    top: 28%;
+    bottom: 20%;
 }
 
 #action-options {
@@ -563,6 +565,7 @@ button:hover {
     /* Flex layout for the internal elements */
     gap: 8px;
     /* Spacing between elements */
+    background-color: whitesmoke;
 }
 
 #searchBox {

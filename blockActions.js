@@ -1,4 +1,6 @@
+
 function setUpCommandPalette() {
+
     const actions = document.getElementById('actions');
     const actionInput = document.getElementById('action-input');
 
@@ -9,12 +11,69 @@ function setUpCommandPalette() {
 
             openFloatingWindow(actions);
 
+            document.querySelectorAll('.action').forEach(action => {
+                action.style.display = '';
+            })
+
             actionInput.value = '';
             actionInput.focus();
         }
     })
 
     setUpActionEventListeners();
+    setUpActionInput();
+}
+
+function setUpActionInput() {
+    const MiniSearch = require('minisearch');
+
+    const actionOptions = document.querySelectorAll('.action');
+    let actionsToSearch = []; // This will hold objects with id and text for searching
+
+    // Populate actionsToSearch with objects
+    actionOptions.forEach(option => {
+        actionsToSearch.push({
+            id: option.id,
+            text: option.querySelector('.action-name').textContent.trim()
+        });
+    });
+
+    let actionSearch = new MiniSearch({
+        fields: ['id', 'text'], // Specify the fields to index
+        storeFields: ['id'], // Specify which fields to store
+        searchOptions: {
+            fuzzy: 0.2
+        },
+    });
+
+    // Add the structured data to MiniSearch
+    actionSearch.addAll(actionsToSearch);
+
+    const actionInput = document.getElementById('action-input');
+    let debounceTimeout; // For debouncing the search
+
+    actionInput.addEventListener('keydown', function () {
+        clearTimeout(debounceTimeout); // Clear existing timeout on each key press
+        debounceTimeout = setTimeout(() => { // Set a new timeout
+            let searchValue = actionInput.value.trim();
+
+            if (searchValue !== '') {
+                let actionSearchResults = actionSearch.search(searchValue, { prefix: true });
+                let searchedIds = actionSearchResults.map(result => result.id);
+                actionOptions.forEach(option => {
+                    if (!searchedIds.includes(option.id)) {
+                        option.style.display = 'none';
+                    } else {
+                        option.style.display = '';
+                    }
+                });
+            } else {
+                actionOptions.forEach(option => {
+                    option.style.display = '';
+                });
+            }
+        }, 20); // Debounce delay in milliseconds
+    });
 }
 
 
@@ -124,10 +183,10 @@ function displayHighlight() {
     closeFloatingWindow(actions);
 }
 
-function displayToDoItems(){
+function displayToDoItems() {
     const blocks = document.querySelectorAll('.block');
-    blocks.forEach(b=>{
-        if (b.dataset.type !== "todo"){
+    blocks.forEach(b => {
+        if (b.dataset.type !== "todo") {
             b.style.display = 'none';
         }
     })
