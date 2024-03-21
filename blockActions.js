@@ -202,6 +202,11 @@ function displayAllBlocks() {
     closeFloatingWindow(actions);
 }
 
+function returnToNavigator() {
+    displayNavigator();
+    closeFloatingWindow(actions);
+}
+
 function setUpActionEventListeners() {
     const actions = document.getElementById('actions')
 
@@ -212,6 +217,7 @@ function setUpActionEventListeners() {
     document.getElementById('insert-block-quote').addEventListener('click', insertBlockQuoteFromCommandPalette);
     document.getElementById('remove-block-quote').addEventListener('click', removeBlockQuoteFromCommandPalette);
 
+    document.getElementById('return-to-navigator').addEventListener('click', returnToNavigator);
     document.getElementById('display-highlight').addEventListener('click', displayHighlight);
     document.getElementById('display-to-do').addEventListener('click', displayToDoItems);
     document.getElementById('display-all-blocks').addEventListener('click', displayAllBlocks);

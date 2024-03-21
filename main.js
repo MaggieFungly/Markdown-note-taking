@@ -113,6 +113,10 @@ function setupIpcEventListeners() {
         openNetwork(id);
     });
     ipcMain.on('get-recent-files', getRecentFiles);
+    ipcMain.on('get-to-do-items', getToDoItems);
+    ipcMain.on('clear-contents', function () {
+        currentFilePath = '';
+    })
 }
 
 // Event handler to open file dialog
@@ -312,6 +316,7 @@ function loadNotePage(filePath) {
         win.webContents.send('directory-changed');
         win.webContents.send('forward-stack-length', forwardStack.length);
         win.webContents.send('previous-stack-length', previousStack.length);
+        getDocumentContents();
         getRecentFiles();
     });
 }
@@ -322,9 +327,9 @@ function loadBlocks(filePath, isNavigate = false) {
     if ((filePath) && (path.normalize(filePath) !== path.normalize(currentFilePath))) {
         fs.readFile(filePath, 'utf8', (err, data) => {
             if (err) {
-                win.webContents.send('log-message', err)
+                win.webContents.send('log-message', err);
+                return;
             } else {
-
                 if (!isNavigate && currentFilePath !== '') {
                     previousStack.push(currentFilePath);
                     forwardStack = [];
@@ -340,15 +345,20 @@ function loadBlocks(filePath, isNavigate = false) {
 
                 // change current file path
                 currentFilePath = filePath;
-                win.webContents.send('directory-changed');
-                win.webContents.send('get-current-file-path', currentFilePath);
 
-                win.webContents.send('navigate-state', { previousStackLength: previousStack.length, forwardStackLength: forwardStack.length });
-
+                // note contents
                 const fileNameWithoutExtension = path.basename(filePath, '.json');
                 win.webContents.send('set-title', fileNameWithoutExtension);
                 win.webContents.send('json-file-data', { error: false, data: JSON.parse(data) });
 
+                // menu
+                win.webContents.send('directory-changed');
+                win.webContents.send('get-current-file-path', currentFilePath);
+
+                // navigation state
+                win.webContents.send('navigate-state', { previousStackLength: previousStack.length, forwardStackLength: forwardStack.length });
+
+                // log message
                 win.webContents.send('log-message', `Note ${fileNameWithoutExtension} loaded.`)
 
                 // watchDirectory when the file is loaded
@@ -566,7 +576,6 @@ function createFolder(directoryPath, folderName = 'Untitled') {
     try {
         // Create the folder
         fs.mkdirSync(folderPath);
-        win.webContents.send('folder-created', folderPath);
         win.webContents.send('log-message', `Folder '${folderName}' created successfully in '${directoryPath}'.`)
     } catch (error) {
         win.webContents.send('log-message', `Error creating folder '${folderName}' in '${directoryPath}': ${error.message}`);
@@ -794,18 +803,27 @@ function updateMergedDocuments() {
 }
 
 function flattenDocuments(docs) {
-    let blocks;
-    blocks = docs.flatMap(doc =>
-        doc.contents.map(content => ({
-            id: content.id,
-            note: content.note || '',
-            cue: content.cue || '',
-            fileName: doc.fileName,
-            path: doc.path,
-            relativePath: doc.relativePath,
-        }))
+    let blocks = docs.flatMap(doc =>
+        doc.contents.map(content => {
+            // Create the base block object with common properties
+            let block = {
+                id: content.id,
+                note: content.note || '',
+                cue: content.cue || '',
+                type: content.type || '',
+                fileName: doc.fileName,
+                path: doc.path,
+                relativePath: doc.relativePath,
+            };
+
+            // Conditionally add 'checked' property if type is 'todo'
+            if (content.type === 'todo') {
+                block.checked = content.checked || false; // Assuming 'false' as a default value if 'checked' isn't specified
+            }
+            return block;
+        })
     );
-    return blocks
+    return blocks;
 }
 
 function getDocumentContents() {
@@ -935,6 +953,11 @@ function openNetwork(id) {
     })
 }
 
+
+function getToDoItems() {
+    noteBlocks = flattenDocuments(documents);
+    win.webContents.send('to-do-items', noteBlocks.filter(block => block.type === 'todo'));
+}
 
 // Start the application when ready
 app.whenReady().then(createWindow);

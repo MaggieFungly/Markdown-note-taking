@@ -281,8 +281,6 @@ function insertBlock(index, block = { type: '', cue: '', note: '', highlighted: 
     var cueCodeMirrorEditor = addEditor(blockContainer, cueContainer, "cueEdit", "cueDisplay", block.cue)
     var noteCodeMirrorEditor = addEditor(blockContainer, noteContainer, "noteEdit", "noteDisplay", block.note)
 
-    
-
     // Create and setup buttons container
     var buttonContainer = document.createElement('div');
     buttonContainer.className = 'buttonContainer';
@@ -355,7 +353,7 @@ function insertBlock(index, block = { type: '', cue: '', note: '', highlighted: 
         }
     });
 
-    var outlineItem = outlineConfig(noteCodeMirrorEditor, block.id, block.note, blockContainer);
+    var outlineItem = outlineConfig(noteCodeMirrorEditor, blockContainer, block);
 
 
     // Determine where to insert the new block
@@ -387,12 +385,12 @@ function removeBlock(index) {
 }
 
 
-function outlineConfig(noteCodeMirrorEditor, id, note, blockContainer) {
+function outlineConfig(noteCodeMirrorEditor, blockContainer, block) {
     // create corresponding outline items
     var outlineItem = document.createElement('div');
-    outlineItem.dataset.id = id;
+    outlineItem.dataset.id = block.id;
     outlineItem.className = 'outlineItem';
-    outlineItem.innerHTML = getOutlineContents(note);
+    outlineItem.innerHTML = getOutlineContents(block.note);
 
     noteCodeMirrorEditor.on('change', function (instance) {
         var currentValue = instance.getValue();

@@ -365,16 +365,18 @@ button:hover {
 }
 
 #actions {
-    height: auto;
-    max-height: 400px;
+    height: 300px;
     position: absolute;
     background-color: whitesmoke;
     top: 28%;
     bottom: 20%;
+    overflow-y: hidden;
 }
 
 #action-options {
     padding-top: 10px;
+    overflow-y: auto;
+    height: 270px;
 }
 
 .action-type {
@@ -457,20 +459,37 @@ button:hover {
 
 #navigator {
     padding: 20px;
-    padding-top: 100px;
+    padding-top: 50px;
+}
+
+#date {
+    text-align: right;
+    font-size: larger;
+    font-family: var(--env-font-family);
+    font-weight: 100;
+}
+
+.nav-div {
+    padding-top: 30px;
+    width: 50%;
 }
 
 .nav-title {
     font-weight: bold;
 }
 
-.recently-opened-file {
+.nav-item-list{
+    height: 175px;
+    overflow-y: scroll;
+}
+
+.nav-item {
     padding-top: 5px;
 }
 
-.recently-opened-file-name {
+.nav-item-name {
     font-family: var(--env-font-family);
-    font-size: var(--display-font-size);
+    font-size: var(--item-font-size);
     color: var(--link-color);
     cursor: pointer;
 }

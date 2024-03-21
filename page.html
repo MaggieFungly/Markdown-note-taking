@@ -190,6 +190,12 @@
                         <div class="action-type">
                             <span>Display</span>
                         </div>
+                        <div class="action" id="return-to-navigator" class="pop-up-options">
+                            <span class="action-name">
+                                <i class="fa-regular fa-map"></i>
+                                Return to navigator
+                            </span>
+                        </div>
                         <div class="action" id="display-highlight" class="pop-up-options">
                             <span class="action-name">
                                 <i class="fa-solid fa-highlighter"></i>
@@ -199,7 +205,7 @@
                         <div class="action" id="display-to-do" class="pop-up-options">
                             <span class="action-name">
                                 <i class="fa-regular fa-square-check"></i>
-                                Display to-do items
+                                Display to do items
                             </span>
                         </div>
                         <div class="action" id="display-all-blocks" class="pop-up-options">
@@ -231,13 +237,18 @@
             </div>
 
             <div id="navigator" style="display: block; padding-left: 30px;">
-                <div id="recent-notes-div">
-                    <span class="nav-title">Recent notes</span>
-                    <div id="recent-file-list">
-                        <!-- <div class="recently-opened-file"> -->
-                        <!-- <span class="recently-opened-file-name">Marine</span> -->
-                        <!-- </div> -->
+
+                <div id="date"></div>
+
+                <div id="recent-notes-div" class="nav-div">
+                    <span class="nav-title">Recent</span>
+                    <div id="recent-file-list" class="nav-item-list">
                     </div>
+                </div>
+
+                <div id="to-do-items" class="nav-div">
+                    <span class="nav-title">To do</span>
+                    <div id="todo-list" class="nav-item-list"></div>
                 </div>
             </div>
         </div>
@@ -361,6 +372,10 @@
         })
     </script>
 
+    <script src="navigator.js"></script>
+    <script>
+        displayNavigator();
+    </script>
 </body>
 
 </html>
